@@ -1,4 +1,0 @@
-/Users/zcy/Documents/3-2/Compiler/code/build/CMakeFiles/pascc.dir
-/Users/zcy/Documents/3-2/Compiler/code/build/CMakeFiles/test.dir
-/Users/zcy/Documents/3-2/Compiler/code/build/CMakeFiles/edit_cache.dir
-/Users/zcy/Documents/3-2/Compiler/code/build/CMakeFiles/rebuild_cache.dir
