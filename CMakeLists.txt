@@ -11,6 +11,9 @@ find_package(FLEX)
 
 set(CORE_SOURCES
     src/main.cpp
+    src/ast.cpp
+    src/semantic_annotator.cpp
+    src/code_generator.cpp
     src/symbol_table.cpp
     src/error_handler.cpp
     src/codegen_utils.cpp

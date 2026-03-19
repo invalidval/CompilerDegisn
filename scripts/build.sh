@@ -1,11 +1,40 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BUILD_DIR="$PROJECT_ROOT/build"
+
 if command -v cmake >/dev/null 2>&1; then
-  cmake -S . -B build
-  cmake --build build
-  echo "Build complete: build/pascc"
+  BISON_BIN=""
+  if [[ -x "/opt/homebrew/opt/bison/bin/bison" ]]; then
+    BISON_BIN="/opt/homebrew/opt/bison/bin/bison"
+  elif command -v bison >/dev/null 2>&1; then
+    BISON_BIN="$(command -v bison)"
+  fi
+
+  CMAKE_ARGS=(
+    -S "$PROJECT_ROOT"
+    -B "$BUILD_DIR"
+  )
+  if [[ -n "$BISON_BIN" ]]; then
+    CMAKE_ARGS+=("-DBISON_EXECUTABLE=$BISON_BIN")
+  fi
+
+  echo "[build] Configure with CMake"
+  cmake "${CMAKE_ARGS[@]}"
+
+  echo "[build] Compile with CMake"
+  cmake --build "$BUILD_DIR" -j"$(sysctl -n hw.ncpu)"
+
+  if [[ -x "$BUILD_DIR/pascc" ]]; then
+    echo "[build] Build complete: $BUILD_DIR/pascc"
+  else
+    echo "[build] Build finished, but binary not found at $BUILD_DIR/pascc"
+    exit 1
+  fi
 else
-  make
-  echo "Build complete: ./pascc"
+  echo "[build] CMake not found, fallback to Makefile"
+  (cd "$PROJECT_ROOT" && make)
+  echo "[build] Build complete: $PROJECT_ROOT/pascc"
 fi
