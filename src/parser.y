@@ -17,8 +17,18 @@ void yyerror(const char* s);
     char* text;
 }
 
-%token PROGRAM
+/* Keywords */
+%token PROGRAM CONST VAR INTEGER REAL BOOLEAN CHAR ARRAY OF FUNCTION PROCEDURE
+%token KW_BEGIN KW_END IF THEN ELSE WHILE DO FOR TO DOWNTO READ WRITE NOT AND OR DIV MOD
+
+/* Literals */
+%token <text> NUMBER CHARACTER STRING
 %token <text> IDENTIFIER
+
+/* Operators and special symbols (multi-character) */
+%token ASSIGN LE GE NE DOTDOT
+
+/* Single-character operators return their ASCII value: := return ':' for compatibility */
 
 %type <node> program
 
