@@ -13,11 +13,11 @@ void SymbolTable::exitScope() {
         scopes_.pop_back();
     }
 }
-
+// 每个作用域都有单独的散列表
 bool SymbolTable::insert(const SymbolEntry& entry) {
     auto& current = scopes_.back();
     if (current.find(entry.name) != current.end()) {
-        return false;
+        return false; // 重定义，插入失败
     }
     current[entry.name] = entry;
     return true;

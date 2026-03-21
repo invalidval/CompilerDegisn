@@ -15,7 +15,7 @@ void SemanticAnnotator::annotateNode(ASTNode* node) {
     if (auto* identifier = dynamic_cast<IdentifierNode*>(node)) {
         annotateIdentifier(identifier);
     }
-
+    // DFS遍历AST
     for (ASTNode* child : node->children) {
         annotateNode(child);
     }
