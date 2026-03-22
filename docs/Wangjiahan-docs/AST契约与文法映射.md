@@ -28,7 +28,7 @@
 
 - `Identifiers`：`idlist`
 - `Statements`：`statement_list`
-- `Expressions`：`expression_list` / `variable_list`（若变量作为可求值表达式处理）
+- `Expressions`：`expression_list` / `variable_list`
 - `Parameters`：`parameter_list`
 - `Declarations`：声明集合（const/var/subprogram）
 - `ArrayRanges`：`period` 的维度区间列表
@@ -87,13 +87,18 @@
 ## 4.9 IfStmtNode
 - `children[0]`：条件
 - `children[1]`：then 分支
-- `children[2]`：else 分支（可缺省）
+- `children[2]`：仅在存在 `else` 时填充；无 `else` 时不填充该槽位（当前实现对齐）
 
 ## 4.10 ForStmtNode
+- 字段：`isDownto`（`false`=to，`true`=downto）
 - `children[0]`：循环变量（`IdentifierNode`）
 - `children[1]`：初值表达式
 - `children[2]`：终值表达式
 - `children[3]`：循环体语句
+
+## 4.10.1 WhileStmtNode
+- `children[0]`：循环条件表达式
+- `children[1]`：循环体语句
 
 ## 4.11 CompoundStmtNode
 - `children`：语句序列，顺序与源码一致
@@ -231,6 +236,10 @@
   - `nullptr` 或语句节点
 - `statement -> for id assignop expression to expression do statement`
   - `ForStmtNode`
+- `statement -> for id assignop expression downto expression do statement`
+  - `ForStmtNode(isDownto=true)`
+- `statement -> while expression do statement`
+  - `WhileStmtNode`
 - `statement -> read ( variable_list )`
   - `ProcCallNode(name="read")`
 - `statement -> write ( expression_list )`
@@ -305,6 +314,19 @@
 代码生成阶段负责：
 - 读取已注解 AST 生成目标代码
 
+## 7.1 SourcePos 传播规则（Parser 实现约束）
+
+1. 叶子节点（`IdentifierNode`、`LiteralNode`）的 `SourcePos` 取对应 token 的起始位置。
+2. 复合节点默认取该产生式首个关键 token 的起始位置（例如 `if`、`for`、`begin`）。
+3. 列表节点（`ListNode`）取该列表第一次出现元素的位置；空列表取触发该空产生式的语法位置。
+4. 若后续引入结束位置，不改变上述“起始位置”规则。
+
+## 7.2 文本规范（Identifier / Literal）
+
+1. `IdentifierNode.identifier` 使用词法归一化后的文本（当前词法实现为小写）。
+2. `LiteralNode.value` 保存词法原始词素文本（例如字符引号、字符串引号、`$FF`、`0x1A` 形式保留）。
+3. 若语义阶段需要规范化字面量值，应写入语义字段，不回写 `value` 原文。
+
 ## 8. 错误处理约定（语法阶段）
 
 1. 当前实现基线：使用 Bison 错误恢复规则与 `yyerror`，在可恢复场景下继续解析。
@@ -352,15 +374,72 @@ ForStmtNode {
 
 1. `begin end` 必须生成 `CompoundStmtNode`，且 `children` 允许为空。
 2. `ProcCallNode` 无参数时，`children.size() == 0`。
-3. `IfStmtNode` 无 `else` 时，`children[2] == nullptr`（或不填充该槽位，但需在实现内保持一致）。
+3. `IfStmtNode` 无 `else` 时，不填充 `children[2]`（与当前 `ast.cpp` 实现一致）。
 4. 多维数组访问（如 `a[i,j]`）需按约定拆解为嵌套 `ArrayAccessNode` 或等价结构，项目内必须唯一化实现。
 5. 函数返回值语义不在语法阶段判定，语法阶段仅保证结构正确。
+6. `ForStmtNode.isDownto` 必须与源代码方向保持一致（`to=false`，`downto=true`）。
 
 ## 11. 建议扩展（不影响当前实现对齐）
 
 1. 为 `LiteralNode` 增加 `LiteralType`（`Integer/Real/Boolean/Char`），减少仅靠字符串值带来的歧义。
 2. 引入 `ErrorNode` 并在恢复解析中挂载，提升错误聚合能力。
 3. 若需更严格位置诊断，可把 `SourcePos` 从“起始位置”扩展为“起止区间”。
+
+## 12. 实现一致性检查清单（Parser / Visitor / Memory）
+
+以下清单用于语法建树联调时的快速自检，避免“契约正确但实现跑不通”。
+
+### 12.1 Parser 一致性
+
+1. Bison 终结符命名必须与 lexer 返回值一致，禁止在 parser 侧私自改名。
+2. 所有 `IDENTIFIER` / `NUMBER` / `CHARACTER` / `STRING` 的 `yylval.text` 在语义动作消费后必须释放，避免内存泄漏。
+3. 列表型非终结符必须统一返回 `ListNode`，并正确设置 `ListKind`。
+4. `IfStmtNode` 的无 `else` 场景采用唯一实现：不填充 `children[2]`。
+5. 关键 AST 节点（声明、语句、表达式）应在语义动作中挂载 `SourcePos` 起始位置。
+
+### 12.2 Lexer-Parser token 对齐（最小表）
+
+| 词法返回 | parser token | 用途 |
+| --- | --- | --- |
+| `program` | `PROGRAM` | 程序头 |
+| 标识符 | `IDENTIFIER` | 名称引用 |
+| 数字常量 | `NUMBER` | 字面量 |
+| 字符常量 | `CHARACTER` | 字面量 |
+| 字符串常量 | `STRING` | 字面量（扩展） |
+| `:=` | `ASSIGN` | 赋值 |
+| `<=` | `LE` | 关系运算 |
+| `>=` | `GE` | 关系运算 |
+| `<>` | `NE` | 关系运算 |
+| `..` | `DOTDOT` | 数组区间 |
+| `begin` | `KW_BEGIN` | 复合语句起始 |
+| `end` | `KW_END` | 复合语句结束 |
+
+### 12.3 词法语义值内存所有权
+
+1. `yylval.text` 的释放责任在 parser 动作（消费方），遵循“谁消费谁释放”。
+2. parser 未消费文本值的 token，不应在 lexer 侧分配 `yylval.text`。
+3. 关键字 token 默认不携带文本语义值；如调试需要携带，必须在 parser 增加统一释放策略（例如 `%destructor`）。
+
+### 12.4 Visitor 一致性
+
+1. 每次扩展 `ASTVisitor` 接口后，所有继承类（语义、代码生成、调试打印）必须同步补全 `visit(...)`。
+2. 如下游暂未支持某新节点，必须提供可编译的占位 `visit(...)`，禁止留下纯虚函数未实现状态。
+3. 下游读取 `children` 时必须严格按本契约的顺序约定，不允许按“节点类型猜测”读取。
+
+### 12.5 内存与生命周期一致性
+
+1. AST 节点统一由 `ASTBuilder` 的 `arena_` 管理生命周期，外部不得手动 `delete` AST 节点。
+2. 语法动作中构造 AST 时，禁止把临时栈对象地址写入 `children`。
+3. lexer 分配的字符串与 AST arena 生命周期相互独立：
+- 词法字符串由 parser 动作负责释放。
+- AST 节点对象由 `ASTBuilder` 统一托管。
+
+### 12.6 联调最小通过标准
+
+1. 词法通过：能稳定输出与 parser 声明一致的 token。
+2. 建树通过：`yyparse` 成功后可获得非空根节点。
+3. 语义通过：不因访问器缺失而编译失败。
+4. 生成通过：代码生成阶段至少可遍历 AST 并输出可编译骨架代码。
 
 ---
 

@@ -25,7 +25,13 @@ if command -v cmake >/dev/null 2>&1; then
   cmake "${CMAKE_ARGS[@]}"
 
   echo "[build] Compile with CMake"
-  cmake --build "$BUILD_DIR" -j"$(sysctl -n hw.ncpu)"
+  JOBS=1
+  if command -v nproc >/dev/null 2>&1; then
+    JOBS="$(nproc)"
+  elif command -v sysctl >/dev/null 2>&1; then
+    JOBS="$(sysctl -n hw.ncpu)"
+  fi
+  cmake --build "$BUILD_DIR" -j"$JOBS"
 
   if [[ -x "$BUILD_DIR/pascc" ]]; then
     echo "[build] Build complete: $BUILD_DIR/pascc"

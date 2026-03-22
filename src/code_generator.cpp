@@ -31,6 +31,36 @@ void CodeGenerator::visit(ProgramNode* node) {
     }
 }
 
+void CodeGenerator::visit(BlockNode* node) {
+    std::ostringstream oss;
+    for (ASTNode* child : node->children) {
+        std::string part = emitNode(child);
+        if (!part.empty()) {
+            oss << part;
+            if (part.back() != '\n') {
+                oss << "\n";
+            }
+        }
+    }
+    currentExpr_ = oss.str();
+}
+
+void CodeGenerator::visit(VarDeclNode* /*node*/) {
+    currentExpr_.clear();
+}
+
+void CodeGenerator::visit(ConstDeclNode* /*node*/) {
+    currentExpr_.clear();
+}
+
+void CodeGenerator::visit(ProcDeclNode* /*node*/) {
+    currentExpr_.clear();
+}
+
+void CodeGenerator::visit(FuncDeclNode* /*node*/) {
+    currentExpr_.clear();
+}
+
 void CodeGenerator::visit(IdentifierNode* node) {
     currentExpr_ = node->identifier;
 }
@@ -43,6 +73,15 @@ void CodeGenerator::visit(BinaryExprNode* node) {
     std::string lhs = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
     std::string rhs = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
     currentExpr_ = "(" + lhs + " " + node->op + " " + rhs + ")";
+}
+
+void CodeGenerator::visit(UnaryExprNode* node) {
+    std::string operand = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
+    if (node->op == "not") {
+        currentExpr_ = "(!" + operand + ")";
+    } else {
+        currentExpr_ = "(" + node->op + operand + ")";
+    }
 }
 
 void CodeGenerator::visit(AssignStmtNode* node) {
@@ -80,6 +119,58 @@ void CodeGenerator::visit(IfStmtNode* node) {
     currentExpr_ = oss.str();
 }
 
+void CodeGenerator::visit(WhileStmtNode* node) {
+    std::string cond = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
+    std::string bodyStmt = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
+
+    std::ostringstream oss;
+    oss << "while (" << cond << ") {\n";
+    if (!bodyStmt.empty()) {
+        oss << "        " << bodyStmt;
+        if (bodyStmt.back() != '\n') {
+            oss << "\n";
+        }
+    }
+    oss << "    }";
+    currentExpr_ = oss.str();
+}
+
+void CodeGenerator::visit(ForStmtNode* node) {
+    std::string iter = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
+    std::string init = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
+    std::string end = emitNode(node->children.size() > 2 ? node->children[2] : nullptr);
+    std::string bodyStmt = emitNode(node->children.size() > 3 ? node->children[3] : nullptr);
+
+    std::string cmp = node->isDownto ? ">=" : "<=";
+    std::string step = node->isDownto ? "--" : "++";
+
+    std::ostringstream oss;
+    oss << "for (" << iter << " = " << init << "; " << iter << " " << cmp << " " << end
+        << "; " << iter << step << ") {\n";
+    if (!bodyStmt.empty()) {
+        oss << "        " << bodyStmt;
+        if (bodyStmt.back() != '\n') {
+            oss << "\n";
+        }
+    }
+    oss << "    }";
+    currentExpr_ = oss.str();
+}
+
+void CodeGenerator::visit(CompoundStmtNode* node) {
+    std::ostringstream oss;
+    for (ASTNode* stmt : node->children) {
+        std::string line = emitNode(stmt);
+        if (!line.empty()) {
+            oss << line;
+            if (line.back() != '\n') {
+                oss << "\n";
+            }
+        }
+    }
+    currentExpr_ = oss.str();
+}
+
 void CodeGenerator::visit(ArrayAccessNode* node) {
     std::string base = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
     std::string index = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
@@ -89,6 +180,28 @@ void CodeGenerator::visit(ArrayAccessNode* node) {
     } else {
         currentExpr_ = base + "[(" + index + ") - " + std::to_string(node->lowerBound) + "]";
     }
+}
+
+void CodeGenerator::visit(ArrayTypeNode* /*node*/) {
+    currentExpr_.clear();
+}
+
+void CodeGenerator::visit(ParamDeclNode* /*node*/) {
+    currentExpr_.clear();
+}
+
+void CodeGenerator::visit(ListNode* node) {
+    std::ostringstream oss;
+    for (ASTNode* item : node->children) {
+        std::string piece = emitNode(item);
+        if (!piece.empty()) {
+            if (oss.tellp() > 0) {
+                oss << ", ";
+            }
+            oss << piece;
+        }
+    }
+    currentExpr_ = oss.str();
 }
 
 void CodeGenerator::visit(ProcCallNode* node) {
