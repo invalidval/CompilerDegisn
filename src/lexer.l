@@ -142,7 +142,11 @@ void reportLexError(int line, int column, const std::string& reason, const std::
 	do { \
 		g_token_line = g_line; \
 		g_token_column = g_column; \
+		yylloc.first_line = g_token_line; \
+		yylloc.first_column = g_token_column; \
 		advancePosition(yytext, yyleng); \
+		yylloc.last_line = g_line; \
+		yylloc.last_column = g_column; \
 	} while (0);
 %}
 

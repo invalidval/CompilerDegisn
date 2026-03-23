@@ -10,10 +10,10 @@
 #include "error_handler.h"
 #include "parser_bridge.h"
 #include "semantic_annotator.h"
+#include "semantic_register.h"
 #include "symbol_table.h"
+#include "debug_utils.h"
 
-extern FILE *yyin;
-int yyparse(void);
 int yylex(void);
 
 void lexerResetState();
@@ -34,16 +34,18 @@ namespace
     void printUsage()
     {
         std::cout << "pascc - Pascal-S to C compiler (project skeleton)\n";
-        std::cout << "Usage: pascc -i <input.pas> [-o output.c] [--lex] [--dump-tokens]\n";
+        std::cout << "Usage: pascc -i <input.pas> [-o output.c] [--lex-only] [--dump-tokens] [--parse-only]\n";
+        std::cout << "注意，--parse-only 也会执行词法分析\n";
     }
 
     bool parseArgs(int argc, char *argv[], std::string &inputPath, std::string &outputPath,
-                   bool &lexMode, bool &dumpTokens, bool &shouldExit, int &exitCode)
+                   bool &lexMode, bool &dumpTokens, bool &parseOnly, bool &shouldExit, int &exitCode)
     {
         shouldExit = false;
         exitCode = 0;
         lexMode = false;
         dumpTokens = false;
+        parseOnly = false;
         outputPath = "out.c";
 
         for (int i = 1; i < argc; ++i)
@@ -66,7 +68,7 @@ namespace
                 outputPath = argv[++i];
                 continue;
             }
-            if (arg == "--lex")
+            if (arg == "--lex-only")
             {
                 lexMode = true;
                 continue;
@@ -75,6 +77,11 @@ namespace
             {
                 lexMode = true;
                 dumpTokens = true;
+                continue;
+            }
+            if (arg == "--parse-only")
+            {
+                parseOnly = true;
                 continue;
             }
         }
@@ -188,9 +195,10 @@ int main(int argc, char *argv[])
     std::string outputPath;
     bool lexMode = false;
     bool dumpTokens = false;
+    bool parseOnly = false;
     bool shouldExit = false;
     int exitCode = 0;
-    if (!parseArgs(argc, argv, inputPath, outputPath, lexMode, dumpTokens, shouldExit, exitCode))
+    if (!parseArgs(argc, argv, inputPath, outputPath, lexMode, dumpTokens, parseOnly, shouldExit, exitCode))
     {
         return 1;
     }
@@ -238,6 +246,12 @@ int main(int argc, char *argv[])
         std::cerr << "Parsing failed.\n";
         return 1;
     }
+    if (getParseErrorCount() > 0)
+    {
+        std::fclose(input);
+        std::cerr << "Parsing failed.\n";
+        return 1;
+    }
     std::fclose(input);
 
     ProgramNode *root = getParseResultRoot();
@@ -247,7 +261,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    if (parseOnly)
+    {
+        std::cout << "Parse succeeded.\n";
+        
+        printAstNode(root);
+        
+        return 0;
+    }
+
     SymbolTable symbolTable;
+    semantic_register::preregisterBuiltins(symbolTable);
     ErrorHandler errorHandler;
     SemanticAnnotator annotator(symbolTable, errorHandler);
     annotator.annotate(root);

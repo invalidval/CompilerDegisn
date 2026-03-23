@@ -7,13 +7,49 @@
 
 #include "common.h"
 
+enum class SymbolKind {
+    Variable,
+    Constant,
+    Procedure,
+    Function,
+    Parameter
+};
+
+struct ArrayBound {
+    int lower = 0;
+    int upper = -1;
+};
+
+struct ParamInfo {
+    std::string name;
+    DataType type = DataType::Unknown;
+    bool isVarParam = false;
+};
+
 struct SymbolEntry {
-    // 符号表条目
-    std::string name; // 名字
-    DataType type; // 类型
-    int scopeLevel; // 作用域等级（也就是scope_项目的索引，from 0）
-    bool isConstant; // 标识位（非常易于扩展）
-    bool isArray;
+    std::string name;
+    SymbolKind kind = SymbolKind::Variable;
+    DataType type = DataType::Unknown;
+    int scopeLevel = 0;
+
+    bool isArray = false;
+    std::vector<ArrayBound> arrayBounds;
+
+    bool hasConstLiteral = false;
+    std::string constLiteralText;
+
+    std::vector<ParamInfo> params;
+    bool isVarParam = false;
+
+    bool isConstantLike() const {
+        return kind == SymbolKind::Constant;
+    }
+
+    static SymbolEntry makeVariable(const std::string& name, DataType type, bool isArray = false);
+    static SymbolEntry makeConstant(const std::string& name, DataType type, const std::string& literalText = "");
+    static SymbolEntry makeProcedure(const std::string& name);
+    static SymbolEntry makeFunction(const std::string& name, DataType returnType);
+    static SymbolEntry makeParameter(const std::string& name, DataType type, bool isVarParam);
 };
 
 class SymbolTable {
@@ -22,13 +58,15 @@ public:
 
     void enterScope();
     void exitScope();
-    bool insert(const SymbolEntry& entry);
-    
-    // 全局查找，可根据scopeLevel来判断是否属于当前作用域
+    bool insert(SymbolEntry entry);
+
+    int currentScopeLevel() const;
+
     const SymbolEntry* lookup(const std::string& name) const;
+    const SymbolEntry* lookupCurrentScope(const std::string& name) const;
 
 private:
-    // 栈式哈基符号表
+    static std::string normalizeName(const std::string& name);
     std::vector<std::unordered_map<std::string, SymbolEntry>> scopes_;
 };
 
