@@ -10,7 +10,9 @@
 #include "error_handler.h"
 #include "parser_bridge.h"
 #include "semantic_annotator.h"
+#include "semantic_register.h"
 #include "symbol_table.h"
+#include "debug_utils.h"
 
 int yylex(void);
 
@@ -32,7 +34,8 @@ namespace
     void printUsage()
     {
         std::cout << "pascc - Pascal-S to C compiler (project skeleton)\n";
-        std::cout << "Usage: pascc -i <input.pas> [-o output.c] [--lex] [--dump-tokens] [--parse-only]\n";
+        std::cout << "Usage: pascc -i <input.pas> [-o output.c] [--lex-only] [--dump-tokens] [--parse-only]\n";
+        std::cout << "注意，--parse-only 也会执行词法分析\n";
     }
 
     bool parseArgs(int argc, char *argv[], std::string &inputPath, std::string &outputPath,
@@ -65,7 +68,7 @@ namespace
                 outputPath = argv[++i];
                 continue;
             }
-            if (arg == "--lex")
+            if (arg == "--lex-only")
             {
                 lexMode = true;
                 continue;
@@ -261,10 +264,14 @@ int main(int argc, char *argv[])
     if (parseOnly)
     {
         std::cout << "Parse succeeded.\n";
+        
+        printAstNode(root);
+        
         return 0;
     }
 
     SymbolTable symbolTable;
+    semantic_register::preregisterBuiltins(symbolTable);
     ErrorHandler errorHandler;
     SemanticAnnotator annotator(symbolTable, errorHandler);
     annotator.annotate(root);

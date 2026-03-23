@@ -38,9 +38,15 @@ private:
     void annotateLiteral(LiteralNode* node);
     void annotateArrayAccess(ArrayAccessNode* node);
     void annotateArrayType(ArrayTypeNode* node);
+    void annotateValueNode(ASTNode* node);
+    bool isValueContext() const;
 
     std::vector<ParamInfo> collectParams(ASTNode* paramList) const;
     void checkCallArguments(ProcCallNode* node, const SymbolEntry* callee);
+    std::vector<ArrayBound> collectArrayBounds(ASTNode* typeNode) const;
+    bool tryEvalIntConst(ASTNode* node, int& out) const;
+    int arrayAccessDepth(const ASTNode* node) const;
+    bool isFunctionResultAssignment(ASTNode* lhs) const;
 
     DataType inferType(ASTNode* node) const;
     DataType inferTypeFromTypeNode(ASTNode* typeNode) const;
@@ -55,6 +61,9 @@ private:
 
     SymbolTable& symbolTable_;
     ErrorHandler& errorHandler_;
+
+    std::vector<std::string> functionContextStack_;
+    int valueContextDepth_ = 0;
 };
 
 #endif  // PASCC_SEMANTIC_ANNOTATOR_H

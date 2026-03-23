@@ -17,6 +17,7 @@ set(CORE_SOURCES
     src/symbol_table.cpp
     src/error_handler.cpp
     src/codegen_utils.cpp
+    src/debug_utils.cpp
 )
 
 if(BISON_FOUND AND FLEX_FOUND)

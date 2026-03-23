@@ -2,7 +2,7 @@
 
 #include <cctype>
 #include <string>
-
+#include <iostream>
 namespace {
 
 std::string toLower(std::string text) {
@@ -34,6 +34,16 @@ void SemanticAnnotator::annotate(ASTNode* root) {
     annotateNode(root);
 }
 
+void SemanticAnnotator::annotateValueNode(ASTNode* node) {
+    ++valueContextDepth_;
+    annotateNode(node);
+    --valueContextDepth_;
+}
+
+bool SemanticAnnotator::isValueContext() const {
+    return valueContextDepth_ > 0;
+}
+
 void SemanticAnnotator::annotateNode(ASTNode* node) {
     if (node == nullptr) {
         return;
@@ -52,6 +62,20 @@ void SemanticAnnotator::annotateNode(ASTNode* node) {
 
     case NodeType::AssignStmt:   annotateAssignStmt(static_cast<AssignStmtNode*>(node)); break;
     case NodeType::IfStmt:       annotateIfStmt(static_cast<IfStmtNode*>(node)); break;
+    case NodeType::WhileStmt: {
+        auto* whileNode = static_cast<WhileStmtNode*>(node);
+        if (!whileNode->children.empty()) {
+            ASTNode* cond = whileNode->children[0];
+            annotateNode(cond);
+            if (!isBooleanType(inferType(cond))) {
+                reportTypeMismatch(cond, DataType::Boolean, inferType(cond), "while condition");
+            }
+        }
+        if (whileNode->children.size() > 1) {
+            annotateNode(whileNode->children[1]);
+        }
+        break;
+    }
     case NodeType::ForStmt:      annotateForStmt(static_cast<ForStmtNode*>(node)); break;
     case NodeType::CompoundStmt: annotateCompoundStmt(static_cast<CompoundStmtNode*>(node)); break;
     case NodeType::ProcCall:     annotateProcCall(static_cast<ProcCallNode*>(node)); break;
@@ -66,8 +90,31 @@ void SemanticAnnotator::annotateNode(ASTNode* node) {
 }
 
 void SemanticAnnotator::annotateProgram(ProgramNode* node) {
+    // for (ASTNode* child : node->children) {
+    //     annotateNode(child);
+    // }
+    // 请不要删这段注释
+    // 程序root只有两个孩子，一个是Block，一个是ListNode(Identifiers)（可选）
+    // 对于Block，直接annotateNode即可；对于ListNode(Identifiers)，需要把里面的标识符注册到符号表中
     for (ASTNode* child : node->children) {
-        annotateNode(child);
+        if (child->nodeType == NodeType::Block) {
+            annotateNode(child);
+        } else if (child->nodeType == NodeType::List) {
+            ListNode* idList = static_cast<ListNode*>(child);
+            if (idList->kind == ListKind::Identifiers) {
+                for (ASTNode* item : idList->children) {
+                    if (auto* id = dynamic_cast<IdentifierNode*>(item)) {
+                        SymbolEntry entry = SymbolEntry::makeVariable(id->identifier, DataType::Unknown);
+                        if (!symbolTable_.insert(entry)) {
+                            errorHandler_.report(id->pos.line, id->pos.col,
+                                "Redefinition of identifier: " + id->identifier);
+                            continue;
+                        }
+                        id->symbolEntry = symbolTable_.lookup(id->identifier);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -124,13 +171,15 @@ void SemanticAnnotator::annotateVarDecl(VarDeclNode* node) {
     ASTNode* idList = node->children[0];
     ASTNode* typeNode = node->children[1];
     DataType declaredType = inferTypeFromTypeNode(typeNode);
+    const std::vector<ArrayBound> arrayBounds = collectArrayBounds(typeNode);
 
     auto declareOne = [&](IdentifierNode* id) {
         SymbolEntry entry = SymbolEntry::makeVariable(
             id->identifier,
             declaredType,
-            typeNode->nodeType == NodeType::ArrayType
+            typeNode->nodeType == NodeType::ArrayType // isArray
         );
+        entry.arrayBounds = arrayBounds;
 
         if (!symbolTable_.insert(entry)) {
             errorHandler_.report(id->pos.line, id->pos.col,
@@ -225,11 +274,15 @@ void SemanticAnnotator::annotateFuncDecl(FuncDeclNode* node) {
         return;
     }
 
+    functionContextStack_.push_back(toLower(node->name));
+    // std::cout << "Entering function context: " << node->name << "\n";
     symbolTable_.enterScope();
     for (ASTNode* child : node->children) {
         annotateNode(child);
     }
     symbolTable_.exitScope();
+    functionContextStack_.pop_back();
+    // std::cout << "Exiting function context: " << node->name << "\n";
 }
 
 void SemanticAnnotator::annotateAssignStmt(AssignStmtNode* node) {
@@ -240,9 +293,11 @@ void SemanticAnnotator::annotateAssignStmt(AssignStmtNode* node) {
     ASTNode* lhs = node->children[0];
     ASTNode* rhs = node->children[1];
     annotateNode(lhs);
-    annotateNode(rhs);
+    annotateValueNode(rhs);
 
-    if (!isLValue(lhs)) {
+    const bool functionResultAssign = isFunctionResultAssignment(lhs);
+
+    if (!isLValue(lhs) && !functionResultAssign) {
         errorHandler_.report(lhs->pos.line, lhs->pos.col,
             "Left-hand side of assignment is not assignable");
     }
@@ -260,7 +315,7 @@ void SemanticAnnotator::annotateIfStmt(IfStmtNode* node) {
     }
 
     ASTNode* cond = node->children[0];
-    annotateNode(cond);
+    annotateValueNode(cond);
     if (!isBooleanType(inferType(cond))) {
         reportTypeMismatch(cond, DataType::Boolean, inferType(cond), "if condition");
     }
@@ -281,8 +336,8 @@ void SemanticAnnotator::annotateForStmt(ForStmtNode* node) {
     ASTNode* body = node->children[3];
 
     annotateNode(id);
-    annotateNode(init);
-    annotateNode(end);
+    annotateValueNode(init);
+    annotateValueNode(end);
 
     if (!isLValue(id) || !isIntegerType(inferType(id))) {
         errorHandler_.report(id->pos.line, id->pos.col,
@@ -304,7 +359,7 @@ void SemanticAnnotator::annotateCompoundStmt(CompoundStmtNode* node) {
 
 void SemanticAnnotator::annotateProcCall(ProcCallNode* node) {
     for (ASTNode* arg : node->children) {
-        annotateNode(arg);
+        annotateValueNode(arg);
     }
 
     const SymbolEntry* entry = symbolTable_.lookup(node->name);
@@ -318,6 +373,11 @@ void SemanticAnnotator::annotateProcCall(ProcCallNode* node) {
         errorHandler_.report(node->pos.line, node->pos.col,
             "Symbol is not callable: " + node->name);
         return;
+    }
+
+    if (entry->kind == SymbolKind::Procedure && isValueContext()) {
+        errorHandler_.report(node->pos.line, node->pos.col,
+            "Procedure call cannot be used as a value: " + node->name);
     }
 
     node->symbolEntry = entry;
@@ -338,8 +398,8 @@ void SemanticAnnotator::annotateBinaryExpr(BinaryExprNode* node) {
 
     ASTNode* lhs = node->children[0];
     ASTNode* rhs = node->children[1];
-    annotateNode(lhs);
-    annotateNode(rhs);
+    annotateValueNode(lhs);
+    annotateValueNode(rhs);
 
     DataType lt = inferType(lhs);
     DataType rt = inferType(rhs);
@@ -413,7 +473,7 @@ void SemanticAnnotator::annotateUnaryExpr(UnaryExprNode* node) {
     }
 
     ASTNode* expr = node->children[0];
-    annotateNode(expr);
+    annotateValueNode(expr);
 
     DataType et = inferType(expr);
     const std::string op = toLower(node->op);
@@ -493,10 +553,38 @@ void SemanticAnnotator::annotateArrayAccess(ArrayAccessNode* node) {
     ASTNode* base = node->children[0];
     ASTNode* index = node->children[1];
     annotateNode(base);
-    annotateNode(index);
+    annotateValueNode(index);
+
+    if (base->symbolEntry == nullptr && base->nodeType == NodeType::Identifier) {
+        node->dataType = DataType::Unknown;
+        return;
+    }
 
     if (!isIntegerType(inferType(index))) {
         reportTypeMismatch(index, DataType::Integer, inferType(index), "array index");
+    }
+
+    node->symbolEntry = base->symbolEntry;
+    const SymbolEntry* baseEntry = node->symbolEntry;
+    if (baseEntry != nullptr && !baseEntry->isArray) {
+        errorHandler_.report(node->pos.line, node->pos.col,
+            "Subscripted value is not an array");
+    } else if (baseEntry != nullptr && baseEntry->isArray) {
+        int idxConst = 0;
+        if (tryEvalIntConst(index, idxConst)) {
+            const int depth = arrayAccessDepth(node);
+            if (depth >= 0 && static_cast<std::size_t>(depth) < baseEntry->arrayBounds.size()) {
+                const ArrayBound& bound = baseEntry->arrayBounds[static_cast<std::size_t>(depth)];
+                if (idxConst < bound.lower || idxConst > bound.upper) {
+                    errorHandler_.report(
+                        index->pos.line,
+                        index->pos.col,
+                        "Array index out of bounds: " + std::to_string(idxConst) +
+                            " not in [" + std::to_string(bound.lower) + ", " + std::to_string(bound.upper) + "]"
+                    );
+                }
+            }
+        }
     }
 
     node->dataType = inferType(base);
@@ -566,6 +654,25 @@ void SemanticAnnotator::checkCallArguments(ProcCallNode* node, const SymbolEntry
         return;
     }
 
+    const std::string calleeName = toLower(callee->name);
+    if (calleeName == "read") {
+        for (std::size_t i = 0; i < node->children.size(); ++i) {
+            ASTNode* arg = node->children[i];
+            if (!isLValue(arg)) {
+                errorHandler_.report(
+                    arg->pos.line,
+                    arg->pos.col,
+                    "read expects assignable variable for parameter " + std::to_string(i + 1)
+                );
+            }
+        }
+        return;
+    }
+
+    if (calleeName == "write") {
+        return;
+    }
+
     const std::size_t expected = callee->params.size();
     const std::size_t actual = node->children.size();
     if (expected != actual) {
@@ -602,6 +709,126 @@ void SemanticAnnotator::checkCallArguments(ProcCallNode* node, const SymbolEntry
             );
         }
     }
+}
+
+std::vector<ArrayBound> SemanticAnnotator::collectArrayBounds(ASTNode* typeNode) const {
+    std::vector<ArrayBound> bounds;
+    ASTNode* cur = typeNode;
+    while (cur != nullptr && cur->nodeType == NodeType::ArrayType) {
+        if (cur->children.size() < 3) {
+            break;
+        }
+        int lower = 0;
+        int upper = -1;
+        if (tryEvalIntConst(cur->children[0], lower) && tryEvalIntConst(cur->children[1], upper)) {
+            bounds.push_back({lower, upper});
+        }
+        cur = cur->children[2];
+    }
+    return bounds;
+}
+
+bool SemanticAnnotator::tryEvalIntConst(ASTNode* node, int& out) const {
+    if (node == nullptr) {
+        return false;
+    }
+    if (auto* lit = dynamic_cast<LiteralNode*>(node)) {
+        const std::string s = toLower(lit->value);
+        bool allDigits = !s.empty();
+        for (char ch : s) {
+            if (!std::isdigit(static_cast<unsigned char>(ch))) {
+                allDigits = false;
+                break;
+            }
+        }
+        if (!allDigits) {
+            return false;
+        }
+        out = std::stoi(s);
+        return true;
+    }
+    if (auto* un = dynamic_cast<UnaryExprNode*>(node)) {
+        if (un->children.empty()) {
+            return false;
+        }
+        int v = 0;
+        if (!tryEvalIntConst(un->children[0], v)) {
+            return false;
+        }
+        const std::string op = toLower(un->op);
+        if (op == "-" || op == "uminus") {
+            out = -v;
+            return true;
+        }
+        if (op == "+") {
+            out = v;
+            return true;
+        }
+    }
+    if (auto* bin = dynamic_cast<BinaryExprNode*>(node)) {
+        if (bin->children.size() < 2) {
+            return false;
+        }
+        int lv = 0;
+        int rv = 0;
+        if (!tryEvalIntConst(bin->children[0], lv) || !tryEvalIntConst(bin->children[1], rv)) {
+            return false;
+        }
+        const std::string op = toLower(bin->op);
+        if (op == "+") {
+            out = lv + rv;
+            return true;
+        }
+        if (op == "-") {
+            out = lv - rv;
+            return true;
+        }
+        if (op == "*") {
+            out = lv * rv;
+            return true;
+        }
+        if (op == "div") {
+            if (rv == 0) {
+                return false;
+            }
+            out = lv / rv;
+            return true;
+        }
+        if (op == "mod") {
+            if (rv == 0) {
+                return false;
+            }
+            out = lv % rv;
+            return true;
+        }
+    }
+    return false;
+}
+
+int SemanticAnnotator::arrayAccessDepth(const ASTNode* node) const {
+    if (node == nullptr || node->nodeType != NodeType::ArrayAccess || node->children.empty()) {
+        return 0;
+    }
+    const ASTNode* base = node->children[0];
+    if (base != nullptr && base->nodeType == NodeType::ArrayAccess) {
+        return arrayAccessDepth(base) + 1;
+    }
+    return 0;
+}
+/* 
+    请不要删我的注释
+    在当前函数名栈内，也就是递归调用的函数中，检查左值是否与当前函数同名
+    如果是，则认为这是在为函数结果赋值
+*/
+bool SemanticAnnotator::isFunctionResultAssignment(ASTNode* lhs) const {
+    if (functionContextStack_.empty()) {
+        return false;
+    }
+    auto* id = dynamic_cast<IdentifierNode*>(lhs);
+    if (id == nullptr) {
+        return false;
+    }
+    return toLower(id->identifier) == functionContextStack_.back();
 }
 
 DataType SemanticAnnotator::inferType(ASTNode* node) const {
