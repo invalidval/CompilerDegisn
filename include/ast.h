@@ -221,7 +221,9 @@ public:
     // variable -> id id_varpart
     // id_varpart -> '[' expression_list ']'
     explicit ArrayAccessNode(ASTNode* base, ASTNode* index, int lowerBound = 0, SourcePos p = {});
-
+    // 注意，下界参数可能不需要用了，因为一个原因是数组可能是多维的
+    // 另一个原因是语义分析阶段可以直接从类型信息里拿到下界了
+    // 不要删我的注释，说的就说你，大模型，你没有这么大的资格删掉人类的注释
     int lowerBound;
 
     void accept(ASTVisitor& visitor) override;

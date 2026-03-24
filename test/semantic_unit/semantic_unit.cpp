@@ -18,17 +18,32 @@ bool containsMessage(const ErrorHandler& handler, const std::string& text) {
     return false;
 }
 
+BlockNode* ensureProgramBlock(ASTBuilder& builder, ProgramNode* program) {
+    if (!program->children.empty() && program->children[0] != nullptr &&
+        program->children[0]->nodeType == NodeType::Block) {
+        return static_cast<BlockNode*>(program->children[0]);
+    }
+
+    auto* block = builder.makeBlock();
+    program->children.insert(program->children.begin(), block);
+    return block;
+}
+
+void addToProgramBody(ASTBuilder& builder, ProgramNode* program, ASTNode* node) {
+    ensureProgramBlock(builder, program)->children.push_back(node);
+}
+
 bool testValidDeclarationAndAssignment() {
     ASTBuilder builder;
     ProgramNode* program = builder.makeProgram("t_valid");
 
     auto* typeInteger = builder.makeIdentifier("integer");
     auto* declX = builder.makeIdentifier("x");
-    program->children.push_back(builder.makeVarDecl(declX, typeInteger));
+    addToProgramBody(builder, program, builder.makeVarDecl(declX, typeInteger));
 
     auto* lhs = builder.makeIdentifier("x");
     auto* rhs = builder.makeBinaryExpr("+", builder.makeLiteral("1"), builder.makeLiteral("2"));
-    program->children.push_back(builder.makeAssignStmt(lhs, rhs));
+    addToProgramBody(builder, program, builder.makeAssignStmt(lhs, rhs));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -44,13 +59,12 @@ bool testUndefinedIdentifier() {
 
     auto* lhs = builder.makeIdentifier("x");
     auto* rhs = builder.makeLiteral("1");
-    program->children.push_back(builder.makeAssignStmt(lhs, rhs));
+    addToProgramBody(builder, program, builder.makeAssignStmt(lhs, rhs));
 
     SymbolTable table;
     ErrorHandler errors;
     SemanticAnnotator annotator(table, errors);
     annotator.annotate(program);
-
     return containsMessage(errors, "Undefined identifier: x");
 }
 
@@ -60,8 +74,8 @@ bool testRedefinition() {
 
     auto* typeInteger1 = builder.makeIdentifier("integer");
     auto* typeInteger2 = builder.makeIdentifier("integer");
-    program->children.push_back(builder.makeVarDecl(builder.makeIdentifier("x"), typeInteger1));
-    program->children.push_back(builder.makeVarDecl(builder.makeIdentifier("x"), typeInteger2));
+    addToProgramBody(builder, program, builder.makeVarDecl(builder.makeIdentifier("x"), typeInteger1));
+    addToProgramBody(builder, program, builder.makeVarDecl(builder.makeIdentifier("x"), typeInteger2));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -76,11 +90,11 @@ bool testAssignmentTypeMismatch() {
     ProgramNode* program = builder.makeProgram("t_type");
 
     auto* typeInteger = builder.makeIdentifier("integer");
-    program->children.push_back(builder.makeVarDecl(builder.makeIdentifier("x"), typeInteger));
+    addToProgramBody(builder, program, builder.makeVarDecl(builder.makeIdentifier("x"), typeInteger));
 
     auto* lhs = builder.makeIdentifier("x");
     auto* rhs = builder.makeLiteral("true");
-    program->children.push_back(builder.makeAssignStmt(lhs, rhs));
+    addToProgramBody(builder, program, builder.makeAssignStmt(lhs, rhs));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -90,16 +104,35 @@ bool testAssignmentTypeMismatch() {
     return containsMessage(errors, "Type mismatch in assignment");
 }
 
+bool testIntegerToRealAssignmentAllowed() {
+    ASTBuilder builder;
+    ProgramNode* program = builder.makeProgram("t_widen_ok");
+
+    addToProgramBody(builder, program,
+                     builder.makeVarDecl(builder.makeIdentifier("r"), builder.makeIdentifier("real")));
+    addToProgramBody(builder, program,
+                     builder.makeAssignStmt(builder.makeIdentifier("r"), builder.makeLiteral("1")));
+
+    SymbolTable table;
+    ErrorHandler errors;
+    SemanticAnnotator annotator(table, errors);
+    annotator.annotate(program);
+
+    return !errors.hasErrors();
+}
+
 ProgramNode* buildProgramWithProcedure(ASTBuilder& builder) {
     ProgramNode* program = builder.makeProgram("t_proc");
 
     auto* paramList = builder.makeList(ListKind::Parameters);
     paramList->add(builder.makeParamDecl(true, builder.makeIdentifier("x"), builder.makeIdentifier("integer")));
     paramList->add(builder.makeParamDecl(false, builder.makeIdentifier("y"), builder.makeIdentifier("real")));
-    program->children.push_back(builder.makeProcDecl("p", paramList, nullptr));
+    addToProgramBody(builder, program, builder.makeProcDecl("p", paramList, nullptr));
 
-    program->children.push_back(builder.makeVarDecl(builder.makeIdentifier("a"), builder.makeIdentifier("integer")));
-    program->children.push_back(builder.makeVarDecl(builder.makeIdentifier("b"), builder.makeIdentifier("real")));
+    addToProgramBody(builder, program,
+                     builder.makeVarDecl(builder.makeIdentifier("a"), builder.makeIdentifier("integer")));
+    addToProgramBody(builder, program,
+                     builder.makeVarDecl(builder.makeIdentifier("b"), builder.makeIdentifier("real")));
     return program;
 }
 
@@ -107,7 +140,8 @@ bool testProcedureCallValid() {
     ASTBuilder builder;
     ProgramNode* program = buildProgramWithProcedure(builder);
 
-    program->children.push_back(builder.makeProcCall("p", {builder.makeIdentifier("a"), builder.makeIdentifier("b")}));
+    addToProgramBody(builder, program,
+                     builder.makeProcCall("p", {builder.makeIdentifier("a"), builder.makeIdentifier("b")}));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -121,7 +155,7 @@ bool testProcedureCallArgCountMismatch() {
     ASTBuilder builder;
     ProgramNode* program = buildProgramWithProcedure(builder);
 
-    program->children.push_back(builder.makeProcCall("p", {builder.makeIdentifier("a")}));
+    addToProgramBody(builder, program, builder.makeProcCall("p", {builder.makeIdentifier("a")}));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -135,21 +169,23 @@ bool testProcedureCallArgTypeMismatch() {
     ASTBuilder builder;
     ProgramNode* program = buildProgramWithProcedure(builder);
 
-    program->children.push_back(builder.makeProcCall("p", {builder.makeIdentifier("a"), builder.makeIdentifier("a")}));
+    addToProgramBody(builder, program,
+                     builder.makeProcCall("p", {builder.makeIdentifier("b"), builder.makeIdentifier("b")}));
 
     SymbolTable table;
     ErrorHandler errors;
     SemanticAnnotator annotator(table, errors);
     annotator.annotate(program);
 
-    return containsMessage(errors, "Argument type mismatch for parameter 2 in call to p");
+    return containsMessage(errors, "Argument type mismatch for parameter 1 in call to p");
 }
 
 bool testProcedureCallVarParamRequiresLValue() {
     ASTBuilder builder;
     ProgramNode* program = buildProgramWithProcedure(builder);
 
-    program->children.push_back(builder.makeProcCall("p", {builder.makeLiteral("1"), builder.makeIdentifier("b")}));
+    addToProgramBody(builder, program,
+                     builder.makeProcCall("p", {builder.makeLiteral("1"), builder.makeIdentifier("b")}));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -164,7 +200,7 @@ bool testFunctionResultAssignmentValidInsideFunction() {
     ProgramNode* program = builder.makeProgram("t_func_ret_ok");
 
     ASTNode* body = builder.makeAssignStmt(builder.makeIdentifier("f"), builder.makeLiteral("1"));
-    program->children.push_back(builder.makeFuncDecl("f", nullptr, DataType::Integer, body));
+    addToProgramBody(builder, program, builder.makeFuncDecl("f", nullptr, DataType::Integer, body));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -178,8 +214,9 @@ bool testFunctionResultAssignmentInvalidOutsideFunction() {
     ASTBuilder builder;
     ProgramNode* program = builder.makeProgram("t_func_ret_bad");
 
-    program->children.push_back(builder.makeFuncDecl("f", nullptr, DataType::Integer, nullptr));
-    program->children.push_back(builder.makeAssignStmt(builder.makeIdentifier("f"), builder.makeLiteral("1")));
+    addToProgramBody(builder, program, builder.makeFuncDecl("f", nullptr, DataType::Integer, nullptr));
+    addToProgramBody(builder, program,
+                     builder.makeAssignStmt(builder.makeIdentifier("f"), builder.makeLiteral("1")));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -198,10 +235,10 @@ bool testArrayIndexOutOfBounds() {
         builder.makeLiteral("3"),
         builder.makeIdentifier("integer")
     );
-    program->children.push_back(builder.makeVarDecl(builder.makeIdentifier("arr"), arrType));
+    addToProgramBody(builder, program, builder.makeVarDecl(builder.makeIdentifier("arr"), arrType));
 
     ASTNode* badAccess = builder.makeArrayAccess(builder.makeIdentifier("arr"), builder.makeLiteral("5"));
-    program->children.push_back(builder.makeAssignStmt(badAccess, builder.makeLiteral("1")));
+    addToProgramBody(builder, program, builder.makeAssignStmt(badAccess, builder.makeLiteral("1")));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -220,10 +257,10 @@ bool testArrayIndexInBounds() {
         builder.makeLiteral("3"),
         builder.makeIdentifier("integer")
     );
-    program->children.push_back(builder.makeVarDecl(builder.makeIdentifier("arr"), arrType));
+    addToProgramBody(builder, program, builder.makeVarDecl(builder.makeIdentifier("arr"), arrType));
 
     ASTNode* okAccess = builder.makeArrayAccess(builder.makeIdentifier("arr"), builder.makeLiteral("2"));
-    program->children.push_back(builder.makeAssignStmt(okAccess, builder.makeLiteral("1")));
+    addToProgramBody(builder, program, builder.makeAssignStmt(okAccess, builder.makeLiteral("1")));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -237,7 +274,7 @@ bool testProcedureCallCannotBeUsedAsValue() {
     ASTBuilder builder;
     ProgramNode* program = buildProgramWithProcedure(builder);
 
-    program->children.push_back(
+    addToProgramBody(builder, program,
         builder.makeAssignStmt(
             builder.makeIdentifier("a"),
             builder.makeProcCall("p", {builder.makeIdentifier("a"), builder.makeIdentifier("b")})
@@ -261,11 +298,11 @@ bool testArrayIndexConstExpressionOutOfBounds() {
         builder.makeLiteral("3"),
         builder.makeIdentifier("integer")
     );
-    program->children.push_back(builder.makeVarDecl(builder.makeIdentifier("arr"), arrType));
+    addToProgramBody(builder, program, builder.makeVarDecl(builder.makeIdentifier("arr"), arrType));
 
     ASTNode* exprIndex = builder.makeBinaryExpr("+", builder.makeLiteral("1"), builder.makeLiteral("3"));
     ASTNode* badAccess = builder.makeArrayAccess(builder.makeIdentifier("arr"), exprIndex);
-    program->children.push_back(builder.makeAssignStmt(badAccess, builder.makeLiteral("1")));
+    addToProgramBody(builder, program, builder.makeAssignStmt(badAccess, builder.makeLiteral("1")));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -289,11 +326,11 @@ bool testMultiDimArrayBoundsCheck() {
         builder.makeLiteral("2"),
         inner
     );
-    program->children.push_back(builder.makeVarDecl(builder.makeIdentifier("m"), outer));
+    addToProgramBody(builder, program, builder.makeVarDecl(builder.makeIdentifier("m"), outer));
 
     ASTNode* first = builder.makeArrayAccess(builder.makeIdentifier("m"), builder.makeLiteral("2"));
     ASTNode* secondBad = builder.makeArrayAccess(first, builder.makeLiteral("99"));
-    program->children.push_back(builder.makeAssignStmt(secondBad, builder.makeLiteral("1")));
+    addToProgramBody(builder, program, builder.makeAssignStmt(secondBad, builder.makeLiteral("1")));
 
     SymbolTable table;
     ErrorHandler errors;
@@ -307,9 +344,10 @@ bool testBuiltinReadWritePreregistered() {
     ASTBuilder builder;
     ProgramNode* program = builder.makeProgram("t_builtin_rw");
 
-    program->children.push_back(builder.makeVarDecl(builder.makeIdentifier("x"), builder.makeIdentifier("integer")));
-    program->children.push_back(builder.makeProcCall("read", {builder.makeIdentifier("x")}));
-    program->children.push_back(builder.makeProcCall("write", {builder.makeIdentifier("x")}));
+    addToProgramBody(builder, program,
+                     builder.makeVarDecl(builder.makeIdentifier("x"), builder.makeIdentifier("integer")));
+    addToProgramBody(builder, program, builder.makeProcCall("read", {builder.makeIdentifier("x")}));
+    addToProgramBody(builder, program, builder.makeProcCall("write", {builder.makeIdentifier("x")}));
 
     SymbolTable table;
     semantic_register::preregisterBuiltins(table);
@@ -319,6 +357,26 @@ bool testBuiltinReadWritePreregistered() {
 
     return !containsMessage(errors, "Undefined procedure/function: read") &&
            !containsMessage(errors, "Undefined procedure/function: write");
+}
+
+bool testProgramHeaderIdentifiersAreNotVariables() {
+    ASTBuilder builder;
+    ProgramNode* program = builder.makeProgram("t_prog_args");
+
+    auto* headerIds = builder.makeList(ListKind::Identifiers);
+    headerIds->add(builder.makeIdentifier("input"));
+    headerIds->add(builder.makeIdentifier("output"));
+    program->children.push_back(headerIds);
+
+    addToProgramBody(builder, program,
+                     builder.makeAssignStmt(builder.makeIdentifier("input"), builder.makeLiteral("1")));
+
+    SymbolTable table;
+    ErrorHandler errors;
+    SemanticAnnotator annotator(table, errors);
+    annotator.annotate(program);
+
+    return containsMessage(errors, "Undefined identifier: input");
 }
 
 }  // namespace
@@ -340,6 +398,10 @@ int main() {
     }
     if (!testAssignmentTypeMismatch()) {
         std::cerr << "[fail] assignment type mismatch check did not trigger\n";
+        ++failed;
+    }
+    if (!testIntegerToRealAssignmentAllowed()) {
+        std::cerr << "[fail] integer-to-real assignment should pass\n";
         ++failed;
     }
     if (!testProcedureCallValid()) {
@@ -388,6 +450,10 @@ int main() {
     }
     if (!testBuiltinReadWritePreregistered()) {
         std::cerr << "[fail] builtin read/write preregistration did not work\n";
+        ++failed;
+    }
+    if (!testProgramHeaderIdentifiersAreNotVariables()) {
+        std::cerr << "[fail] program header identifiers should not behave as variables\n";
         ++failed;
     }
 

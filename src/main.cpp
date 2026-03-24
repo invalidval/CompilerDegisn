@@ -34,18 +34,22 @@ namespace
     void printUsage()
     {
         std::cout << "pascc - Pascal-S to C compiler (project skeleton)\n";
-        std::cout << "Usage: pascc -i <input.pas> [-o output.c] [--lex-only] [--dump-tokens] [--parse-only]\n";
-        std::cout << "注意，--parse-only 也会执行词法分析\n";
+        std::cout << "Usage: pascc -i <input.pas> [-o output.c] [--lex] [--dump-tokens] [--parse] [--semantic] [--dump-annotated-ast] \n";
+        std::cout << "运行会截止到参数所指步骤\n";
     }
 
     bool parseArgs(int argc, char *argv[], std::string &inputPath, std::string &outputPath,
-                   bool &lexMode, bool &dumpTokens, bool &parseOnly, bool &shouldExit, int &exitCode)
+                   bool &lexMode, bool &dumpTokens, bool &parseOnly, bool &semanticOnly,
+                   bool &dumpAnnotatedAst,
+                   bool &shouldExit, int &exitCode)
     {
         shouldExit = false;
         exitCode = 0;
         lexMode = false;
         dumpTokens = false;
         parseOnly = false;
+        semanticOnly = false;
+        dumpAnnotatedAst = false;
         outputPath = "out.c";
 
         for (int i = 1; i < argc; ++i)
@@ -68,7 +72,7 @@ namespace
                 outputPath = argv[++i];
                 continue;
             }
-            if (arg == "--lex-only")
+            if (arg == "--lex")
             {
                 lexMode = true;
                 continue;
@@ -79,9 +83,19 @@ namespace
                 dumpTokens = true;
                 continue;
             }
-            if (arg == "--parse-only")
+            if (arg == "--parse")
             {
                 parseOnly = true;
+                continue;
+            }
+            if (arg == "--semantic")
+            {
+                semanticOnly = true;
+                continue;
+            }
+            if (arg == "--dump-annotated-ast")
+            {
+                dumpAnnotatedAst = true;
                 continue;
             }
         }
@@ -196,9 +210,12 @@ int main(int argc, char *argv[])
     bool lexMode = false;
     bool dumpTokens = false;
     bool parseOnly = false;
+    bool semanticOnly = false;
+    bool dumpAnnotatedAst = false;
     bool shouldExit = false;
     int exitCode = 0;
-    if (!parseArgs(argc, argv, inputPath, outputPath, lexMode, dumpTokens, parseOnly, shouldExit, exitCode))
+    if (!parseArgs(argc, argv, inputPath, outputPath, lexMode, dumpTokens, parseOnly,
+                   semanticOnly, dumpAnnotatedAst, shouldExit, exitCode))
     {
         return 1;
     }
@@ -276,6 +293,12 @@ int main(int argc, char *argv[])
     SemanticAnnotator annotator(symbolTable, errorHandler);
     annotator.annotate(root);
 
+    if (dumpAnnotatedAst)
+    {
+        std::cout << "Annotated AST:\n";
+        printAnnotatedAstNode(root);
+    }
+
     if (errorHandler.hasErrors())
     {
         for (const auto &err : errorHandler.errors())
@@ -283,6 +306,12 @@ int main(int argc, char *argv[])
             std::cerr << "Error at " << err.line << ":" << err.column << " - " << err.message << "\n";
         }
         return 1;
+    }
+
+    if (semanticOnly)
+    {
+        std::cout << "Semantic analysis succeeded.\n";
+        return 0;
     }
 
     CodeGenerator generator;

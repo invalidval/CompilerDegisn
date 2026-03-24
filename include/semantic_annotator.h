@@ -28,6 +28,7 @@ private:
 
     void annotateAssignStmt(AssignStmtNode* node);
     void annotateIfStmt(IfStmtNode* node);
+    void annotateWhileStmt(WhileStmtNode* node);
     void annotateForStmt(ForStmtNode* node);
     void annotateCompoundStmt(CompoundStmtNode* node);
     void annotateProcCall(ProcCallNode* node);
