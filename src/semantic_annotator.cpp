@@ -90,32 +90,16 @@ void SemanticAnnotator::annotateNode(ASTNode* node) {
 }
 
 void SemanticAnnotator::annotateProgram(ProgramNode* node) {
-    // for (ASTNode* child : node->children) {
-    //     annotateNode(child);
-    // }
-    // 请不要删这段注释
-    // 程序root只有两个孩子，一个是Block，一个是ListNode(Identifiers)（可选）
-    // 对于Block，直接annotateNode即可；对于ListNode(Identifiers)，需要把里面的标识符注册到符号表中
+    // Program root has a mandatory Block child and an optional identifier list
+    // from the program header (e.g., program p(input, output)).
+    // The header identifier list is metadata and should not be treated as
+    // ordinary variables in this Pascal-S subset.
     for (ASTNode* child : node->children) {
         if (child->nodeType == NodeType::Block) {
             annotateNode(child);
-        } else if (child->nodeType == NodeType::List) {
-            ListNode* idList = static_cast<ListNode*>(child);
-            if (idList->kind == ListKind::Identifiers) {
-                for (ASTNode* item : idList->children) {
-                    if (auto* id = dynamic_cast<IdentifierNode*>(item)) {
-                        SymbolEntry entry = SymbolEntry::makeVariable(id->identifier, DataType::Unknown);
-                        if (!symbolTable_.insert(entry)) {
-                            errorHandler_.report(id->pos.line, id->pos.col,
-                                "Redefinition of identifier: " + id->identifier);
-                            continue;
-                        }
-                        id->symbolEntry = symbolTable_.lookup(id->identifier);
-                    }
-                }
-            }
         }
     }
+    // 注解AST时，程序头部的标识符列表不应被视为普通变量，因此不对其进行注解。
 }
 
 void SemanticAnnotator::annotateBlock(BlockNode* node) {

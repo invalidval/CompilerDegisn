@@ -8,7 +8,7 @@ mkdir -p build
 
 CXX="${CXX:-g++}"
 $CXX -std=c++17 -Wall -Wextra -Iinclude \
-  test/semantic_unit.cpp \
+  test/semantic_unit/semantic_unit.cpp \
   src/ast.cpp \
   src/semantic_annotator.cpp \
   src/symbol_table.cpp \

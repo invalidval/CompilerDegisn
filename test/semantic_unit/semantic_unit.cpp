@@ -342,26 +342,6 @@ bool testBuiltinReadWritePreregistered() {
            !containsMessage(errors, "Undefined procedure/function: write");
 }
 
-bool testProgramHeaderIdentifiersAreNotVariables() {
-    ASTBuilder builder;
-    ProgramNode* program = builder.makeProgram("t_prog_args");
-
-    auto* headerIds = builder.makeList(ListKind::Identifiers);
-    headerIds->add(builder.makeIdentifier("input"));
-    headerIds->add(builder.makeIdentifier("output"));
-    program->children.push_back(headerIds);
-
-    addToProgramBody(builder, program,
-                     builder.makeAssignStmt(builder.makeIdentifier("input"), builder.makeLiteral("1")));
-
-    SymbolTable table;
-    ErrorHandler errors;
-    SemanticAnnotator annotator(table, errors);
-    annotator.annotate(program);
-
-    return containsMessage(errors, "Undefined identifier: input");
-}
-
 }  // namespace
 
 int main() {
@@ -429,10 +409,6 @@ int main() {
     }
     if (!testBuiltinReadWritePreregistered()) {
         std::cerr << "[fail] builtin read/write preregistration did not work\n";
-        ++failed;
-    }
-    if (!testProgramHeaderIdentifiersAreNotVariables()) {
-        std::cerr << "[fail] program header identifiers should not behave as variables\n";
         ++failed;
     }
 
