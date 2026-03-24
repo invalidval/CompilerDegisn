@@ -34,12 +34,13 @@ namespace
     void printUsage()
     {
         std::cout << "pascc - Pascal-S to C compiler (project skeleton)\n";
-        std::cout << "Usage: pascc -i <input.pas> [-o output.c] [--lex] [--dump-tokens] [--parse] [--semantic] \n";
+        std::cout << "Usage: pascc -i <input.pas> [-o output.c] [--lex] [--dump-tokens] [--parse] [--semantic] [--dump-annotated-ast] \n";
         std::cout << "运行会截止到参数所指步骤\n";
     }
 
     bool parseArgs(int argc, char *argv[], std::string &inputPath, std::string &outputPath,
                    bool &lexMode, bool &dumpTokens, bool &parseOnly, bool &semanticOnly,
+                   bool &dumpAnnotatedAst,
                    bool &shouldExit, int &exitCode)
     {
         shouldExit = false;
@@ -48,6 +49,7 @@ namespace
         dumpTokens = false;
         parseOnly = false;
         semanticOnly = false;
+        dumpAnnotatedAst = false;
         outputPath = "out.c";
 
         for (int i = 1; i < argc; ++i)
@@ -89,6 +91,11 @@ namespace
             if (arg == "--semantic")
             {
                 semanticOnly = true;
+                continue;
+            }
+            if (arg == "--dump-annotated-ast")
+            {
+                dumpAnnotatedAst = true;
                 continue;
             }
         }
@@ -204,10 +211,11 @@ int main(int argc, char *argv[])
     bool dumpTokens = false;
     bool parseOnly = false;
     bool semanticOnly = false;
+    bool dumpAnnotatedAst = false;
     bool shouldExit = false;
     int exitCode = 0;
     if (!parseArgs(argc, argv, inputPath, outputPath, lexMode, dumpTokens, parseOnly,
-                   semanticOnly, shouldExit, exitCode))
+                   semanticOnly, dumpAnnotatedAst, shouldExit, exitCode))
     {
         return 1;
     }
@@ -284,6 +292,12 @@ int main(int argc, char *argv[])
     ErrorHandler errorHandler;
     SemanticAnnotator annotator(symbolTable, errorHandler);
     annotator.annotate(root);
+
+    if (dumpAnnotatedAst)
+    {
+        std::cout << "Annotated AST:\n";
+        printAnnotatedAstNode(root);
+    }
 
     if (errorHandler.hasErrors())
     {

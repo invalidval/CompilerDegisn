@@ -62,20 +62,7 @@ void SemanticAnnotator::annotateNode(ASTNode* node) {
 
     case NodeType::AssignStmt:   annotateAssignStmt(static_cast<AssignStmtNode*>(node)); break;
     case NodeType::IfStmt:       annotateIfStmt(static_cast<IfStmtNode*>(node)); break;
-    case NodeType::WhileStmt: {
-        auto* whileNode = static_cast<WhileStmtNode*>(node);
-        if (!whileNode->children.empty()) {
-            ASTNode* cond = whileNode->children[0];
-            annotateNode(cond);
-            if (!isBooleanType(inferType(cond))) {
-                reportTypeMismatch(cond, DataType::Boolean, inferType(cond), "while condition");
-            }
-        }
-        if (whileNode->children.size() > 1) {
-            annotateNode(whileNode->children[1]);
-        }
-        break;
-    }
+    case NodeType::WhileStmt:    annotateWhileStmt(static_cast<WhileStmtNode*>(node)); break;
     case NodeType::ForStmt:      annotateForStmt(static_cast<ForStmtNode*>(node)); break;
     case NodeType::CompoundStmt: annotateCompoundStmt(static_cast<CompoundStmtNode*>(node)); break;
     case NodeType::ProcCall:     annotateProcCall(static_cast<ProcCallNode*>(node)); break;
@@ -306,6 +293,22 @@ void SemanticAnnotator::annotateIfStmt(IfStmtNode* node) {
 
     for (std::size_t i = 1; i < node->children.size(); ++i) {
         annotateNode(node->children[i]);
+    }
+}
+
+void SemanticAnnotator::annotateWhileStmt(WhileStmtNode* node) {
+    if (node->children.empty()) {
+        return;
+    }
+
+    ASTNode* cond = node->children[0];
+    annotateValueNode(cond);
+    if (!isBooleanType(inferType(cond))) {
+        reportTypeMismatch(cond, DataType::Boolean, inferType(cond), "while condition");
+    }
+
+    if (node->children.size() > 1) {
+        annotateNode(node->children[1]);
     }
 }
 
@@ -857,6 +860,10 @@ DataType SemanticAnnotator::inferTypeFromTypeNode(ASTNode* typeNode) const {
 bool SemanticAnnotator::isAssignable(DataType lhs, DataType rhs) const {
     if (lhs == DataType::Unknown || rhs == DataType::Unknown) {
         return false;
+    }
+    // Allow widening conversion in assignments/calls: integer -> real.
+    if (lhs == DataType::Real && rhs == DataType::Integer) {
+        return true;
     }
     return lhs == rhs;
 }

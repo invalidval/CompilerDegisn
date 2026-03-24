@@ -1,5 +1,5 @@
 program example(input, output);
-const t = `10086`; a = 1e6; {必须先声明const再声明var}
+const t = "haha"; a = 1e6; {必须先声明const再声明var}
 var x, y: integer; z : array [1..10, 2..8] of integer; u : integer;
 function gcd(a, b: integer): integer;
 begin

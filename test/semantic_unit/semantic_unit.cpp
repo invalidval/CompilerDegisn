@@ -104,6 +104,23 @@ bool testAssignmentTypeMismatch() {
     return containsMessage(errors, "Type mismatch in assignment");
 }
 
+bool testIntegerToRealAssignmentAllowed() {
+    ASTBuilder builder;
+    ProgramNode* program = builder.makeProgram("t_widen_ok");
+
+    addToProgramBody(builder, program,
+                     builder.makeVarDecl(builder.makeIdentifier("r"), builder.makeIdentifier("real")));
+    addToProgramBody(builder, program,
+                     builder.makeAssignStmt(builder.makeIdentifier("r"), builder.makeLiteral("1")));
+
+    SymbolTable table;
+    ErrorHandler errors;
+    SemanticAnnotator annotator(table, errors);
+    annotator.annotate(program);
+
+    return !errors.hasErrors();
+}
+
 ProgramNode* buildProgramWithProcedure(ASTBuilder& builder) {
     ProgramNode* program = builder.makeProgram("t_proc");
 
@@ -153,14 +170,14 @@ bool testProcedureCallArgTypeMismatch() {
     ProgramNode* program = buildProgramWithProcedure(builder);
 
     addToProgramBody(builder, program,
-                     builder.makeProcCall("p", {builder.makeIdentifier("a"), builder.makeIdentifier("a")}));
+                     builder.makeProcCall("p", {builder.makeIdentifier("b"), builder.makeIdentifier("b")}));
 
     SymbolTable table;
     ErrorHandler errors;
     SemanticAnnotator annotator(table, errors);
     annotator.annotate(program);
 
-    return containsMessage(errors, "Argument type mismatch for parameter 2 in call to p");
+    return containsMessage(errors, "Argument type mismatch for parameter 1 in call to p");
 }
 
 bool testProcedureCallVarParamRequiresLValue() {
@@ -342,6 +359,26 @@ bool testBuiltinReadWritePreregistered() {
            !containsMessage(errors, "Undefined procedure/function: write");
 }
 
+bool testProgramHeaderIdentifiersAreNotVariables() {
+    ASTBuilder builder;
+    ProgramNode* program = builder.makeProgram("t_prog_args");
+
+    auto* headerIds = builder.makeList(ListKind::Identifiers);
+    headerIds->add(builder.makeIdentifier("input"));
+    headerIds->add(builder.makeIdentifier("output"));
+    program->children.push_back(headerIds);
+
+    addToProgramBody(builder, program,
+                     builder.makeAssignStmt(builder.makeIdentifier("input"), builder.makeLiteral("1")));
+
+    SymbolTable table;
+    ErrorHandler errors;
+    SemanticAnnotator annotator(table, errors);
+    annotator.annotate(program);
+
+    return containsMessage(errors, "Undefined identifier: input");
+}
+
 }  // namespace
 
 int main() {
@@ -361,6 +398,10 @@ int main() {
     }
     if (!testAssignmentTypeMismatch()) {
         std::cerr << "[fail] assignment type mismatch check did not trigger\n";
+        ++failed;
+    }
+    if (!testIntegerToRealAssignmentAllowed()) {
+        std::cerr << "[fail] integer-to-real assignment should pass\n";
         ++failed;
     }
     if (!testProcedureCallValid()) {
@@ -409,6 +450,10 @@ int main() {
     }
     if (!testBuiltinReadWritePreregistered()) {
         std::cerr << "[fail] builtin read/write preregistration did not work\n";
+        ++failed;
+    }
+    if (!testProgramHeaderIdentifiersAreNotVariables()) {
+        std::cerr << "[fail] program header identifiers should not behave as variables\n";
         ++failed;
     }
 
