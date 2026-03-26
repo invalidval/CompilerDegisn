@@ -28,7 +28,11 @@ std::string dataTypeToString(DataType t) {
 }  // namespace
 
 SemanticAnnotator::SemanticAnnotator(SymbolTable& symbolTable, ErrorHandler& errorHandler)
-    : symbolTable_(symbolTable), errorHandler_(errorHandler) {}
+    : symbolTable_(symbolTable), errorHandler_(errorHandler) {
+    // 插入 Pascal 标准布尔常量 true/false
+    symbolTable_.insert(SymbolEntry::makeConstant("true", DataType::Boolean, "true"));
+    symbolTable_.insert(SymbolEntry::makeConstant("false", DataType::Boolean, "false"));
+}
 
 void SemanticAnnotator::annotate(ASTNode* root) {
     annotateNode(root);

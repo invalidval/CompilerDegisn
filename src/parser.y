@@ -113,7 +113,7 @@ ASTNode* buildArrayAccessFromIndices(ASTNode* base, ASTNode* indicesNode, Source
 }
 
 /* Keywords */
-%token PROGRAM CONST VAR INTEGER REAL BOOLEAN CHAR ARRAY OF FUNCTION PROCEDURE
+%token PROGRAM CONST VAR INTEGER REAL BOOLEAN CHAR ARRAY OF FUNCTION PROCEDURE TRUE FALSE
 %token KW_BEGIN KW_END IF THEN ELSE WHILE DO FOR TO DOWNTO READ WRITE NOT AND OR DIV MOD
 
 /* Literals */
@@ -251,6 +251,14 @@ const_value:
                     auto* lit = g_astBuilder.makeLiteral(std::string($2), currentPos());
                     $$ = static_cast<void*>(g_astBuilder.makeUnaryExpr("-", lit, currentPos()));
                     std::free($2);
+            }
+        | TRUE
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeLiteral("true", currentPos()));
+            }
+        | FALSE
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeLiteral("false", currentPos()));
             }
         ;
 
@@ -690,6 +698,14 @@ factor:
             {
                     $$ = static_cast<void*>(g_astBuilder.makeLiteral(std::string($1), currentPos()));
                     std::free($1);
+            }
+        | TRUE
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeLiteral("true", currentPos()));
+            }
+        | FALSE
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeLiteral("false", currentPos()));
             }
         | variable
             {
