@@ -1,22 +1,23 @@
 #include "code_generator.h"
+#include "codegen_utils.h"
+#include "symbol_table.h" // 新增：引入符号表类型定义
 
 #include <sstream>
 
-#include "codegen_utils.h"
-
 std::string CodeGenerator::generate(ProgramNode* root) {
-    body_.clear();
-    currentExpr_.clear();
-
+    reset();
     if (root != nullptr) {
         root->accept(*this);
     }
-
     if (body_.empty()) {
         body_ = "    /* TODO: emit statements from AST */\n";
     }
-
     return CodegenUtils::wrapAsCProgram(body_);
+}
+
+void CodeGenerator::reset() {
+    body_.clear();
+    currentExpr_.clear();
 }
 
 void CodeGenerator::visit(ProgramNode* node) {
@@ -45,19 +46,41 @@ void CodeGenerator::visit(BlockNode* node) {
     currentExpr_ = oss.str();
 }
 
-void CodeGenerator::visit(VarDeclNode* /*node*/) {
+void CodeGenerator::visit(VarDeclNode* node) {
+    // 生成变量声明代码
+    // 示例：int a, b;
+    std::string decl = CodegenUtils::emitVarDecl(node);
+    if (!decl.empty()) {
+        body_ += "    " + decl + "\n";
+    }
     currentExpr_.clear();
 }
 
-void CodeGenerator::visit(ConstDeclNode* /*node*/) {
+void CodeGenerator::visit(ConstDeclNode* node) {
+    // 生成常量声明代码
+    // 示例：const int N = 10;
+    std::string decl = CodegenUtils::emitConstDecl(node);
+    if (!decl.empty()) {
+        body_ += "    " + decl + "\n";
+    }
     currentExpr_.clear();
 }
 
-void CodeGenerator::visit(ProcDeclNode* /*node*/) {
+void CodeGenerator::visit(ProcDeclNode* node) {
+    // 生成过程声明代码
+    std::string procCode = CodegenUtils::emitProcDecl(node, *this);
+    if (!procCode.empty()) {
+        body_ += procCode + "\n";
+    }
     currentExpr_.clear();
 }
 
-void CodeGenerator::visit(FuncDeclNode* /*node*/) {
+void CodeGenerator::visit(FuncDeclNode* node) {
+    // 生成函数声明代码
+    std::string funcCode = CodegenUtils::emitFuncDecl(node, *this);
+    if (!funcCode.empty()) {
+        body_ += funcCode + "\n";
+    }
     currentExpr_.clear();
 }
 
@@ -85,8 +108,19 @@ void CodeGenerator::visit(UnaryExprNode* node) {
 }
 
 void CodeGenerator::visit(AssignStmtNode* node) {
-    std::string lhs = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
-    std::string rhs = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
+    // 判断是否为函数返回值赋值
+    IdentifierNode* idNode = dynamic_cast<IdentifierNode*>(node->children[0]);
+    if (idNode && idNode->symbolEntry) {
+        // 正确判断：符号种类为函数
+        if (idNode->symbolEntry->kind == SymbolKind::Function) {
+            std::string rhs = emitNode(node->children[1]);
+            currentExpr_ = "_retval = " + rhs + ";";
+            return;
+        }
+    }
+    // 普通赋值
+    std::string lhs = emitNode(node->children[0]);
+    std::string rhs = emitNode(node->children[1]);
     currentExpr_ = lhs + " = " + rhs + ";";
 }
 
@@ -205,6 +239,18 @@ void CodeGenerator::visit(ListNode* node) {
 }
 
 void CodeGenerator::visit(ProcCallNode* node) {
+    // 特殊处理 read/write
+    if (node->name == "read") {
+        std::string code = CodegenUtils::emitReadStmt(node);
+        currentExpr_ = code;
+        return;
+    }
+    if (node->name == "write") {
+        std::string code = CodegenUtils::emitWriteStmt(node);
+        currentExpr_ = code;
+        return;
+    }
+    // 普通过程调用
     std::ostringstream oss;
     oss << node->name << "(";
 
