@@ -50,7 +50,7 @@ namespace
         parseOnly = false;
         semanticOnly = false;
         dumpAnnotatedAst = false;
-        outputPath = "out.c";
+        outputPath.clear();
 
         for (int i = 1; i < argc; ++i)
         {
@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
     bool dumpAnnotatedAst = false;
     bool shouldExit = false;
     int exitCode = 0;
+
     if (!parseArgs(argc, argv, inputPath, outputPath, lexMode, dumpTokens, parseOnly,
                    semanticOnly, dumpAnnotatedAst, shouldExit, exitCode))
     {
@@ -222,6 +223,13 @@ int main(int argc, char *argv[])
     if (shouldExit)
     {
         return exitCode;
+    }
+
+    // 若未指定 -o，自动生成与输入文件同名、同目录，仅扩展名改为.c
+    if (outputPath.empty() && !inputPath.empty()) {
+        size_t lastDot = inputPath.find_last_of('.');
+        std::string base = (lastDot == std::string::npos) ? inputPath : inputPath.substr(0, lastDot);
+        outputPath = base + ".c";
     }
 
     FILE *input = std::fopen(inputPath.c_str(), "r");

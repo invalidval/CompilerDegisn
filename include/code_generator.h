@@ -4,11 +4,16 @@
 #include <string>
 
 #include "ast.h"
+#include "symbol_table.h" // 需要访问符号表信息
+#include "codegen_utils.h" // 代码生成辅助工具
 
+// 代码生成器：基于Visitor模式遍历AST，生成等价C代码
 class CodeGenerator : public ASTVisitor {
 public:
+    // 入口：生成C代码字符串
     std::string generate(ProgramNode* root);
 
+    // Visitor接口：每种AST节点类型
     void visit(ProgramNode* node) override;
     void visit(BlockNode* node) override;
     void visit(VarDeclNode* node) override;
@@ -30,11 +35,21 @@ public:
     void visit(ListNode* node) override;
     void visit(ProcCallNode* node) override;
 
-private:
+    // 可选：重置生成器状态
+    void reset();
+
+    const std::string& getCurrentExpr() const { return currentExpr_; } // 添加访问器方法
+    // 递归生成表达式代码（对外公开）
     std::string emitNode(ASTNode* node);
 
-    std::string currentExpr_;
-    std::string body_;
+protected:
+    // 当前表达式/语句生成结果
+    std::string currentExpr_; // 修改为 protected 以允许访问
+    // 代码分区缓冲
+    std::string globalDecls_;
+    std::string prototypes_;
+    std::string definitions_;
+    std::string mainBody_;
 };
 
 #endif  // PASCC_CODE_GENERATOR_H

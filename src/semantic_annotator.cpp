@@ -28,7 +28,11 @@ std::string dataTypeToString(DataType t) {
 }  // namespace
 
 SemanticAnnotator::SemanticAnnotator(SymbolTable& symbolTable, ErrorHandler& errorHandler)
-    : symbolTable_(symbolTable), errorHandler_(errorHandler) {}
+    : symbolTable_(symbolTable), errorHandler_(errorHandler) {
+    // 插入 Pascal 标准布尔常量 true/false
+    symbolTable_.insert(SymbolEntry::makeConstant("true", DataType::Boolean, "true"));
+    symbolTable_.insert(SymbolEntry::makeConstant("false", DataType::Boolean, "false"));
+}
 
 void SemanticAnnotator::annotate(ASTNode* root) {
     annotateNode(root);
@@ -102,30 +106,37 @@ void SemanticAnnotator::annotateList(ListNode* node) {
 }
 
 void SemanticAnnotator::annotateConstDecl(ConstDeclNode* node) {
-    if (node->children.size() < 2) {
-        return;
-    }
+    if (node->children.size() < 2) return;
 
     ASTNode* idNode = node->children[0];
     ASTNode* valueNode = node->children[1];
-    annotateNode(valueNode);
+    annotateNode(valueNode); // 递归注解所有常量表达式
 
     IdentifierNode* id = dynamic_cast<IdentifierNode*>(idNode);
-    if (id == nullptr) {
-        errorHandler_.report(node->pos.line, node->pos.col,
-            "Invalid const declaration: identifier expected");
+    if (!id) {
+        errorHandler_.report(node->pos.line, node->pos.col, "Invalid const declaration: identifier expected");
         return;
     }
 
-    SymbolEntry entry = SymbolEntry::makeConstant(id->identifier, inferType(valueNode));
+    // 递归推断类型，支持Literal/UnaryExpr/其他表达式
+    DataType dtype = inferType(valueNode);
+    SymbolEntry entry = SymbolEntry::makeConstant(id->identifier, dtype);
+
+    // 记录常量字面量文本（如有）
     if (auto* literal = dynamic_cast<LiteralNode*>(valueNode)) {
         entry.hasConstLiteral = true;
         entry.constLiteralText = literal->value;
+    } else if (auto* unary = dynamic_cast<UnaryExprNode*>(valueNode)) {
+        // 递归查找字面量
+        ASTNode* sub = unary->children.empty() ? nullptr : unary->children[0];
+        if (auto* lit = dynamic_cast<LiteralNode*>(sub)) {
+            entry.hasConstLiteral = true;
+            entry.constLiteralText = unary->op + lit->value;
+        }
     }
 
     if (!symbolTable_.insert(entry)) {
-        errorHandler_.report(id->pos.line, id->pos.col,
-            "Redefinition of identifier: " + id->identifier);
+        errorHandler_.report(id->pos.line, id->pos.col, "Redefinition of identifier: " + id->identifier);
         return;
     }
 
