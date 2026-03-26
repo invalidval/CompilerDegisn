@@ -14,7 +14,12 @@ class CodeGenerator; // 前置声明
 
 class CodegenUtils {
 public:
-    static std::string wrapAsCProgram(const std::string& body);
+    // Pascal-S类型到C类型映射
+    static std::string mapType(DataType t);
+    static std::string wrapAsCProgram(const std::string& globals,
+                                      const std::string& prototypes,
+                                      const std::string& definitions,
+                                      const std::string& mainBody);
 
     // 变量声明
     static std::string emitVarDecl(VarDeclNode* node);
@@ -22,8 +27,12 @@ public:
     static std::string emitConstDecl(ConstDeclNode* node);
     // 过程声明
     static std::string emitProcDecl(ProcDeclNode* node, CodeGenerator& cg);
+    // 过程原型声明
+    static std::string emitProcPrototype(ProcDeclNode* node);
     // 函数声明
     static std::string emitFuncDecl(FuncDeclNode* node, CodeGenerator& cg);
+    // 函数原型声明
+    static std::string emitFuncPrototype(FuncDeclNode* node);
     // read语句
     static std::string emitReadStmt(ProcCallNode* node);
     // write语句

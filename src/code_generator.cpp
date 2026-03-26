@@ -6,30 +6,78 @@
 
 std::string CodeGenerator::generate(ProgramNode* root) {
     reset();
-    if (root != nullptr) {
-        root->accept(*this);
+    if (!root) return "";
+    // 递归遍历 AST，分区收集
+    // 约定：
+    // BlockNode: children = [consts, vars, subprograms, compound]
+    // subprograms: ListNode，每个元素为 ProcDeclNode/FuncDeclNode
+    // compound: CompoundStmtNode
+    BlockNode* block = nullptr;
+    for (ASTNode* child : root->children) {
+        block = dynamic_cast<BlockNode*>(child);
+        if (block) break;
     }
-    if (body_.empty()) {
-        body_ = "    /* TODO: emit statements from AST */\n";
+    if (!block) return "/* Invalid AST: no program body */\n";
+
+    // 1. 全局常量/变量声明
+    if (block->children.size() > 0) {
+        ListNode* consts = dynamic_cast<ListNode*>(block->children[0]);
+        if (consts) {
+            for (ASTNode* decl : consts->children) {
+                ConstDeclNode* cdecl = dynamic_cast<ConstDeclNode*>(decl);
+                if (cdecl) globalDecls_ += CodegenUtils::emitConstDecl(cdecl) + "\n";
+            }
+        }
     }
-    return CodegenUtils::wrapAsCProgram(body_);
+    if (block->children.size() > 1) {
+        ListNode* vars = dynamic_cast<ListNode*>(block->children[1]);
+        if (vars) {
+            for (ASTNode* decl : vars->children) {
+                VarDeclNode* vdecl = dynamic_cast<VarDeclNode*>(decl);
+                if (vdecl) globalDecls_ += CodegenUtils::emitVarDecl(vdecl) + "\n";
+            }
+        }
+    }
+
+    // 2. 子程序原型和定义
+    if (block->children.size() > 2) {
+        ListNode* subs = dynamic_cast<ListNode*>(block->children[2]);
+        if (subs) {
+            for (ASTNode* sub : subs->children) {
+                if (auto* proc = dynamic_cast<ProcDeclNode*>(sub)) {
+                    prototypes_ += CodegenUtils::emitProcPrototype(proc) + "\n";
+                    definitions_ += CodegenUtils::emitProcDecl(proc, *this) + "\n";
+                } else if (auto* func = dynamic_cast<FuncDeclNode*>(sub)) {
+                    prototypes_ += CodegenUtils::emitFuncPrototype(func) + "\n";
+                    definitions_ += CodegenUtils::emitFuncDecl(func, *this) + "\n";
+                }
+            }
+        }
+    }
+
+    // 3. 主程序体
+    if (block->children.size() > 3) {
+        CompoundStmtNode* mainStmt = dynamic_cast<CompoundStmtNode*>(block->children[3]);
+        if (mainStmt) {
+            visit(mainStmt);
+            mainBody_ = currentExpr_;
+        }
+    }
+
+    // 4. 组装
+    return CodegenUtils::wrapAsCProgram(globalDecls_, prototypes_, definitions_, mainBody_);
 }
 
 void CodeGenerator::reset() {
-    body_.clear();
+    globalDecls_.clear();
+    prototypes_.clear();
+    definitions_.clear();
+    mainBody_.clear();
     currentExpr_.clear();
 }
 
 void CodeGenerator::visit(ProgramNode* node) {
-    for (ASTNode* child : node->children) {
-        std::string line = emitNode(child);
-        if (!line.empty()) {
-            body_ += "    " + line;
-            if (line.back() != '\n') {
-                body_ += "\n";
-            }
-        }
-    }
+    // 不做任何事，主流程在 generate 里
 }
 
 void CodeGenerator::visit(BlockNode* node) {
@@ -47,40 +95,22 @@ void CodeGenerator::visit(BlockNode* node) {
 }
 
 void CodeGenerator::visit(VarDeclNode* node) {
-    // 生成变量声明代码
-    // 示例：int a, b;
-    std::string decl = CodegenUtils::emitVarDecl(node);
-    if (!decl.empty()) {
-        body_ += "    " + decl + "\n";
-    }
+    // 变量声明只在 generate 里处理，这里不输出
     currentExpr_.clear();
 }
 
 void CodeGenerator::visit(ConstDeclNode* node) {
-    // 生成常量声明代码
-    // 示例：const int N = 10;
-    std::string decl = CodegenUtils::emitConstDecl(node);
-    if (!decl.empty()) {
-        body_ += "    " + decl + "\n";
-    }
+    // 常量声明只在 generate 里处理，这里不输出
     currentExpr_.clear();
 }
 
 void CodeGenerator::visit(ProcDeclNode* node) {
-    // 生成过程声明代码
-    std::string procCode = CodegenUtils::emitProcDecl(node, *this);
-    if (!procCode.empty()) {
-        body_ += procCode + "\n";
-    }
+    // 过程定义只在 generate 里处理，这里不输出
     currentExpr_.clear();
 }
 
 void CodeGenerator::visit(FuncDeclNode* node) {
-    // 生成函数声明代码
-    std::string funcCode = CodegenUtils::emitFuncDecl(node, *this);
-    if (!funcCode.empty()) {
-        body_ += funcCode + "\n";
-    }
+    // 函数定义只在 generate 里处理，这里不输出
     currentExpr_.clear();
 }
 
@@ -95,7 +125,9 @@ void CodeGenerator::visit(LiteralNode* node) {
 void CodeGenerator::visit(BinaryExprNode* node) {
     std::string lhs = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
     std::string rhs = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
-    currentExpr_ = "(" + lhs + " " + node->op + " " + rhs + ")";
+    std::string op = node->op;
+    if (op == "mod") op = "%";
+    currentExpr_ = "(" + lhs + " " + op + " " + rhs + ")";
 }
 
 void CodeGenerator::visit(UnaryExprNode* node) {

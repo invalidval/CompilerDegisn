@@ -39,13 +39,17 @@ public:
     void reset();
 
     const std::string& getCurrentExpr() const { return currentExpr_; } // 添加访问器方法
+    // 递归生成表达式代码（对外公开）
+    std::string emitNode(ASTNode* node);
 
 protected:
     // 当前表达式/语句生成结果
     std::string currentExpr_; // 修改为 protected 以允许访问
-    // 主体代码缓冲
-    std::string body_;
-    std::string emitNode(ASTNode* node); // 声明 emitNode 方法
+    // 代码分区缓冲
+    std::string globalDecls_;
+    std::string prototypes_;
+    std::string definitions_;
+    std::string mainBody_;
 };
 
 #endif  // PASCC_CODE_GENERATOR_H
