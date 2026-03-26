@@ -116,7 +116,7 @@ std::string CodegenUtils::emitProcDecl(ProcDeclNode* node, CodeGenerator& cg) {
     BlockNode* body = dynamic_cast<BlockNode*>(node->children[1]);
     if (body) {
         cg.visit(body);
-        oss << cg.currentExpr_;
+        oss << cg.getCurrentExpr(); // 使用访问器方法获取 currentExpr_ 的值
     }
     oss << "\n}\n";
     return oss.str();
@@ -154,7 +154,7 @@ std::string CodegenUtils::emitFuncDecl(FuncDeclNode* node, CodeGenerator& cg) {
     BlockNode* body = dynamic_cast<BlockNode*>(node->children[1]);
     if (body) {
         cg.visit(body);
-        oss << cg.currentExpr_;
+        oss << cg.getCurrentExpr(); // 使用访问器方法获取 currentExpr_ 的值
     }
     oss << "\n    return _retval;\n";
     oss << "}\n";
@@ -192,7 +192,7 @@ std::string CodegenUtils::emitWriteStmt(ProcCallNode* node) {
             t = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
         }
         oss << getFormat(t);
-        args.push_back(arg->toString ? arg->toString() : "expr");
+        args.push_back(arg->toString());
     }
     oss << "\"";
     for (const auto& a : args) oss << ", " << a;

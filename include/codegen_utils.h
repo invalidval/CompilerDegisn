@@ -2,6 +2,8 @@
 #define PASCC_CODEGEN_UTILS_H
 
 #include <string>
+#include "code_generator.h" // 确保包含 CodeGenerator 的完整定义
+
 class VarDeclNode;
 class ConstDeclNode;
 class ProcDeclNode;

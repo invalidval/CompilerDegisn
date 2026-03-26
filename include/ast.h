@@ -67,6 +67,9 @@ public:
     const SymbolEntry* symbolEntry = nullptr;
 
     virtual void accept(ASTVisitor& visitor) = 0;
+    virtual std::string toString() const {
+        return "ASTNode"; // 默认实现返回节点类型
+    }
 };
 
 class ProgramNode : public ASTNode {
@@ -320,4 +323,3 @@ private:
 };
 
 #endif  // PASCC_AST_H
- 

@@ -276,6 +276,6 @@ std::string CodeGenerator::emitNode(ASTNode* node) {
         return "";
     }
 
-    node->accept(*this);
-    return currentExpr_;
+    node->accept(*this); // 调用对应节点的 visit 方法
+    return currentExpr_; // 返回生成的代码
 }

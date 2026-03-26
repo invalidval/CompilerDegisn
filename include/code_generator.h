@@ -38,14 +38,14 @@ public:
     // 可选：重置生成器状态
     void reset();
 
-private:
-    // 递归生成节点对应C代码
-    std::string emitNode(ASTNode* node);
+    const std::string& getCurrentExpr() const { return currentExpr_; } // 添加访问器方法
 
+protected:
     // 当前表达式/语句生成结果
-    std::string currentExpr_;
+    std::string currentExpr_; // 修改为 protected 以允许访问
     // 主体代码缓冲
     std::string body_;
+    std::string emitNode(ASTNode* node); // 声明 emitNode 方法
 };
 
 #endif  // PASCC_CODE_GENERATOR_H
