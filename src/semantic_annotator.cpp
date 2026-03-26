@@ -476,13 +476,17 @@ void SemanticAnnotator::annotateUnaryExpr(UnaryExprNode* node) {
     DataType et = inferType(expr);
     const std::string op = toLower(node->op);
     if (op == "not") {
-        if (!isBooleanType(et)) {
+        if (isBooleanType(et)) {
+            node->dataType = DataType::Boolean;
+            return;
+        } else if (et == DataType::Integer) {
+            node->dataType = DataType::Integer;
+            return;
+        } else {
             reportTypeMismatch(node, DataType::Boolean, et, "unary not");
             node->dataType = DataType::Unknown;
             return;
         }
-        node->dataType = DataType::Boolean;
-        return;
     }
 
     if (op == "-" || op == "uminus") {
