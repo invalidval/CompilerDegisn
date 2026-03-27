@@ -133,7 +133,11 @@ void CodeGenerator::visit(BinaryExprNode* node) {
 void CodeGenerator::visit(UnaryExprNode* node) {
     std::string operand = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
     if (node->op == "not") {
-        currentExpr_ = "(!" + operand + ")";
+        if (node->dataType == DataType::Integer) {
+            currentExpr_ = "(~" + operand + ")";
+        } else {
+            currentExpr_ = "(!" + operand + ")";
+        }
     } else {
         currentExpr_ = "(" + node->op + operand + ")";
     }

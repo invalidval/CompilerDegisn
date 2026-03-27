@@ -6,9 +6,6 @@ Parsing failed.
 Parse error at 24:17 near ')': syntax error
 Parsing failed.
 ----------------------
-28_unary_op.pas
-Error at 5:9 - Type mismatch in unary not: expected boolean, got integer
-----------------------
 29_unary_op2.pas
 Parse error at 6:18 near '+': syntax error
 Parse error at 6:19 near 'b': syntax error
