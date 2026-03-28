@@ -127,6 +127,11 @@ void CodeGenerator::visit(BinaryExprNode* node) {
     std::string rhs = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
     std::string op = node->op;
     if (op == "mod") op = "%";
+    else if (op == "div") op = "/";
+    else if (op == "=") op = "==";
+    else if (op == "<>") op = "!=";
+    else if (op == "and") op = "&&";
+    else if (op == "or") op = "||";
     currentExpr_ = "(" + lhs + " " + op + " " + rhs + ")";
 }
 

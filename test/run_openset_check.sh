@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -uo
 
 # 自动批量测试 open_set 下所有 .pas 文件，记录编译器报错的用例
 

@@ -11,7 +11,8 @@ std::string CodegenUtils::wrapAsCProgram(const std::string& globals,
                                          const std::string& definitions,
                                          const std::string& mainBody) {
     std::ostringstream oss;
-    oss << "#include <stdio.h>\n\n";
+    // Plan B: 不引入 bool 头文件，布尔用整型表示
+    oss << "#include <stdio.h>\n";
     if (!globals.empty()) oss << globals << "\n";
     if (!prototypes.empty()) oss << prototypes << "\n";
     if (!definitions.empty()) oss << definitions << "\n";
@@ -149,7 +150,13 @@ std::string CodegenUtils::emitConstDecl(ConstDeclNode* node) {
     oss << "const " << ctype << " " << id->identifier << " = ";
     // 支持负号表达式
     if (auto* lit = dynamic_cast<LiteralNode*>(val)) {
-        oss << lit->value;
+        if (lit->value == "true") {
+            oss << "1";
+        } else if (lit->value == "false") {
+            oss << "0";
+        } else {
+            oss << lit->value;
+        }
     } else if (auto* unary = dynamic_cast<UnaryExprNode*>(val)) {
         oss << unary->op << dynamic_cast<LiteralNode*>(unary->children[0])->value;
     } else {
