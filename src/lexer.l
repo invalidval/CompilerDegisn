@@ -162,6 +162,7 @@ WS         [ \t\r]+
 
 {WS}                                  ;
 \n                                    ;
+<INITIAL>"//"[^\n]*                 ;
 
 <INITIAL>"\xEF\xBB\xBF"               {
 										if (g_token_line != 1 || g_token_column != 1) {
