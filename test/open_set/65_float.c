@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 const double radius = 5.5;
 const double pi = 03.141595653589793;
 const double eps = 0.000001;
@@ -62,28 +61,28 @@ printf("%c", o);
 }
 
 void assert(int cond) {
-if ((cond = 0)) {
-        error()
+if ((cond == 0)) {
+        error();
     } else {
-        ok()
+        ok();
     }
 
 }
 
 
 int main(void) {
-assert(float_eq(circle_area(5), circle_area(five)))
-if ((1.5 <> 0.0)) {
-        ok()
+assert(float_eq(circle_area(5), circle_area(five)));
+if ((1.5 != 0.0)) {
+        ok();
     }
-if ((!(3.3 = 0.0))) {
-        ok()
+if ((!(3.3 == 0.0))) {
+        ok();
     }
-if (((0.0 <> 0.0) and (3 <> 0.0))) {
-        error()
+if (((0.0 != 0.0) && (3 != 0.0))) {
+        error();
     }
-if (((0 <> 0.0) or (0.3 <> 0.0))) {
-        ok()
+if (((0 != 0.0) || (0.3 != 0.0))) {
+        ok();
     }
 p = 0;
 arr[0] = 1.0;

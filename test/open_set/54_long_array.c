@@ -1,9 +1,10 @@
 #include <stdio.h>
-
 int long_array(int k);
 
 int long_array(int k) {
     int _retval;
+    int a1[150], a2[150], a3[150];
+    int i, j, ans;
 for (i = 0; i <= 149; i++) {
         a1[i] = ((i * i) % 10);
     }
@@ -20,13 +21,13 @@ for (i = 0; i <= 149; i++) {
 printf("%d", ans);
     }
 if ((i < 20)) {
-        for (j = (150 div 2); j <= 149; j++) {
+        for (j = (150 / 2); j <= 149; j++) {
         ans = ((ans + a3[i]) - a1[j]);
     }
 printf("%d", ans);
     }
 if ((i < 30)) {
-        for (j = (150 div 2); j <= 149; j++) {
+        for (j = (150 / 2); j <= 149; j++) {
         if ((j > 2233)) {
         ans = ((ans + a2[i]) - a1[j]);
     } else {

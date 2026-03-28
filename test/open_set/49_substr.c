@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int a[15];
 int b[13];
 
@@ -20,6 +19,8 @@ if ((a >= b)) {
 
 int max_sum_nonadjacent(int n) {
     int _retval;
+    int i;
+    int temp[16];
 temp[0] = a[0];
 temp[1] = max(a[0], a[1]);
 for (i = 2; i <= (n - 1); i++) {
@@ -32,6 +33,8 @@ _retval = temp[(n - 1)];
 
 int longest_common_subseq(int len1, int len2) {
     int _retval;
+    int i, j;
+    int p[16][16];
 for (i = 0; i <= 15; i++) {
         p[i][0] = 0;
     }
@@ -40,7 +43,7 @@ for (j = 0; j <= 15; j++) {
     }
 for (i = 1; i <= len1; i++) {
         for (j = 1; j <= len2; j++) {
-        if ((a[(i - 1)] = b[(j - 1)])) {
+        if ((a[(i - 1)] == b[(j - 1)])) {
         p[i][j] = (p[(i - 1)][(j - 1)] + 1);
     } else {
         p[i][j] = max(p[(i - 1)][j], p[i][(j - 1)]);

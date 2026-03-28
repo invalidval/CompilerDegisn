@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int arr[6];
 int sum, i;
 

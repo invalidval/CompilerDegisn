@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int a, b, c, d, e;
 int flag;
 
@@ -9,9 +8,9 @@ b = 0;
 c = 1;
 d = 2;
 e = 4;
-flag = false;
-if ((((((a * b) / c) = (e + d)) and (((a * (a + b)) + c) <= (d + e))) or ((a - (b * c)) = (d - (a / c))))) {
-        flag = true;
+flag = 0;
+if ((((((a * b) / c) == (e + d)) && (((a * (a + b)) + c) <= (d + e))) || ((a - (b * c)) == (d - (a / c))))) {
+        flag = 1;
     }
 if (flag) {
         printf("%d", 1);

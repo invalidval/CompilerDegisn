@@ -3,6 +3,28 @@
 #include "symbol_table.h" // 新增：引入符号表类型定义
 
 #include <sstream>
+#include <cctype>
+
+namespace {
+std::string toLowerCopy(const std::string& text) {
+    std::string out = text;
+    for (char& ch : out) {
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    }
+    return out;
+}
+
+int arrayAccessDepthForCodegen(const ASTNode* node) {
+    if (node == nullptr || node->nodeType != NodeType::ArrayAccess || node->children.empty()) {
+        return 0;
+    }
+    const ASTNode* base = node->children[0];
+    if (base != nullptr && base->nodeType == NodeType::ArrayAccess) {
+        return arrayAccessDepthForCodegen(base) + 1;
+    }
+    return 0;
+}
+}
 
 std::string CodeGenerator::generate(ProgramNode* root) {
     reset();
@@ -82,11 +104,52 @@ void CodeGenerator::visit(ProgramNode* node) {
 
 void CodeGenerator::visit(BlockNode* node) {
     std::ostringstream oss;
-    for (ASTNode* child : node->children) {
-        std::string part = emitNode(child);
-        if (!part.empty()) {
-            oss << part;
-            if (part.back() != '\n') {
+    // BlockNode: children = [consts, vars, subprograms, compound]
+    if (node->children.size() > 0) {
+        ListNode* consts = dynamic_cast<ListNode*>(node->children[0]);
+        if (consts) {
+            for (ASTNode* decl : consts->children) {
+                ConstDeclNode* cdecl = dynamic_cast<ConstDeclNode*>(decl);
+                if (!cdecl) {
+                    continue;
+                }
+                std::string line = CodegenUtils::emitConstDecl(cdecl);
+                if (!line.empty()) {
+                    oss << "    " << line << "\n";
+                }
+            }
+        }
+    }
+
+    if (node->children.size() > 1) {
+        ListNode* vars = dynamic_cast<ListNode*>(node->children[1]);
+        if (vars) {
+            for (ASTNode* decl : vars->children) {
+                VarDeclNode* vdecl = dynamic_cast<VarDeclNode*>(decl);
+                if (!vdecl) {
+                    continue;
+                }
+                std::string line = CodegenUtils::emitVarDecl(vdecl);
+                if (!line.empty()) {
+                    oss << "    " << line << "\n";
+                }
+            }
+        }
+    }
+
+    ASTNode* bodyNode = nullptr;
+    if (node->children.size() > 3) {
+        bodyNode = node->children[3];
+    } else if (node->children.size() > 2) {
+        // subprogram_body: [consts, vars, compound]
+        bodyNode = node->children[2];
+    }
+
+    if (bodyNode) {
+        std::string body = emitNode(bodyNode);
+        if (!body.empty()) {
+            oss << body;
+            if (body.back() != '\n') {
                 oss << "\n";
             }
         }
@@ -115,10 +178,37 @@ void CodeGenerator::visit(FuncDeclNode* node) {
 }
 
 void CodeGenerator::visit(IdentifierNode* node) {
+    const std::string lowered = toLowerCopy(node->identifier);
+    if (lowered == "true") {
+        currentExpr_ = "1";
+        return;
+    }
+    if (lowered == "false") {
+        currentExpr_ = "0";
+        return;
+    }
+
+    if (node->symbolEntry != nullptr &&
+        node->symbolEntry->kind == SymbolKind::Parameter &&
+        node->symbolEntry->isVarParam) {
+        // var parameter is translated to C pointer parameter.
+        // In expression/assignment context it should be dereferenced.
+        currentExpr_ = "(*" + node->identifier + ")";
+        return;
+    }
     currentExpr_ = node->identifier;
 }
 
 void CodeGenerator::visit(LiteralNode* node) {
+    const std::string lowered = toLowerCopy(node->value);
+    if (lowered == "true") {
+        currentExpr_ = "1";
+        return;
+    }
+    if (lowered == "false") {
+        currentExpr_ = "0";
+        return;
+    }
     currentExpr_ = node->value;
 }
 
@@ -168,6 +258,11 @@ void CodeGenerator::visit(AssignStmtNode* node) {
 void CodeGenerator::visit(IfStmtNode* node) {
     std::string cond = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
     std::string thenStmt = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
+    if (node->children.size() > 1 && node->children[1] &&
+        node->children[1]->nodeType == NodeType::ProcCall &&
+        !thenStmt.empty() && thenStmt.back() != ';') {
+        thenStmt.push_back(';');
+    }
 
     std::ostringstream oss;
     oss << "if (" << cond << ") {\n";
@@ -181,6 +276,10 @@ void CodeGenerator::visit(IfStmtNode* node) {
 
     if (node->children.size() > 2) {
         std::string elseStmt = emitNode(node->children[2]);
+        if (node->children[2] && node->children[2]->nodeType == NodeType::ProcCall &&
+            !elseStmt.empty() && elseStmt.back() != ';') {
+            elseStmt.push_back(';');
+        }
         oss << " else {\n";
         if (!elseStmt.empty()) {
             oss << "        " << elseStmt;
@@ -197,6 +296,11 @@ void CodeGenerator::visit(IfStmtNode* node) {
 void CodeGenerator::visit(WhileStmtNode* node) {
     std::string cond = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
     std::string bodyStmt = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
+    if (node->children.size() > 1 && node->children[1] &&
+        node->children[1]->nodeType == NodeType::ProcCall &&
+        !bodyStmt.empty() && bodyStmt.back() != ';') {
+        bodyStmt.push_back(';');
+    }
 
     std::ostringstream oss;
     oss << "while (" << cond << ") {\n";
@@ -215,12 +319,24 @@ void CodeGenerator::visit(ForStmtNode* node) {
     std::string init = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
     std::string end = emitNode(node->children.size() > 2 ? node->children[2] : nullptr);
     std::string bodyStmt = emitNode(node->children.size() > 3 ? node->children[3] : nullptr);
+    if (node->children.size() > 3 && node->children[3] &&
+        node->children[3]->nodeType == NodeType::ProcCall &&
+        !bodyStmt.empty() && bodyStmt.back() != ';') {
+        bodyStmt.push_back(';');
+    }
 
     std::string cmp = node->isDownto ? ">=" : "<=";
     std::string step = node->isDownto ? "--" : "++";
 
     std::ostringstream oss;
-    oss << "for (" << iter << " = " << init << "; " << iter << " " << cmp << " " << end
+    IdentifierNode* iterId = dynamic_cast<IdentifierNode*>(node->children.size() > 0 ? node->children[0] : nullptr);
+    bool needLoopVarDecl = (iterId != nullptr && iterId->symbolEntry == nullptr);
+    if (needLoopVarDecl) {
+        oss << "for (int " << iter << " = " << init << "; " << iter << " " << cmp << " " << end;
+    } else {
+        oss << "for (" << iter << " = " << init << "; " << iter << " " << cmp << " " << end;
+    }
+    oss
         << "; " << iter << step << ") {\n";
     if (!bodyStmt.empty()) {
         oss << "        " << bodyStmt;
@@ -236,6 +352,9 @@ void CodeGenerator::visit(CompoundStmtNode* node) {
     std::ostringstream oss;
     for (ASTNode* stmt : node->children) {
         std::string line = emitNode(stmt);
+        if (stmt && stmt->nodeType == NodeType::ProcCall && !line.empty() && line.back() != ';') {
+            line.push_back(';');
+        }
         if (!line.empty()) {
             oss << line;
             if (line.back() != '\n') {
@@ -250,10 +369,18 @@ void CodeGenerator::visit(ArrayAccessNode* node) {
     std::string base = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
     std::string index = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
 
-    if (node->lowerBound == 0) {
+    int lowerBound = node->lowerBound;
+    if (node->symbolEntry != nullptr && node->symbolEntry->isArray) {
+        const int depth = arrayAccessDepthForCodegen(node);
+        if (depth >= 0 && static_cast<size_t>(depth) < node->symbolEntry->arrayBounds.size()) {
+            lowerBound = node->symbolEntry->arrayBounds[static_cast<size_t>(depth)].lower;
+        }
+    }
+
+    if (lowerBound == 0) {
         currentExpr_ = base + "[" + index + "]";
     } else {
-        currentExpr_ = base + "[(" + index + ") - " + std::to_string(node->lowerBound) + "]";
+        currentExpr_ = base + "[(" + index + ") - " + std::to_string(lowerBound) + "]";
     }
 }
 
@@ -300,9 +427,15 @@ void CodeGenerator::visit(ProcCallNode* node) {
             oss << ", ";
         }
 
-        std::string arg = emitNode(node->children[i]);
+        ASTNode* rawArgNode = node->children[i];
+        std::string arg = emitNode(rawArgNode);
         if (i < node->isVarParam.size() && node->isVarParam[i]) {
-            oss << "&" << arg;
+            // Normalize forwarded var-parameter: &(*x) -> x
+            if (arg.size() >= 4 && arg.rfind("(*", 0) == 0 && arg.back() == ')') {
+                oss << arg.substr(2, arg.size() - 3);
+            } else {
+                oss << "&" << arg;
+            }
         } else {
             oss << arg;
         }

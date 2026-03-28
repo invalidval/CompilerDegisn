@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x;
 int sum, sum1, sum2, sum3;
 
@@ -7,6 +6,9 @@ int foo();
 
 int foo() {
     int _retval;
+    int arr[16];
+    int a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p;
+    int sum1, sum2;
 arr[0] = 0;
 arr[1] = 1;
 arr[2] = 2;

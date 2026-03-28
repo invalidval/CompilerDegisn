@@ -1,13 +1,13 @@
 #include <stdio.h>
-
 int if_if_else();
 
 int if_if_else() {
     int _retval;
+    int a, b;
 a = 5;
 b = 10;
-if ((a = 5)) {
-        if ((b = 10)) {
+if ((a == 5)) {
+        if ((b == 10)) {
         a = 25;
     }
     } else {

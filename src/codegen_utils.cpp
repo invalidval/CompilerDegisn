@@ -149,7 +149,7 @@ std::string CodegenUtils::emitConstDecl(ConstDeclNode* node) {
     std::ostringstream oss;
     oss << "const " << ctype << " " << id->identifier << " = ";
     // 支持负号表达式
-    if (auto* lit = dynamic_cast<LiteralNode*>(val)) {
+    if (LiteralNode* lit = dynamic_cast<LiteralNode*>(val)) {
         if (lit->value == "true") {
             oss << "1";
         } else if (lit->value == "false") {
@@ -157,7 +157,7 @@ std::string CodegenUtils::emitConstDecl(ConstDeclNode* node) {
         } else {
             oss << lit->value;
         }
-    } else if (auto* unary = dynamic_cast<UnaryExprNode*>(val)) {
+    } else if (UnaryExprNode* unary = dynamic_cast<UnaryExprNode*>(val)) {
         oss << unary->op << dynamic_cast<LiteralNode*>(unary->children[0])->value;
     } else {
         oss << "0";
@@ -247,11 +247,30 @@ std::string CodegenUtils::emitReadStmt(ProcCallNode* node) {
     oss << "scanf(\"";
     std::vector<std::string> args;
     for (ASTNode* arg : node->children) {
-        // 变量类型
-        IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg);
-        DataType t = id && id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
+        DataType t = DataType::Integer;
+        if (arg != nullptr && arg->dataType != DataType::Unknown) {
+            t = arg->dataType;
+        } else {
+            IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg);
+            if (id && id->symbolEntry) {
+                t = id->symbolEntry->type;
+            }
+        }
         oss << getFormat(t);
-        args.push_back("&" + (id ? id->identifier : "var"));
+
+        if (arg) {
+            CodeGenerator cg;
+            std::string expr = cg.emitNode(arg);
+            // var parameter identifier is emitted as (*x); scanf needs x in that case.
+            if (expr.size() >= 4 && expr.rfind("(*", 0) == 0 && expr.back() == ')') {
+                args.push_back(expr.substr(2, expr.size() - 3));
+            } else {
+                args.push_back("&" + expr);
+            }
+        } else {
+            // Keep generated C compilable even for malformed AST.
+            args.push_back("&0");
+        }
     }
     oss << "\"";
     for (const auto& a : args) oss << ", " << a;

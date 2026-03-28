@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 const char dog = 'd';
 const char cat = 'c';
 int n, k, i, j;
@@ -37,10 +36,10 @@ scanf("%d", &n);
 for (k = 0; k <= (n - 1); k++) {
         for (i = 0; i <= 4; i++) {
         for (j = 0; j <= 4; j++) {
-        scanf("%d", &var);
+        scanf("%d", &a[i][j]);
     }
     }
-if ((model <> 0)) {
+if ((model != 0)) {
         printf("%c", cat);
     } else {
         printf("%c", dog);

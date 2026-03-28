@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int i, i1, i2, i3, i4, a;
 int arr[10];
 
@@ -13,7 +12,7 @@ int func7(int x);
 
 int func1(int x, int y, int z) {
     int _retval;
-if ((z = 0)) {
+if ((z == 0)) {
         _retval = (x * y);
     } else {
         _retval = func1(x, (y - z), 0);
@@ -24,7 +23,7 @@ if ((z = 0)) {
 
 int func2(int x, int y) {
     int _retval;
-if ((y <> 0)) {
+if ((y != 0)) {
         _retval = func2((x % y), 0);
     } else {
         _retval = x;
@@ -35,7 +34,7 @@ if ((y <> 0)) {
 
 int func3(int x, int y) {
     int _retval;
-if ((y = 0)) {
+if ((y == 0)) {
         _retval = (x + 1);
     } else {
         _retval = func3((x + y), 0);
@@ -46,7 +45,7 @@ if ((y = 0)) {
 
 int func4(int x, int y, int z) {
     int _retval;
-if ((x <> 0)) {
+if ((x != 0)) {
         _retval = y;
     } else {
         _retval = z;
@@ -64,7 +63,7 @@ _retval = (-x);
 
 int func6(int x, int y) {
     int _retval;
-if (((x <> 0) and (y <> 0))) {
+if (((x != 0) && (y != 0))) {
         _retval = 1;
     } else {
         _retval = 0;
@@ -75,7 +74,7 @@ if (((x <> 0) and (y <> 0))) {
 
 int func7(int x) {
     int _retval;
-if ((x = 0)) {
+if ((x == 0)) {
         _retval = 1;
     } else {
         _retval = 0;

@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int arr1[10][2][3][4][5][6][2];
 int arr2[10][2][3][2][4][8][7];
 int x, y, h, i, j, k, l, m, n, ret;
@@ -9,6 +8,7 @@ void loop2();
 int loop3(int h, int i, int j, int k, int l, int m, int n);
 
 void loop1(int x, int y) {
+    int a, b, c, d, e, f, g;
 for (a = 0; a <= (x - 1); a++) {
         for (b = 0; b <= 1; b++) {
         for (c = 0; c <= 2; c++) {
@@ -28,6 +28,7 @@ for (a = 0; a <= (x - 1); a++) {
 }
 
 void loop2() {
+    int a, b, c, d, e, f, g;
 for (a = 0; a <= 9; a++) {
         for (b = 0; b <= 1; b++) {
         for (c = 0; c <= 2; c++) {
@@ -48,6 +49,7 @@ for (a = 0; a <= 9; a++) {
 
 int loop3(int h, int i, int j, int k, int l, int m, int n) {
     int _retval;
+    int ans, a, b, c, d, e, f, g;
 ans = 0;
 for (a = 0; a <= (h - 1); a++) {
         for (b = 0; b <= (i - 1); b++) {
@@ -81,8 +83,8 @@ k = 6;
 l = 7;
 m = 8;
 n = 9;
-loop1(x, y)
-loop2()
+loop1(x, y);
+loop2();
 ret = loop3(h, i, j, k, l, m, n);
 printf("%d", ret);
 

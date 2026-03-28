@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int n;
 int i, tmp;
 int iniarr[10], sortedarr[10];
@@ -8,6 +7,8 @@ int countingsort(int n);
 
 int countingsort(int n) {
     int _retval;
+    int countarr[10];
+    int i, j, k, jj;
 for (k = 0; k <= 9; k++) {
         countarr[k] = 0;
     }
@@ -40,7 +41,7 @@ iniarr[6] = 6;
 iniarr[7] = 5;
 iniarr[8] = 7;
 iniarr[9] = 8;
-countingsort(n)
+countingsort(n);
 for (i = 0; i <= (n - 1); i++) {
         tmp = sortedarr[i];
 printf("%d", tmp);

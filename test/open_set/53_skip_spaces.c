@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int i, j, sum, t;
 int arr[100];
 

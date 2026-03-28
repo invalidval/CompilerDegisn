@@ -81,7 +81,11 @@ bool SymbolTable::insert(SymbolEntry entry) {
         return false;
     }
     entry.scopeLevel = currentScopeLevel();
-    current[entry.name] = entry;
+
+    // Keep SymbolEntry addresses stable for AST annotations even after scope pop.
+    entryArena_.push_back(std::make_unique<SymbolEntry>(std::move(entry)));
+    const SymbolEntry* stored = entryArena_.back().get();
+    current[stored->name] = stored;
     return true;
 }
 
@@ -94,7 +98,7 @@ const SymbolEntry* SymbolTable::lookup(const std::string& name) const {
     for (auto it = scopes_.rbegin(); it != scopes_.rend(); ++it) {
         auto found = it->find(normalized);
         if (found != it->end()) {
-            return &found->second;
+            return found->second;
         }
     }
     return nullptr;
@@ -109,5 +113,5 @@ const SymbolEntry* SymbolTable::lookupCurrentScope(const std::string& name) cons
     if (found == current.end()) {
         return nullptr;
     }
-    return &found->second;
+    return found->second;
 }

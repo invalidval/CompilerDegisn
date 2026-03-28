@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int arr[32][2];
 int i;
 
@@ -10,7 +9,7 @@ int getint(int *index);
 
 int param32_rec(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15, int a16, int a17, int a18, int a19, int a20, int a21, int a22, int a23, int a24, int a25, int a26, int a27, int a28, int a29, int a30, int a31, int a32) {
     int _retval;
-if ((a1 = 0)) {
+if ((a1 == 0)) {
         _retval = a2;
     } else {
         _retval = param32_rec((a1 - 1), ((a2 + a3) % 998244353), a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, 0);
@@ -21,6 +20,7 @@ if ((a1 = 0)) {
 
 int param32_arr() {
     int _retval;
+    int sum;
 sum = (arr[0][0] + arr[0][1]);
 sum = ((sum + arr[1][0]) + arr[1][1]);
 sum = ((sum + arr[2][0]) + arr[2][1]);
@@ -60,6 +60,7 @@ _retval = sum;
 
 int param16(int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15, int a16) {
     int _retval;
+    int arr2[16];
 arr2[0] = a1;
 arr2[1] = a2;
 arr2[2] = a3;
@@ -83,6 +84,7 @@ _retval = param32_rec(arr2[0], arr2[1], arr2[2], arr2[3], arr2[4], arr2[5], arr2
 
 int getint(int *index) {
     int _retval;
+    int input[16];
 input[0] = 17;
 input[1] = 13;
 input[2] = 80;
@@ -99,8 +101,8 @@ input[12] = 54;
 input[13] = 45;
 input[14] = 67;
 input[15] = 63;
-index = (index + 1);
-_retval = input[(index - 1)];
+(*index) = ((*index) + 1);
+_retval = input[((*index) - 1)];
 
     return _retval;
 }

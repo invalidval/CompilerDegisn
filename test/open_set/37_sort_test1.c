@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int i, n;
 int arr[10];
 
@@ -7,6 +6,7 @@ int bubblesort();
 
 int bubblesort() {
     int _retval;
+    int i, j, tmp;
 for (i = 0; i <= (n - 2); i++) {
         for (j = 0; j <= ((n - 2) - i); j++) {
         if ((arr[j] > arr[(j + 1)])) {

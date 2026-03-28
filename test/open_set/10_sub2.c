@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 const int a = 10;
 int b;
 

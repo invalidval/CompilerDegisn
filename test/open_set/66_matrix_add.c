@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int m, l, n;
 int a0[3], a1[3], a2[3], b0[3], b1[3], b2[3], c0[3], c1[3], c2[3];
 int i, x;
@@ -8,6 +7,7 @@ int add();
 
 int add() {
     int _retval;
+    int i;
 for (i = 0; i <= (m - 1); i++) {
         c0[i] = (a0[i] + b0[i]);
 c1[i] = (a1[i] + b1[i]);
@@ -31,7 +31,7 @@ b0[i] = i;
 b1[i] = i;
 b2[i] = i;
     }
-add()
+add();
 for (i = 0; i <= (n - 1); i++) {
         x = c0[i];
 printf("%d", x);

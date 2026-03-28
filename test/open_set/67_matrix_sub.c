@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int n, m, l, i, x;
 int a0[3];
 int a1[3];
@@ -38,7 +37,7 @@ b0[i] = i;
 b1[i] = i;
 b2[i] = i;
     }
-sub()
+sub();
 for (i = 0; i <= 2; i++) {
         x = c0[i];
 printf("%d", x);

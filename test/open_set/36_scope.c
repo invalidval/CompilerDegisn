@@ -1,14 +1,14 @@
 #include <stdio.h>
-
 int a, sum, i;
 
 int func();
 
 int func() {
     int _retval;
+    int b, a;
 b = 7;
 a = 1;
-if ((a = b)) {
+if ((a == b)) {
         a = (a + 1);
 _retval = 1;
     } else {
@@ -23,7 +23,7 @@ int main(void) {
 a = 7;
 sum = 0;
 for (i = 0; i <= 99; i++) {
-        if ((func() = 1)) {
+        if ((func() == 1)) {
         sum = (sum + 1);
     }
     }

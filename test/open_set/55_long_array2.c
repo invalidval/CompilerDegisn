@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 int a[4096];
 int b[4][1024];
 int c[1024][4];
