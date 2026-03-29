@@ -1,15 +1,28 @@
 #include <stdio.h>
+int n;
+int m;
+int l;
+int i;
+int x;
 
-int n, m, l, i, x;
 int a0[3];
+
 int a1[3];
+
 int a2[3];
+
 int b0[3];
+
 int b1[3];
+
 int b2[3];
+
 int c0[6];
+
 int c1[3];
+
 int c2[3];
+
 
 int sub();
 
@@ -38,7 +51,7 @@ b0[i] = i;
 b1[i] = i;
 b2[i] = i;
     }
-sub()
+sub();
 for (i = 0; i <= 2; i++) {
         x = c0[i];
 printf("%d", x);

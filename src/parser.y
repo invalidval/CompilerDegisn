@@ -149,6 +149,7 @@ ASTNode* buildArrayAccessFromIndices(ASTNode* base, ASTNode* indicesNode, Source
 %left '*' '/' DIV MOD
 %right NOT
 %right UMINUS
+%right UPLUS
 
 %%
 
@@ -400,6 +401,10 @@ formal_parameter:
             {
                     $$ = static_cast<void*>(g_astBuilder.makeList(ListKind::Parameters, currentPos()));
             }
+        | '(' ')'
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeList(ListKind::Parameters, currentPos()));
+            }
         | '(' parameter_list ')'
             {
                     $$ = $2;
@@ -569,6 +574,11 @@ procedure_call:
                     $$ = static_cast<void*>(g_astBuilder.makeProcCall(std::string($1), {}, currentPos()));
                     std::free($1);
             }
+        | IDENTIFIER '(' ')'
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeProcCall(std::string($1), {}, currentPos()));
+                    std::free($1);
+            }
         | IDENTIFIER '(' expression_list ')'
             {
                     $$ = static_cast<void*>(g_astBuilder.makeProcCall(std::string($1), listItems(asNode($3)), currentPos()));
@@ -715,6 +725,11 @@ factor:
             {
                     $$ = $2;
             }
+        | IDENTIFIER '(' ')'
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeProcCall(std::string($1), {}, currentPos()));
+                    std::free($1);
+            }
         | IDENTIFIER '(' expression_list ')'
             {
                     $$ = static_cast<void*>(g_astBuilder.makeProcCall(std::string($1), listItems(asNode($3)), currentPos()));
@@ -727,6 +742,10 @@ factor:
         | '-' factor %prec UMINUS
             {
                     $$ = static_cast<void*>(g_astBuilder.makeUnaryExpr("-", asNode($2), currentPos()));
+            }
+        | '+' factor %prec UPLUS
+            {
+                    $$ = asNode($2);
             }
         ;
 

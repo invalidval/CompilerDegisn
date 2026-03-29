@@ -1,15 +1,96 @@
 #include <stdio.h>
+int a0;
+int a1;
+int a2;
+int a3;
+int a4;
+int a5;
+int a6;
+int a7;
+int a8;
+int a9;
 
-int a0, a1, a2, a3, a4, a5, a6, a7, a8, a9;
-int a10, a11, a12, a13, a14, a15, a16, a17, a18, a19;
-int a20, a21, a22, a23, a24, a25, a26, a27, a28, a29;
-int a30, a31, a32;
-int a, b;
+int a10;
+int a11;
+int a12;
+int a13;
+int a14;
+int a15;
+int a16;
+int a17;
+int a18;
+int a19;
+
+int a20;
+int a21;
+int a22;
+int a23;
+int a24;
+int a25;
+int a26;
+int a27;
+int a28;
+int a29;
+
+int a30;
+int a31;
+int a32;
+
+int a;
+int b;
+
 
 int func(int a, int b);
 
 int func(int a, int b) {
     int _retval;
+    int i;
+
+    int c1;
+int c2;
+int c3;
+int c4;
+
+    int d1;
+int d2;
+int d3;
+int d4;
+
+    int e1;
+int e2;
+int e3;
+int e4;
+
+    int f1;
+int f2;
+int f3;
+int f4;
+
+    int g1;
+int g2;
+int g3;
+int g4;
+
+    int h1;
+int h2;
+int h3;
+int h4;
+
+    int i1;
+int i2;
+int i3;
+int i4;
+
+    int j1;
+int j2;
+int j3;
+int j4;
+
+    int k1;
+int k2;
+int k3;
+int k4;
+
 c1 = 1;
 c2 = 2;
 c3 = 3;

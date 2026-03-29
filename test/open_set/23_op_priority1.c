@@ -1,6 +1,9 @@
 #include <stdio.h>
+int a;
+int b;
+int c;
+int d;
 
-int a, b, c, d;
 
 int main(void) {
 a = 10;

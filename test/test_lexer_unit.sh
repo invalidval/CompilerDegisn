@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euo
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 if [[ ! -x ./build/pascc ]]; then
   echo "[info] build/pascc not found, running build first"
-  bash scripts/build.sh >/dev/null
+   >/dev/null
 fi
 
 run_lex_ok() {

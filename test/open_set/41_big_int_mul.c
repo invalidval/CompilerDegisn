@@ -1,11 +1,22 @@
 #include <stdio.h>
-
 const int len = 20;
-int i, j, t, n, temp;
-int len1, len2;
-int mult1[20], mult2[20];
-int c1[25], c2[25];
+int i;
+int j;
+int t;
+int n;
+int temp;
+
+int len1;
+int len2;
+
+int mult1[20];
+int mult2[20];
+
+int c1[25];
+int c2[25];
+
 int result[40];
+
 
 int main(void) {
 len1 = len;
@@ -55,7 +66,7 @@ for (j = 0; j <= (len1 - 1); j++) {
         temp = (result[n] + (t * c1[((len1 - 1) - j)]));
 if ((temp >= 10)) {
         result[n] = temp;
-result[(n - 1)] = (result[(n - 1)] + (temp div 10));
+result[(n - 1)] = (result[(n - 1)] + (temp / 10));
     } else {
         result[n] = temp;
     }
@@ -63,7 +74,7 @@ n = (n - 1);
     }
 n = ((n + len1) - 1);
     }
-if ((result[0] <> 0)) {
+if ((result[0] != 0)) {
         printf("%d", result[0]);
     }
 for (i = 1; i <= ((len1 + len2) - 1); i++) {

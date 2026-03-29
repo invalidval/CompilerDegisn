@@ -1,13 +1,17 @@
 #include <stdio.h>
-
 int ret;
+
 int a[61][67];
+
 int b[53][59];
+
 
 int func(int aa, int c, int e, int f, int h, int i);
 
 int func(int aa, int c, int e, int f, int h, int i) {
     int _retval;
+    int index;
+
 index = 0;
 while ((index < 10)) {
         printf("%d", b[aa][index]);

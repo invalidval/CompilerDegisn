@@ -11,7 +11,8 @@ std::string CodegenUtils::wrapAsCProgram(const std::string& globals,
                                          const std::string& definitions,
                                          const std::string& mainBody) {
     std::ostringstream oss;
-    oss << "#include <stdio.h>\n\n";
+    // Plan B: 不引入 bool 头文件，布尔用整型表示
+    oss << "#include <stdio.h>\n";
     if (!globals.empty()) oss << globals << "\n";
     if (!prototypes.empty()) oss << prototypes << "\n";
     if (!definitions.empty()) oss << definitions << "\n";
@@ -77,7 +78,7 @@ std::string CodegenUtils::emitFuncPrototype(FuncDeclNode* node) {
 std::string CodegenUtils::mapType(DataType t) {
     switch (t) {
         case DataType::Integer: return "int";
-        case DataType::Real:    return "double";
+        case DataType::Real:    return "float"; // Pascal real -> float
         case DataType::Boolean: return "int";
         case DataType::Char:    return "char";
         default:                return "int";
@@ -88,7 +89,7 @@ std::string CodegenUtils::mapType(DataType t) {
 static std::string getFormat(DataType t) {
     switch (t) {
         case DataType::Integer: return "%d";
-        case DataType::Real:    return "%lf";
+        case DataType::Real:    return "%f"; // Pascal real -> float, use %f
         case DataType::Boolean: return "%d";
         case DataType::Char:    return "%c";
         default:                return "%d";
@@ -116,23 +117,17 @@ std::string CodegenUtils::emitVarDecl(VarDeclNode* node) {
         dimensions.push_back(arrSize);
         elemType = arrType->children[2];
     }
-    ctype = CodegenUtils::mapType(elemType->dataType);
-
     std::ostringstream oss;
-    bool first = true;
     for (size_t i = 0; i < idList->children.size(); ++i) {
         IdentifierNode* id = dynamic_cast<IdentifierNode*>(idList->children[i]);
         if (!id) continue;
-        if (!first) oss << ", ";
-        if (first) oss << ctype << " ";
-        first = false;
-        oss << id->identifier;
-        // 输出所有维度
+        std::string idType = CodegenUtils::mapType(id->dataType);
+        oss << idType << " " << id->identifier;
         for (int d : dimensions) {
             oss << "[" << d << "]";
         }
+        oss << ";\n";
     }
-    oss << ";";
     return oss.str();
 }
 
@@ -148,9 +143,15 @@ std::string CodegenUtils::emitConstDecl(ConstDeclNode* node) {
     std::ostringstream oss;
     oss << "const " << ctype << " " << id->identifier << " = ";
     // 支持负号表达式
-    if (auto* lit = dynamic_cast<LiteralNode*>(val)) {
-        oss << lit->value;
-    } else if (auto* unary = dynamic_cast<UnaryExprNode*>(val)) {
+    if (LiteralNode* lit = dynamic_cast<LiteralNode*>(val)) {
+        if (lit->value == "true") {
+            oss << "1";
+        } else if (lit->value == "false") {
+            oss << "0";
+        } else {
+            oss << lit->value;
+        }
+    } else if (UnaryExprNode* unary = dynamic_cast<UnaryExprNode*>(val)) {
         oss << unary->op << dynamic_cast<LiteralNode*>(unary->children[0])->value;
     } else {
         oss << "0";
@@ -240,11 +241,32 @@ std::string CodegenUtils::emitReadStmt(ProcCallNode* node) {
     oss << "scanf(\"";
     std::vector<std::string> args;
     for (ASTNode* arg : node->children) {
-        // 变量类型
-        IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg);
-        DataType t = id && id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
+        DataType t = DataType::Integer;
+        // 优先用 symbolEntry->type，保证与C声明一致
+        if (arg != nullptr) {
+            if (arg->symbolEntry && arg->symbolEntry->type != DataType::Unknown) {
+                t = arg->symbolEntry->type;
+            } else if (arg->dataType != DataType::Unknown) {
+                t = arg->dataType;
+            } else if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
+                t = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
+            }
+        }
         oss << getFormat(t);
-        args.push_back("&" + (id ? id->identifier : "var"));
+
+        if (arg) {
+            CodeGenerator cg;
+            std::string expr = cg.emitNode(arg);
+            // var parameter identifier is emitted as (*x); scanf needs x in that case.
+            if (expr.size() >= 4 && expr.rfind("(*", 0) == 0 && expr.back() == ')') {
+                args.push_back(expr.substr(2, expr.size() - 3));
+            } else {
+                args.push_back("&" + expr);
+            }
+        } else {
+            // Keep generated C compilable even for malformed AST.
+            args.push_back("&0");
+        }
     }
     oss << "\"";
     for (const auto& a : args) oss << ", " << a;
@@ -260,16 +282,25 @@ std::string CodegenUtils::emitWriteStmt(ProcCallNode* node) {
     std::vector<std::string> args;
     for (ASTNode* arg : node->children) {
         DataType t = DataType::Integer;
-        // 类型推断
-        if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
-            t = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
+        DataType exprType = DataType::Unknown;
+        if (arg != nullptr) {
+            if (arg->symbolEntry && arg->symbolEntry->type != DataType::Unknown) {
+                t = arg->symbolEntry->type;
+            } else if (arg->dataType != DataType::Unknown) {
+                t = arg->dataType;
+            } else if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
+                t = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
+            }
+            exprType = arg->dataType;
         }
         oss << getFormat(t);
-        // 递归生成表达式代码
         if (arg) {
-            // 使用CodeGenerator递归生成表达式代码
             CodeGenerator cg;
             std::string expr = cg.emitNode(arg);
+            // 如果格式符为%f但表达式类型为int，自动加(float)强转
+            if (getFormat(t) == "%f" && exprType == DataType::Integer) {
+                expr = "(float)(" + expr + ")";
+            }
             args.push_back(expr);
         } else {
             args.push_back("0");

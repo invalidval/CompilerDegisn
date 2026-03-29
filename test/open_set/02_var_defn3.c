@@ -1,6 +1,8 @@
 #include <stdio.h>
+int a;
+int b0;
+int c;
 
-int a, b0, c;
 
 int main(void) {
 a = 1;

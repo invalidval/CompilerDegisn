@@ -1,6 +1,6 @@
 #include <stdio.h>
-
 int a;
+
 
 int defn();
 
@@ -13,7 +13,7 @@ _retval = 4;
 
 
 int main(void) {
-a = defn;
+a = defn();
 printf("%d", a);
 
     return 0;

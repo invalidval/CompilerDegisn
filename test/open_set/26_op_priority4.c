@@ -1,7 +1,12 @@
 #include <stdio.h>
+int a;
+int b;
+int c;
+int d;
+int e;
 
-int a, b, c, d, e;
 int flag;
+
 
 int main(void) {
 scanf("%d", &a);
@@ -9,9 +14,9 @@ scanf("%d", &b);
 scanf("%d", &c);
 scanf("%d", &d);
 scanf("%d", &e);
-flag = false;
-if (((((a - (b * c)) <> (d - (a / c))) or (((a * b) / c) = (e + d))) or (((a + b) + c) = (d + e)))) {
-        flag = true;
+flag = 0;
+if (((((a - (b * c)) != (d - (a / c))) || (((a * b) / c) == (e + d))) || (((a + b) + c) == (d + e)))) {
+        flag = 1;
     }
 if (flag) {
         printf("%d", 1);

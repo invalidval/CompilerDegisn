@@ -1,11 +1,13 @@
 #include <stdio.h>
+int a;
+int b;
+int c;
 
-int a, b, c;
 
 int main(void) {
 scanf("%d", &a);
 scanf("%d", &b);
-if (((a = b) and (a <> 3))) {
+if (((a == b) && (a != 3))) {
         c = 1;
     } else {
         c = 0;

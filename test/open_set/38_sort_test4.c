@@ -1,11 +1,18 @@
 #include <stdio.h>
+int n;
+int i;
 
-int n, i;
 int arr[10];
+
 
 void selectsort();
 
 void selectsort() {
+    int i;
+int j;
+int min;
+int tmp;
+
 for (i = 0; i <= (n - 2); i++) {
         min = i;
 for (j = (i + 1); j <= (n - 1); j++) {
@@ -13,7 +20,7 @@ for (j = (i + 1); j <= (n - 1); j++) {
         min = j;
     }
     }
-if ((min <> i)) {
+if ((min != i)) {
         tmp = arr[min];
 arr[min] = arr[i];
 arr[i] = tmp;
@@ -35,7 +42,7 @@ arr[6] = 6;
 arr[7] = 5;
 arr[8] = 7;
 arr[9] = 8;
-selectsort()
+selectsort();
 for (i = 0; i <= (n - 1); i++) {
         printf("%d", arr[i]);
     }

@@ -2,6 +2,7 @@
 #define PASCC_SYMBOL_TABLE_H
 
 #include <string>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -67,7 +68,8 @@ public:
 
 private:
     static std::string normalizeName(const std::string& name);
-    std::vector<std::unordered_map<std::string, SymbolEntry>> scopes_;
+    std::vector<std::unordered_map<std::string, const SymbolEntry*>> scopes_;
+    std::vector<std::unique_ptr<SymbolEntry>> entryArena_;
 };
 
 #endif  // PASCC_SYMBOL_TABLE_H
