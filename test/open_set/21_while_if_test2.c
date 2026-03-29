@@ -1,11 +1,14 @@
 #include <stdio.h>
 int ret;
 
+
 int ifwhile();
 
 int ifwhile() {
     int _retval;
-    int a, b;
+    int a;
+int b;
+
 a = 0;
 b = 1;
 if ((a == 5)) {

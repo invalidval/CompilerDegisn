@@ -1,10 +1,12 @@
 #include <stdio.h>
 int i;
 
+
 void reverse(int n);
 
 void reverse(int n) {
     int next;
+
 if ((n <= 1)) {
         scanf("%d", &next);
 printf("%d", next);

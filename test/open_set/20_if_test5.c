@@ -3,7 +3,9 @@ int if_if_else();
 
 int if_if_else() {
     int _retval;
-    int a, b;
+    int a;
+int b;
+
 a = 5;
 b = 10;
 if ((a == 5)) {
@@ -20,7 +22,7 @@ _retval = a;
 
 
 int main(void) {
-printf("%d", if_if_else);
+printf("%d", if_if_else());
 
     return 0;
 }

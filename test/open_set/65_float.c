@@ -1,28 +1,33 @@
 #include <stdio.h>
-const double radius = 5.5;
-const double pi = 03.141595653589793;
-const double eps = 0.000001;
-const double eval1 = 95.033188;
+const float radius = 5.5;
+const float pi = 03.141595653589793;
+const float eps = 0.000001;
+const float eval1 = 95.033188;
 const int conv1 = 233;
 const int max = 1000000000;
-const double two = 2.9;
+const float two = 2.9;
 const int three = 3;
 const int five = 5;
 const char e = 'e';
 const char o = 'o';
 int p;
-int arr[10];
-int input, area, area_trunc;
 
-double float_abs(int x);
-double circle_area(int radius);
+float arr[10];
+
+float input;
+float area;
+float area_trunc;
+
+
+float float_abs(int x);
+float circle_area(int radius);
 int float_eq(int a, int b);
 void error();
 void ok();
 void assert(int cond);
 
-double float_abs(int x) {
-    double _retval;
+float float_abs(int x) {
+    float _retval;
 if ((x < 0)) {
         _retval = (-x);
     } else {
@@ -32,8 +37,8 @@ if ((x < 0)) {
     return _retval;
 }
 
-double circle_area(int radius) {
-    double _retval;
+float circle_area(int radius) {
+    float _retval;
 _retval = ((((pi * radius) * radius) + ((radius * radius) * pi)) / 2);
 
     return _retval;
@@ -91,9 +96,9 @@ input = 0.520;
 area = ((pi * input) * input);
 area_trunc = circle_area(0);
 arr[p] = (arr[p] + input);
-printf("%lf", area);
-printf("%lf", area_trunc);
-printf("%d", arr[0]);
+printf("%f", area);
+printf("%f", area_trunc);
+printf("%f", arr[0]);
 
     return 0;
 }

@@ -3,8 +3,14 @@ int long_array(int k);
 
 int long_array(int k) {
     int _retval;
-    int a1[150], a2[150], a3[150];
-    int i, j, ans;
+    int a1[150];
+int a2[150];
+int a3[150];
+
+    int i;
+int j;
+int ans;
+
 for (i = 0; i <= 149; i++) {
         a1[i] = ((i * i) % 10);
     }

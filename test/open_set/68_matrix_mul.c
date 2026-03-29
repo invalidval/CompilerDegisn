@@ -1,13 +1,28 @@
 #include <stdio.h>
-int m, n, l;
-int i, x;
-int a0[3], a1[3], a2[3], b0[3], b1[3], b2[3], c0[3], c1[3], c2[3];
+int m;
+int n;
+int l;
+
+int i;
+int x;
+
+int a0[3];
+int a1[3];
+int a2[3];
+int b0[3];
+int b1[3];
+int b2[3];
+int c0[3];
+int c1[3];
+int c2[3];
+
 
 int multiplymatrices();
 
 int multiplymatrices() {
     int _retval;
     int i;
+
 for (i = 0; i <= (m - 1); i++) {
         c0[i] = (((a0[0] * b0[i]) + (a0[1] * b1[i])) + (a0[2] * b2[i]));
 c1[i] = (((a1[0] * b0[i]) + (a1[1] * b1[i])) + (a1[2] * b2[i]));

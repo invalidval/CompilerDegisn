@@ -1,8 +1,17 @@
 #include <stdio.h>
 int arr[110];
+
 int n;
-int m, a, b, k, loc, i;
+
+int m;
+int a;
+int b;
+int k;
+int loc;
+int i;
+
 int flag;
+
 
 void init(int n);
 int findfa(int a);
@@ -10,6 +19,7 @@ void mmerge(int a, int b);
 
 void init(int n) {
     int i;
+
 for (i = 1; i <= ((n * n) + 1); i++) {
         arr[i] = (-1);
     }
@@ -29,7 +39,9 @@ _retval = arr[a];
 }
 
 void mmerge(int a, int b) {
-    int m, n;
+    int m;
+int n;
+
 m = findfa(a);
 n = findfa(b);
 if ((m != n)) {

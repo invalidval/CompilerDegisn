@@ -1,12 +1,18 @@
 #include <stdio.h>
-int i, n;
+int i;
+int n;
+
 int arr[10];
+
 
 int bubblesort();
 
 int bubblesort() {
     int _retval;
-    int i, j, tmp;
+    int i;
+int j;
+int tmp;
+
 for (i = 0; i <= (n - 2); i++) {
         for (j = 0; j <= ((n - 2) - i); j++) {
         if ((arr[j] > arr[(j + 1)])) {
@@ -34,7 +40,7 @@ arr[6] = 6;
 arr[7] = 5;
 arr[8] = 7;
 arr[9] = 8;
-for (i = bubblesort; i <= (n - 1); i++) {
+for (i = bubblesort(); i <= (n - 1); i++) {
         printf("%d", arr[i]);
     }
 

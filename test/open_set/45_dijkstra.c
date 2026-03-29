@@ -1,14 +1,28 @@
 #include <stdio.h>
 const int inf = 32767;
 int e[16][16];
-int dis[16], book[16];
-int m, n;
-int u, v, i, j;
+
+int dis[16];
+int book[16];
+
+int m;
+int n;
+
+int u;
+int v;
+int i;
+int j;
+
 
 void dijkstra();
 
 void dijkstra() {
-    int i, min_num, min_index, k, j;
+    int i;
+int min_num;
+int min_index;
+int k;
+int j;
+
 for (i = 1; i <= n; i++) {
         dis[i] = e[1][i];
 book[i] = 0;

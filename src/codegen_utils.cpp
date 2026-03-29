@@ -78,7 +78,7 @@ std::string CodegenUtils::emitFuncPrototype(FuncDeclNode* node) {
 std::string CodegenUtils::mapType(DataType t) {
     switch (t) {
         case DataType::Integer: return "int";
-        case DataType::Real:    return "double";
+        case DataType::Real:    return "float"; // Pascal real -> float
         case DataType::Boolean: return "int";
         case DataType::Char:    return "char";
         default:                return "int";
@@ -89,7 +89,7 @@ std::string CodegenUtils::mapType(DataType t) {
 static std::string getFormat(DataType t) {
     switch (t) {
         case DataType::Integer: return "%d";
-        case DataType::Real:    return "%lf";
+        case DataType::Real:    return "%f"; // Pascal real -> float, use %f
         case DataType::Boolean: return "%d";
         case DataType::Char:    return "%c";
         default:                return "%d";
@@ -117,23 +117,17 @@ std::string CodegenUtils::emitVarDecl(VarDeclNode* node) {
         dimensions.push_back(arrSize);
         elemType = arrType->children[2];
     }
-    ctype = CodegenUtils::mapType(elemType->dataType);
-
     std::ostringstream oss;
-    bool first = true;
     for (size_t i = 0; i < idList->children.size(); ++i) {
         IdentifierNode* id = dynamic_cast<IdentifierNode*>(idList->children[i]);
         if (!id) continue;
-        if (!first) oss << ", ";
-        if (first) oss << ctype << " ";
-        first = false;
-        oss << id->identifier;
-        // 输出所有维度
+        std::string idType = CodegenUtils::mapType(id->dataType);
+        oss << idType << " " << id->identifier;
         for (int d : dimensions) {
             oss << "[" << d << "]";
         }
+        oss << ";\n";
     }
-    oss << ";";
     return oss.str();
 }
 
@@ -248,12 +242,14 @@ std::string CodegenUtils::emitReadStmt(ProcCallNode* node) {
     std::vector<std::string> args;
     for (ASTNode* arg : node->children) {
         DataType t = DataType::Integer;
-        if (arg != nullptr && arg->dataType != DataType::Unknown) {
-            t = arg->dataType;
-        } else {
-            IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg);
-            if (id && id->symbolEntry) {
-                t = id->symbolEntry->type;
+        // 优先用 symbolEntry->type，保证与C声明一致
+        if (arg != nullptr) {
+            if (arg->symbolEntry && arg->symbolEntry->type != DataType::Unknown) {
+                t = arg->symbolEntry->type;
+            } else if (arg->dataType != DataType::Unknown) {
+                t = arg->dataType;
+            } else if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
+                t = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
             }
         }
         oss << getFormat(t);
@@ -286,16 +282,25 @@ std::string CodegenUtils::emitWriteStmt(ProcCallNode* node) {
     std::vector<std::string> args;
     for (ASTNode* arg : node->children) {
         DataType t = DataType::Integer;
-        // 类型推断
-        if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
-            t = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
+        DataType exprType = DataType::Unknown;
+        if (arg != nullptr) {
+            if (arg->symbolEntry && arg->symbolEntry->type != DataType::Unknown) {
+                t = arg->symbolEntry->type;
+            } else if (arg->dataType != DataType::Unknown) {
+                t = arg->dataType;
+            } else if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
+                t = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
+            }
+            exprType = arg->dataType;
         }
         oss << getFormat(t);
-        // 递归生成表达式代码
         if (arg) {
-            // 使用CodeGenerator递归生成表达式代码
             CodeGenerator cg;
             std::string expr = cg.emitNode(arg);
+            // 如果格式符为%f但表达式类型为int，自动加(float)强转
+            if (getFormat(t) == "%f" && exprType == DataType::Integer) {
+                expr = "(float)(" + expr + ")";
+            }
             args.push_back(expr);
         } else {
             args.push_back("0");

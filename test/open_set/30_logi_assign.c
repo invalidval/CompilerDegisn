@@ -1,5 +1,8 @@
 #include <stdio.h>
-int a, b, c;
+int a;
+int b;
+int c;
+
 
 int main(void) {
 scanf("%d", &a);

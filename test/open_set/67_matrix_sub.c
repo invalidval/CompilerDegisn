@@ -1,14 +1,28 @@
 #include <stdio.h>
-int n, m, l, i, x;
+int n;
+int m;
+int l;
+int i;
+int x;
+
 int a0[3];
+
 int a1[3];
+
 int a2[3];
+
 int b0[3];
+
 int b1[3];
+
 int b2[3];
+
 int c0[6];
+
 int c1[3];
+
 int c2[3];
+
 
 int sub();
 

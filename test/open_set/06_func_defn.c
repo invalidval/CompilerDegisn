@@ -1,6 +1,8 @@
 #include <stdio.h>
 int a;
+
 int b;
+
 
 int func(int p);
 

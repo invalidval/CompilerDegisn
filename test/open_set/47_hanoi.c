@@ -1,6 +1,9 @@
 #include <stdio.h>
 const char split = ',';
-int n, t, i;
+int n;
+int t;
+int i;
+
 
 void move(int x, int y);
 void hanoi(int n, int one, int two, int three);

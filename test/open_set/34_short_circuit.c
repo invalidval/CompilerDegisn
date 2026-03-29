@@ -1,5 +1,7 @@
 #include <stdio.h>
-int g, i;
+int g;
+int i;
+
 
 int func(int n);
 

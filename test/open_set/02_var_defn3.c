@@ -1,5 +1,8 @@
 #include <stdio.h>
-int a, b0, c;
+int a;
+int b0;
+int c;
+
 
 int main(void) {
 a = 1;

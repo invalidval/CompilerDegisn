@@ -4,7 +4,9 @@ int ififelse();
 int ififelse() {
     int _retval;
     int a;
+
     int b;
+
 a = 5;
 b = 10;
 if ((a == 5)) {
@@ -21,7 +23,7 @@ _retval = a;
 
 
 int main(void) {
-printf("%d", ififelse);
+printf("%d", ififelse());
 
     return 0;
 }

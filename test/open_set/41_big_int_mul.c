@@ -1,10 +1,22 @@
 #include <stdio.h>
 const int len = 20;
-int i, j, t, n, temp;
-int len1, len2;
-int mult1[20], mult2[20];
-int c1[25], c2[25];
+int i;
+int j;
+int t;
+int n;
+int temp;
+
+int len1;
+int len2;
+
+int mult1[20];
+int mult2[20];
+
+int c1[25];
+int c2[25];
+
 int result[40];
+
 
 int main(void) {
 len1 = len;

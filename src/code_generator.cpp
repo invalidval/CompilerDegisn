@@ -196,6 +196,14 @@ void CodeGenerator::visit(IdentifierNode* node) {
         currentExpr_ = "(*" + node->identifier + ")";
         return;
     }
+
+    if (node->symbolEntry != nullptr &&
+        node->symbolEntry->kind == SymbolKind::Function) {
+        // Pascal allows zero-arg function designator in expressions, e.g. write(f).
+        currentExpr_ = node->identifier + "()";
+        return;
+    }
+
     currentExpr_ = node->identifier;
 }
 

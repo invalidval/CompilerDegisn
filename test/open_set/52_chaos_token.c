@@ -1,14 +1,24 @@
 #include <stdio.h>
 int n;
-int i, tmp;
-int iniarr[10], sortedarr[10];
+
+int i;
+int tmp;
+
+int iniarr[10];
+int sortedarr[10];
+
 
 int countingsort(int n);
 
 int countingsort(int n) {
     int _retval;
     int countarr[10];
-    int i, j, k, jj;
+
+    int i;
+int j;
+int k;
+int jj;
+
 for (k = 0; k <= 9; k++) {
         countarr[k] = 0;
     }

@@ -1,6 +1,12 @@
 #include <stdio.h>
-int a, b, c, d, e;
+int a;
+int b;
+int c;
+int d;
+int e;
+
 int flag;
+
 
 int main(void) {
 scanf("%d", &a);

@@ -1,11 +1,18 @@
 #include <stdio.h>
-int n, i;
+int n;
+int i;
+
 int arr[10];
+
 
 void selectsort();
 
 void selectsort() {
-    int i, j, min, tmp;
+    int i;
+int j;
+int min;
+int tmp;
+
 for (i = 0; i <= (n - 2); i++) {
         min = i;
 for (j = (i + 1); j <= (n - 1); j++) {

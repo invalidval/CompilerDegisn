@@ -1,7 +1,10 @@
 #include <stdio.h>
 int a[4096];
+
 int b[4][1024];
+
 int c[1024][4];
+
 
 int f1();
 
@@ -28,7 +31,7 @@ c[0][0] = 1;
 c[0][1] = 2;
 c[1][0] = 3;
 c[1][1] = 4;
-printf("%d", f1);
+printf("%d", f1());
 printf("%d", c[2][0]);
 
     return 0;

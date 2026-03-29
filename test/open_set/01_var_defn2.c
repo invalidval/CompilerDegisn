@@ -1,5 +1,7 @@
 #include <stdio.h>
-int a, b;
+int a;
+int b;
+
 
 int main(void) {
 a = 3;

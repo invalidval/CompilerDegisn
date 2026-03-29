@@ -1,8 +1,13 @@
 #include <stdio.h>
 const char dog = 'd';
 const char cat = 'c';
-int n, k, i, j;
+int n;
+int k;
+int i;
+int j;
+
 int a[5][5];
+
 
 int relu_reg(int n);
 int model();
@@ -39,7 +44,7 @@ for (k = 0; k <= (n - 1); k++) {
         scanf("%d", &a[i][j]);
     }
     }
-if ((model != 0)) {
+if ((model() != 0)) {
         printf("%c", cat);
     } else {
         printf("%c", dog);

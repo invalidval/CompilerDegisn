@@ -1,6 +1,13 @@
 #include <stdio.h>
-int i, i1, i2, i3, i4, a;
+int i;
+int i1;
+int i2;
+int i3;
+int i4;
+int a;
+
 int arr[10];
+
 
 int func1(int x, int y, int z);
 int func2(int x, int y);

@@ -1,6 +1,11 @@
 #include <stdio.h>
-int i, j, sum, t;
+int i;
+int j;
+int sum;
+int t;
+
 int arr[100];
+
 
 int main(void) {
 t = 5;

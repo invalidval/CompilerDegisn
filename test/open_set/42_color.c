@@ -1,11 +1,22 @@
 #include <stdio.h>
 const int modn = 1000000007;
 int dp[18][18][18][18][18][7];
+
 int list[200];
+
 int cns[19];
+
 int n;
-int i, j, k, l, m, h;
+
+int i;
+int j;
+int k;
+int l;
+int m;
+int h;
+
 int ans;
+
 
 int equal(int a, int b);
 int dfs(int a, int b, int c, int d, int e, int last);
@@ -24,6 +35,7 @@ if ((a == b)) {
 int dfs(int a, int b, int c, int d, int e, int last) {
     int _retval;
     int anss;
+
 if ((dp[a][b][c][d][e][last] != (-1))) {
         _retval = dp[a][b][c][d][e][last];
     }

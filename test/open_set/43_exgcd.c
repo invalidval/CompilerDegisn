@@ -1,12 +1,18 @@
 #include <stdio.h>
-int x[1], y[1];
-int a, b;
+int x[1];
+int y[1];
+
+int a;
+int b;
+
 
 int exgcd(int a, int b, int *x, int *y);
 
 int exgcd(int a, int b, int *x, int *y) {
     int _retval;
-    int t, r;
+    int t;
+int r;
+
 if ((b == 0)) {
         (*x) = 1;
 (*y) = 0;

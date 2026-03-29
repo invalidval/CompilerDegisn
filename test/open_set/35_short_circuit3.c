@@ -11,8 +11,16 @@ const char i = 'I';
 const char j = 'J';
 const char k = 'K';
 const int c = 1;
-int a, b, d;
-int i0, i1, i2, i3, i4;
+int a;
+int b;
+int d;
+
+int i0;
+int i1;
+int i2;
+int i3;
+int i4;
+
 
 int set_a(int val);
 int set_b(int val);

@@ -1,12 +1,21 @@
 #include <stdio.h>
-int n, i;
-int ini_arr[10], sorted_arr[10];
+int n;
+int i;
+
+int ini_arr[10];
+int sorted_arr[10];
+
 
 void countingsort();
 
 void countingsort() {
-    int i, j, k, jj;
+    int i;
+int j;
+int k;
+int jj;
+
     int count_arr[10];
+
 for (k = 0; k <= (n - 1); k++) {
         count_arr[k] = 0;
     }

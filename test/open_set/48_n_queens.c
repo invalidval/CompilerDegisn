@@ -2,17 +2,26 @@
 const char newline = ',';
 const char blank = ' ';
 int ans[50];
-int sum, n;
+
+int sum;
+int n;
+
 int row[50];
+
 int line1[50];
+
 int line2[100];
-int k, i;
+
+int k;
+int i;
+
 
 void printans();
 void f(int step);
 
 void printans() {
     int i;
+
 sum = (sum + 1);
 for (i = 1; i <= n; i++) {
         printf("%d", ans[(i) - 1]);
@@ -27,6 +36,7 @@ if ((i == n)) {
 
 void f(int step) {
     int i;
+
 for (i = 1; i <= n; i++) {
         if ((((row[(i) - 1] != 1) && (line1[((step + i)) - 1] == 0)) && (line2[(((n + step) - i)) - 1] == 0))) {
         ans[(step) - 1] = i;

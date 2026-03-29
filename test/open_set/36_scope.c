@@ -1,11 +1,16 @@
 #include <stdio.h>
-int a, sum, i;
+int a;
+int sum;
+int i;
+
 
 int func();
 
 int func() {
     int _retval;
-    int b, a;
+    int b;
+int a;
+
 b = 7;
 a = 1;
 if ((a == b)) {

@@ -1,6 +1,9 @@
 #include <stdio.h>
 int arr[6];
-int sum, i;
+
+int sum;
+int i;
+
 
 int main(void) {
 arr[0] = 1;

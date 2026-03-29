@@ -1,6 +1,8 @@
 #include <stdio.h>
 int a[5][20000];
+
 int ans;
+
 
 int main(void) {
 a[4][19999] = 1;
