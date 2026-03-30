@@ -2,9 +2,6 @@
 Parse error at 4:17 near ';': syntax error
 Parsing failed.
 ----------------------
-84_union_find.pas
-Error at 9:8 - read expects assignable variable for parameter 1
-----------------------
 85_matrix_multiply.pas
 Parse error at 15:15 near '[': syntax error
 Parsing failed.

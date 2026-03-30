@@ -210,6 +210,22 @@ bool testFunctionResultAssignmentValidInsideFunction() {
     return !errors.hasErrors();
 }
 
+bool testReadIntoFunctionResultValidInsideFunction() {
+    ASTBuilder builder;
+    ProgramNode* program = builder.makeProgram("t_func_read_ret_ok");
+
+    ASTNode* body = builder.makeProcCall("read", {builder.makeIdentifier("getint")});
+    addToProgramBody(builder, program, builder.makeFuncDecl("getint", nullptr, DataType::Integer, body));
+
+    SymbolTable table;
+    semantic_register::preregisterBuiltins(table);
+    ErrorHandler errors;
+    SemanticAnnotator annotator(table, errors);
+    annotator.annotate(program);
+
+    return !containsMessage(errors, "read expects assignable variable for parameter 1");
+}
+
 bool testFunctionResultAssignmentInvalidOutsideFunction() {
     ASTBuilder builder;
     ProgramNode* program = builder.makeProgram("t_func_ret_bad");
@@ -422,6 +438,10 @@ int main() {
     }
     if (!testFunctionResultAssignmentValidInsideFunction()) {
         std::cerr << "[fail] function result assignment inside function should pass\n";
+        ++failed;
+    }
+    if (!testReadIntoFunctionResultValidInsideFunction()) {
+        std::cerr << "[fail] read(function_name) inside function should pass\n";
         ++failed;
     }
     if (!testFunctionResultAssignmentInvalidOutsideFunction()) {

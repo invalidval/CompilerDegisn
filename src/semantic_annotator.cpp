@@ -660,7 +660,8 @@ void SemanticAnnotator::checkCallArguments(ProcCallNode* node, const SymbolEntry
     if (calleeName == "read") {
         for (std::size_t i = 0; i < node->children.size(); ++i) {
             ASTNode* arg = node->children[i];
-            if (!isLValue(arg)) {
+            const bool functionResultTarget = isFunctionResultAssignment(arg);
+            if (!isLValue(arg) && !functionResultTarget) {
                 errorHandler_.report(
                     arg->pos.line,
                     arg->pos.col,
