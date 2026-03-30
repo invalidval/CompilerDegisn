@@ -1,0 +1,20 @@
+79_graph_coloring.pas
+Parse error at 4:17 near ';': syntax error
+Parsing failed.
+----------------------
+84_union_find.pas
+Error at 9:8 - read expects assignable variable for parameter 1
+----------------------
+85_matrix_multiply.pas
+Parse error at 15:15 near '[': syntax error
+Parsing failed.
+----------------------
+92_math.pas
+Parse error at 3:13 near ';': syntax error
+Parsing failed.
+----------------------
+94_fp_params.pas
+Parse error at 103:13 near '[': syntax error
+Parse error at 103:14 near 'k': syntax error
+Parsing failed.
+----------------------
