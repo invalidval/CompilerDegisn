@@ -1,9 +1,13 @@
 #include <stdio.h>
 const char t = 's';
-const double a = 1e6;
-int x, y;
+const float a = 1e6;
+int x;
+int y;
+
 int z[10][7];
+
 int u;
+
 
 int gcd(int a, int b);
 
