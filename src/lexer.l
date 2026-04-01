@@ -46,7 +46,7 @@ const std::unordered_map<std::string, int> g_keyword_tokens = {
 	{"of", OF}, {"function", FUNCTION}, {"procedure", PROCEDURE},
 	{"begin", KW_BEGIN}, {"end", KW_END}, {"if", IF}, {"then", THEN},
 	{"else", ELSE}, {"while", WHILE}, {"do", DO}, {"for", FOR},
-	{"to", TO}, {"downto", DOWNTO}, {"read", READ}, {"write", WRITE},
+	{"to", TO}, {"downto", DOWNTO}, {"break", BREAK}, {"read", READ}, {"write", WRITE},
 	{"not", NOT}, {"and", AND}, {"or", OR}, {"div", DIV}, {"mod", MOD},
 	{"true", TRUE}, {"false", FALSE}
 };
@@ -253,21 +253,18 @@ WS         [ \t\r]+
 										return 0;
 									  }
 
-\'([^\'\\\n]|\\[ntr0\'\\])\'            {
-										if (!g_in_comment) {
-											setTokenMeta("Character", "char_literal");
-											yylval.text = duplicateText(yytext);
-											return CHARACTER;
-										}
-									  }
-
-\'([^\'\\\n]|\\.)+\'                  {
-										if (!g_in_comment) {
-											reportLexError(g_token_line, g_token_column,
-												"malformed character literal", yytext);
-											continue;
-										}
-									  }
+\'([^\'\\\n]|\\[ntr0\'\\])+\'           {
+								if (!g_in_comment) {
+									if (yyleng == 3 || (yyleng == 4 && yytext[1] == '\\')) {
+										setTokenMeta("Character", "char_literal");
+										yylval.text = duplicateText(yytext);
+										return CHARACTER;
+									}
+									setTokenMeta("String", "string_single_quote");
+									yylval.text = duplicateText(yytext);
+									return STRING;
+								}
+							  }
 
 \'([^\'\\\n]|\\.)*                    {
 										if (!g_in_comment) {

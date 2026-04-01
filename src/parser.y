@@ -114,7 +114,7 @@ ASTNode* buildArrayAccessFromIndices(ASTNode* base, ASTNode* indicesNode, Source
 
 /* Keywords */
 %token PROGRAM CONST VAR INTEGER REAL BOOLEAN CHAR ARRAY OF FUNCTION PROCEDURE TRUE FALSE
-%token KW_BEGIN KW_END IF THEN ELSE WHILE DO FOR TO DOWNTO READ WRITE NOT AND OR DIV MOD
+%token KW_BEGIN KW_END IF THEN ELSE WHILE DO FOR TO DOWNTO BREAK READ WRITE NOT AND OR DIV MOD
 
 /* Literals */
 %token <text> NUMBER CHARACTER STRING
@@ -538,6 +538,10 @@ statement:
             {
                     $$ = static_cast<void*>(g_astBuilder.makeWhileStmt(asNode($2), asNode($4), currentPos()));
             }
+        | BREAK
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeProcCall("break", {}, currentPos()));
+            }
         | READ '(' variable_list ')'
             {
                     $$ = static_cast<void*>(g_astBuilder.makeProcCall("read", listItems(asNode($3)), currentPos()));
@@ -562,9 +566,20 @@ id_varpart:
             {
                     $$ = nullptr;
             }
-        | '[' expression_list ']'
+        | id_varpart '[' expression_list ']'
             {
-                    $$ = $2;
+                    ListNode* list = nullptr;
+                    if ($1 == nullptr) {
+                            list = g_astBuilder.makeList(ListKind::Expressions, currentPos());
+                    } else {
+                            list = asList($1);
+                    }
+
+                    auto indices = listItems(asNode($3));
+                    for (ASTNode* idx : indices) {
+                            list->add(idx);
+                    }
+                    $$ = static_cast<void*>(list);
             }
         ;
 

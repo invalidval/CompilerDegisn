@@ -319,7 +319,9 @@ void SemanticAnnotator::annotateWhileStmt(WhileStmtNode* node) {
     }
 
     if (node->children.size() > 1) {
+        ++loopDepth_;
         annotateNode(node->children[1]);
+        --loopDepth_;
     }
 }
 
@@ -346,7 +348,9 @@ void SemanticAnnotator::annotateForStmt(ForStmtNode* node) {
             "For-loop bounds must be integer expressions");
     }
 
+    ++loopDepth_;
     annotateNode(body);
+    --loopDepth_;
 }
 
 void SemanticAnnotator::annotateCompoundStmt(CompoundStmtNode* node) {
@@ -356,6 +360,21 @@ void SemanticAnnotator::annotateCompoundStmt(CompoundStmtNode* node) {
 }
 
 void SemanticAnnotator::annotateProcCall(ProcCallNode* node) {
+    const std::string calleeName = toLower(node->name);
+    if (calleeName == "break") {
+        if (!node->children.empty()) {
+            errorHandler_.report(node->pos.line, node->pos.col,
+                "break does not take arguments");
+        }
+        if (loopDepth_ <= 0) {
+            errorHandler_.report(node->pos.line, node->pos.col,
+                "break can only be used inside while/for loop");
+        }
+        node->dataType = DataType::Unknown;
+        node->symbolEntry = nullptr;
+        return;
+    }
+
     for (ASTNode* arg : node->children) {
         annotateValueNode(arg);
     }
