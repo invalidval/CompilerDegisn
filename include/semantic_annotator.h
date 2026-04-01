@@ -65,6 +65,7 @@ private:
 
     std::vector<std::string> functionContextStack_;
     int valueContextDepth_ = 0;
+    int loopDepth_ = 0;
 };
 
 #endif  // PASCC_SEMANTIC_ANNOTATOR_H

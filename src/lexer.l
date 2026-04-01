@@ -46,7 +46,7 @@ const std::unordered_map<std::string, int> g_keyword_tokens = {
 	{"of", OF}, {"function", FUNCTION}, {"procedure", PROCEDURE},
 	{"begin", KW_BEGIN}, {"end", KW_END}, {"if", IF}, {"then", THEN},
 	{"else", ELSE}, {"while", WHILE}, {"do", DO}, {"for", FOR},
-	{"to", TO}, {"downto", DOWNTO}, {"read", READ}, {"write", WRITE},
+	{"to", TO}, {"downto", DOWNTO}, {"break", BREAK}, {"read", READ}, {"write", WRITE},
 	{"not", NOT}, {"and", AND}, {"or", OR}, {"div", DIV}, {"mod", MOD},
 	{"true", TRUE}, {"false", FALSE}
 };

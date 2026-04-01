@@ -114,7 +114,7 @@ ASTNode* buildArrayAccessFromIndices(ASTNode* base, ASTNode* indicesNode, Source
 
 /* Keywords */
 %token PROGRAM CONST VAR INTEGER REAL BOOLEAN CHAR ARRAY OF FUNCTION PROCEDURE TRUE FALSE
-%token KW_BEGIN KW_END IF THEN ELSE WHILE DO FOR TO DOWNTO READ WRITE NOT AND OR DIV MOD
+%token KW_BEGIN KW_END IF THEN ELSE WHILE DO FOR TO DOWNTO BREAK READ WRITE NOT AND OR DIV MOD
 
 /* Literals */
 %token <text> NUMBER CHARACTER STRING
@@ -537,6 +537,10 @@ statement:
         | WHILE expression DO statement
             {
                     $$ = static_cast<void*>(g_astBuilder.makeWhileStmt(asNode($2), asNode($4), currentPos()));
+            }
+        | BREAK
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeProcCall("break", {}, currentPos()));
             }
         | READ '(' variable_list ')'
             {
