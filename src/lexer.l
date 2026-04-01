@@ -253,21 +253,18 @@ WS         [ \t\r]+
 										return 0;
 									  }
 
-\'([^\'\\\n]|\\[ntr0\'\\])\'            {
-										if (!g_in_comment) {
-											setTokenMeta("Character", "char_literal");
-											yylval.text = duplicateText(yytext);
-											return CHARACTER;
-										}
-									  }
-
-\'([^\'\\\n]|\\.)+\'                  {
-										if (!g_in_comment) {
-											reportLexError(g_token_line, g_token_column,
-												"malformed character literal", yytext);
-											continue;
-										}
-									  }
+\'([^\'\\\n]|\\[ntr0\'\\])+\'           {
+								if (!g_in_comment) {
+									if (yyleng == 3 || (yyleng == 4 && yytext[1] == '\\')) {
+										setTokenMeta("Character", "char_literal");
+										yylval.text = duplicateText(yytext);
+										return CHARACTER;
+									}
+									setTokenMeta("String", "string_single_quote");
+									yylval.text = duplicateText(yytext);
+									return STRING;
+								}
+							  }
 
 \'([^\'\\\n]|\\.)*                    {
 										if (!g_in_comment) {

@@ -562,9 +562,20 @@ id_varpart:
             {
                     $$ = nullptr;
             }
-        | '[' expression_list ']'
+        | id_varpart '[' expression_list ']'
             {
-                    $$ = $2;
+                    ListNode* list = nullptr;
+                    if ($1 == nullptr) {
+                            list = g_astBuilder.makeList(ListKind::Expressions, currentPos());
+                    } else {
+                            list = asList($1);
+                    }
+
+                    auto indices = listItems(asNode($3));
+                    for (ASTNode* idx : indices) {
+                            list->add(idx);
+                    }
+                    $$ = static_cast<void*>(list);
             }
         ;
 
