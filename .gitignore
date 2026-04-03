@@ -3,3 +3,4 @@ output/
 .vscode/
 test/.parser-test-out/
 test/out.c
+.DS_Store
