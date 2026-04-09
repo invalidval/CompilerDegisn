@@ -1,6 +1,6 @@
 #include <stdio.h>
 const float e = 2.1718281828459045;
-const char split = '--';
+const char split[] = "--";
 float x;
 float y;
 
@@ -183,13 +183,13 @@ _retval = my_exp((x * my_ln(a)));
 }
 
 void putfloat(int f) {
-printf("%f", f);
+printf("%d", f);
 
 }
 
 float getfloat() {
     float _retval;
-scanf("%f", &getfloat());
+scanf("%f", getfloat());
 
     return _retval;
 }
@@ -207,17 +207,17 @@ putfloat(my_exp(x));
 if ((x > 0.0)) {
         putfloat(my_ln(x));
     } else {
-        printf("%c", split);
+        printf("%s", split);
     }
 if (((x > 0.0) && (y > 0.0))) {
         putfloat(my_log(x, y));
     } else {
-        printf("%c", split);
+        printf("%s", split);
     }
 if ((x > 0.0)) {
         putfloat(my_powf(x, y));
     } else {
-        printf("%c", split);
+        printf("%s", split);
     }
     }
 scanf("%d", &num);

@@ -28,7 +28,7 @@ for (i = 1; i <= m1; i++) {
 
 int getint() {
     int _retval;
-scanf("%d", &getint());
+scanf("%d", getint());
 
     return _retval;
 }

@@ -141,20 +141,37 @@ std::string CodegenUtils::emitConstDecl(ConstDeclNode* node) {
     if (val) dtype = val->dataType;
     std::string ctype = CodegenUtils::mapType(dtype);
     std::ostringstream oss;
-    oss << "const " << ctype << " " << id->identifier << " = ";
-    // 支持负号表达式
+    // 检查是否为字符串常量或多字符常量
+    bool isString = false;
+    std::string valueStr;
     if (LiteralNode* lit = dynamic_cast<LiteralNode*>(val)) {
-        if (lit->value == "true") {
-            oss << "1";
-        } else if (lit->value == "false") {
-            oss << "0";
-        } else {
-            oss << lit->value;
+        valueStr = lit->value;
+        if (!valueStr.empty() && valueStr[0] == '"' && valueStr.back() == '"') {
+            isString = true;
+        } else if (valueStr.size() >= 2 && valueStr[0] == '\'' && valueStr.back() == '\'' && valueStr.size() > 3) {
+            // 多字符常量，改为字符串
+            isString = true;
+            valueStr = "\"" + valueStr.substr(1, valueStr.size() - 2) + "\"";
         }
-    } else if (UnaryExprNode* unary = dynamic_cast<UnaryExprNode*>(val)) {
-        oss << unary->op << dynamic_cast<LiteralNode*>(unary->children[0])->value;
+    }
+    if (isString) {
+        oss << "const char " << id->identifier << "[] = " << valueStr;
     } else {
-        oss << "0";
+        oss << "const " << ctype << " " << id->identifier << " = ";
+        // 支持负号表达式
+        if (LiteralNode* lit = dynamic_cast<LiteralNode*>(val)) {
+            if (lit->value == "true") {
+                oss << "1";
+            } else if (lit->value == "false") {
+                oss << "0";
+            } else {
+                oss << lit->value;
+            }
+        } else if (UnaryExprNode* unary = dynamic_cast<UnaryExprNode*>(val)) {
+            oss << unary->op << dynamic_cast<LiteralNode*>(unary->children[0])->value;
+        } else {
+            oss << "0";
+        }
     }
     oss << ";";
     return oss.str();
@@ -260,8 +277,18 @@ std::string CodegenUtils::emitReadStmt(ProcCallNode* node) {
             // var parameter identifier is emitted as (*x); scanf needs x in that case.
             if (expr.size() >= 4 && expr.rfind("(*", 0) == 0 && expr.back() == ')') {
                 args.push_back(expr.substr(2, expr.size() - 3));
+            } else if (arg->nodeType == NodeType::Identifier) {
+                IdentifierNode* idNode = dynamic_cast<IdentifierNode*>(arg);
+                if (idNode && idNode->symbolEntry && idNode->symbolEntry->kind == SymbolKind::Function) {
+                    // 函数调用：不加 &
+                    args.push_back(expr);
+                } else {
+                    // 变量：加 &
+                    args.push_back("&" + expr);
+                }
             } else {
-                args.push_back("&" + expr);
+                // 其他表达式：不加 &
+                args.push_back(expr);
             }
         } else {
             // Keep generated C compilable even for malformed AST.
@@ -281,24 +308,39 @@ std::string CodegenUtils::emitWriteStmt(ProcCallNode* node) {
     oss << "printf(\"";
     std::vector<std::string> args;
     for (ASTNode* arg : node->children) {
-        DataType t = DataType::Integer;
         DataType exprType = DataType::Unknown;
         if (arg != nullptr) {
             if (arg->symbolEntry && arg->symbolEntry->type != DataType::Unknown) {
-                t = arg->symbolEntry->type;
+                exprType = arg->symbolEntry->type;
             } else if (arg->dataType != DataType::Unknown) {
-                t = arg->dataType;
+                exprType = arg->dataType;
             } else if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
-                t = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
+                exprType = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
+            } else {
+                exprType = DataType::Integer; // 默认
             }
-            exprType = arg->dataType;
+            // 特殊处理：如果参数类型为Real，但实际C类型为int，使用int格式
+            if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
+                if (id->symbolEntry && id->symbolEntry->kind == SymbolKind::Parameter && exprType == DataType::Real) {
+                    exprType = DataType::Integer;
+                }
+            }
         }
-        oss << getFormat(t);
+        // 特殊处理：常量字符数组使用%s
+        std::string format = getFormat(exprType);
+        if (exprType == DataType::Char) {
+            if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
+                if (id->symbolEntry && id->symbolEntry->kind == SymbolKind::Constant) {
+                    format = "%s";
+                }
+            }
+        }
+        oss << format;
         if (arg) {
             CodeGenerator cg;
             std::string expr = cg.emitNode(arg);
             // 如果格式符为%f但表达式类型为int，自动加(float)强转
-            if (getFormat(t) == "%f" && exprType == DataType::Integer) {
+            if (getFormat(exprType) == "%f" && exprType == DataType::Integer) {
                 expr = "(float)(" + expr + ")";
             }
             args.push_back(expr);

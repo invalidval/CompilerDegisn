@@ -1,6 +1,6 @@
 #include <stdio.h>
 const int space = 32;
-const char ne = 'Not exist';
+const char ne[] = "Not exist";
 int graph[4][4];
 
 int color[4];
@@ -24,7 +24,7 @@ for (i = 0; i <= 3; i++) {
 }
 
 void printmessage() {
-printf("%c", ne);
+printf("%s", ne);
 
 }
 
