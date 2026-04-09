@@ -63,7 +63,7 @@ foundsolution = 1;
         color[i] = j;
 if ((graphcoloring(m, (i + 1)) != 0)) {
         foundsolution = 1;
-break();
+break;
     }
 color[i] = 0;
     }

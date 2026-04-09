@@ -426,6 +426,11 @@ void CodeGenerator::visit(ProcCallNode* node) {
         currentExpr_ = code;
         return;
     }
+    // 特殊处理 break
+    if (node->name == "break") {
+        currentExpr_ = "break;";
+        return;
+    }
     // 普通过程调用
     std::ostringstream oss;
     oss << node->name << "(";
