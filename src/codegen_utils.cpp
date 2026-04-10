@@ -30,11 +30,11 @@ std::string CodegenUtils::emitProcPrototype(ProcDeclNode* node) {
             ParamDeclNode* param = dynamic_cast<ParamDeclNode*>(paramList->children[i]);
             if (!param) continue;
             ListNode* ids = dynamic_cast<ListNode*>(param->children[0]);
-            ASTNode* typeNode = param->children[1];
-            std::string ctype = mapType(typeNode->dataType);
+            // ASTNode* typeNode = param->children[1];
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
+                std::string ctype = mapType(id->dataType); // 关键：用每个id的dataType
                 if (!first) oss << ", ";
                 first = false;
                 if (param->isVar) oss << ctype << " *" << id->identifier;
@@ -58,11 +58,11 @@ std::string CodegenUtils::emitFuncPrototype(FuncDeclNode* node) {
             ParamDeclNode* param = dynamic_cast<ParamDeclNode*>(paramList->children[i]);
             if (!param) continue;
             ListNode* ids = dynamic_cast<ListNode*>(param->children[0]);
-            ASTNode* typeNode = param->children[1];
-            std::string ptype = mapType(typeNode->dataType);
+            // ASTNode* typeNode = param->children[1];
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
+                std::string ptype = mapType(id->dataType); // 关键：用每个id的dataType
                 if (!first) oss << ", ";
                 first = false;
                 if (param->isVar) oss << ptype << " *" << id->identifier;
@@ -173,11 +173,11 @@ std::string CodegenUtils::emitProcDecl(ProcDeclNode* node, CodeGenerator& cg) {
             ParamDeclNode* param = dynamic_cast<ParamDeclNode*>(paramList->children[i]);
             if (!param) continue;
             ListNode* ids = dynamic_cast<ListNode*>(param->children[0]);
-            ASTNode* typeNode = param->children[1];
-            std::string ctype = CodegenUtils::mapType(typeNode->dataType);
+            // ASTNode* typeNode = param->children[1];
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
+                std::string ctype = mapType(id->dataType); // 关键：用每个id的dataType
                 if (i > 0 || j > 0) oss << ", ";
                 if (param->isVar) oss << ctype << " *" << id->identifier;
                 else oss << ctype << " " << id->identifier;
@@ -209,11 +209,11 @@ std::string CodegenUtils::emitFuncDecl(FuncDeclNode* node, CodeGenerator& cg) {
             ParamDeclNode* param = dynamic_cast<ParamDeclNode*>(paramList->children[i]);
             if (!param) continue;
             ListNode* ids = dynamic_cast<ListNode*>(param->children[0]);
-            ASTNode* typeNode = param->children[1];
-            std::string ptype = CodegenUtils::mapType(typeNode->dataType);
+            // ASTNode* typeNode = param->children[1];
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
+                std::string ptype = mapType(id->dataType); // 关键：用每个id的dataType
                 if (i > 0 || j > 0) oss << ", ";
                 if (param->isVar) oss << ptype << " *" << id->identifier;
                 else oss << ptype << " " << id->identifier;

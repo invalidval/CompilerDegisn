@@ -4,6 +4,7 @@
 
 #include <sstream>
 #include <cctype>
+#include <algorithm> // 添加这一行，解决 std::reverse 未定义
 
 namespace {
 std::string toLowerCopy(const std::string& text) {
@@ -374,22 +375,49 @@ void CodeGenerator::visit(CompoundStmtNode* node) {
 }
 
 void CodeGenerator::visit(ArrayAccessNode* node) {
-    std::string base = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
-    std::string index = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
+    // 递归处理多维数组访问，生成 arr[i][j] 并对每一维做下界偏移
+    // 收集所有 base/index/lowerBound
+    std::vector<std::string> indices;
+    std::vector<int> lowers;
+    const ASTNode* cur = node;
+    const SymbolEntry* arrSym = nullptr;
+    // 向内递归收集所有 index/lowerBound
+    while (cur && cur->nodeType == NodeType::ArrayAccess) {
+        // 当前 index
+        std::string idx = emitNode(cur->children.size() > 1 ? cur->children[1] : nullptr);
+        int lower = 0;
+        if (cur->symbolEntry && cur->symbolEntry->isArray) {
+            // 语义注解已填充 arrayBounds
+            int depth = static_cast<int>(indices.size());
+            if (depth < static_cast<int>(cur->symbolEntry->arrayBounds.size())) {
+                lower = cur->symbolEntry->arrayBounds[depth].lower;
+            }
+        } else {
+            lower = static_cast<const ArrayAccessNode*>(cur)->lowerBound;
+        }
+        indices.push_back(idx);
+        lowers.push_back(lower);
+        // 继续向内
+        cur = cur->children.size() > 0 ? cur->children[0] : nullptr;
+        if (cur && cur->symbolEntry) arrSym = cur->symbolEntry;
+    }
+    // cur 现在是最底层的 base（IdentifierNode）
+    std::string base = emitNode(const_cast<ASTNode*>(cur));
 
-    int lowerBound = node->lowerBound;
-    if (node->symbolEntry != nullptr && node->symbolEntry->isArray) {
-        const int depth = arrayAccessDepthForCodegen(node);
-        if (depth >= 0 && static_cast<size_t>(depth) < node->symbolEntry->arrayBounds.size()) {
-            lowerBound = node->symbolEntry->arrayBounds[static_cast<size_t>(depth)].lower;
+    // indices/lowers 是从内到外的，需反转
+    std::reverse(indices.begin(), indices.end());
+    std::reverse(lowers.begin(), lowers.end());
+
+    std::ostringstream oss;
+    oss << base;
+    for (size_t i = 0; i < indices.size(); ++i) {
+        if (lowers[i] == 0) {
+            oss << "[" << indices[i] << "]";
+        } else {
+            oss << "[(" << indices[i] << ") - " << lowers[i] << "]";
         }
     }
-
-    if (lowerBound == 0) {
-        currentExpr_ = base + "[" + index + "]";
-    } else {
-        currentExpr_ = base + "[(" + index + ") - " + std::to_string(lowerBound) + "]";
-    }
+    currentExpr_ = oss.str();
 }
 
 void CodeGenerator::visit(ArrayTypeNode* /*node*/) {
