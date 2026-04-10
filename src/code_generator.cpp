@@ -415,13 +415,19 @@ void CodeGenerator::visit(ListNode* node) {
 }
 
 void CodeGenerator::visit(ProcCallNode* node) {
+    const std::string loweredName = toLowerCopy(node->name);
+    if (loweredName == "break") {
+        currentExpr_ = "break";
+        return;
+    }
+
     // 特殊处理 read/write
-    if (node->name == "read") {
+    if (loweredName == "read") {
         std::string code = CodegenUtils::emitReadStmt(node);
         currentExpr_ = code;
         return;
     }
-    if (node->name == "write") {
+    if (loweredName == "write") {
         std::string code = CodegenUtils::emitWriteStmt(node);
         currentExpr_ = code;
         return;

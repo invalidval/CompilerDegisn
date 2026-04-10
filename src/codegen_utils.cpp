@@ -6,6 +6,29 @@
 #include <string>
 #include <cassert>
 
+static bool isMultiCharLiteralText(const std::string& text) {
+    if (text.size() < 2 || text.front() != '\'' || text.back() != '\'') {
+        return false;
+    }
+    return (text.size() - 2) > 1;
+}
+
+static std::string pascalCharLiteralToCString(const std::string& text) {
+    if (text.size() < 2 || text.front() != '\'' || text.back() != '\'') {
+        return "\"\"";
+    }
+    std::string inner = text.substr(1, text.size() - 2);
+    std::string escaped;
+    escaped.reserve(inner.size() + 4);
+    for (char ch : inner) {
+        if (ch == '\\' || ch == '"') {
+            escaped.push_back('\\');
+        }
+        escaped.push_back(ch);
+    }
+    return "\"" + escaped + "\"";
+}
+
 std::string CodegenUtils::wrapAsCProgram(const std::string& globals,
                                          const std::string& prototypes,
                                          const std::string& definitions,
@@ -31,10 +54,10 @@ std::string CodegenUtils::emitProcPrototype(ProcDeclNode* node) {
             if (!param) continue;
             ListNode* ids = dynamic_cast<ListNode*>(param->children[0]);
             ASTNode* typeNode = param->children[1];
-            std::string ctype = mapType(typeNode->dataType);
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
+                std::string ctype = mapType(id->dataType);
                 if (!first) oss << ", ";
                 first = false;
                 if (param->isVar) oss << ctype << " *" << id->identifier;
@@ -59,10 +82,10 @@ std::string CodegenUtils::emitFuncPrototype(FuncDeclNode* node) {
             if (!param) continue;
             ListNode* ids = dynamic_cast<ListNode*>(param->children[0]);
             ASTNode* typeNode = param->children[1];
-            std::string ptype = mapType(typeNode->dataType);
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
+                std::string ptype = mapType(id->dataType);
                 if (!first) oss << ", ";
                 first = false;
                 if (param->isVar) oss << ptype << " *" << id->identifier;
@@ -140,10 +163,21 @@ std::string CodegenUtils::emitConstDecl(ConstDeclNode* node) {
     DataType dtype = DataType::Integer;
     if (val) dtype = val->dataType;
     std::string ctype = CodegenUtils::mapType(dtype);
+    bool useCStringConst = false;
+    std::string cStringLiteral;
+    if (auto* lit = dynamic_cast<LiteralNode*>(val)) {
+        if (dtype == DataType::Char && isMultiCharLiteralText(lit->value)) {
+            useCStringConst = true;
+            ctype = "char*";
+            cStringLiteral = pascalCharLiteralToCString(lit->value);
+        }
+    }
     std::ostringstream oss;
     oss << "const " << ctype << " " << id->identifier << " = ";
     // 支持负号表达式
-    if (LiteralNode* lit = dynamic_cast<LiteralNode*>(val)) {
+    if (useCStringConst) {
+        oss << cStringLiteral;
+    } else if (LiteralNode* lit = dynamic_cast<LiteralNode*>(val)) {
         if (lit->value == "true") {
             oss << "1";
         } else if (lit->value == "false") {
@@ -174,10 +208,10 @@ std::string CodegenUtils::emitProcDecl(ProcDeclNode* node, CodeGenerator& cg) {
             if (!param) continue;
             ListNode* ids = dynamic_cast<ListNode*>(param->children[0]);
             ASTNode* typeNode = param->children[1];
-            std::string ctype = CodegenUtils::mapType(typeNode->dataType);
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
+                std::string ctype = CodegenUtils::mapType(id->dataType);
                 if (i > 0 || j > 0) oss << ", ";
                 if (param->isVar) oss << ctype << " *" << id->identifier;
                 else oss << ctype << " " << id->identifier;
@@ -210,10 +244,10 @@ std::string CodegenUtils::emitFuncDecl(FuncDeclNode* node, CodeGenerator& cg) {
             if (!param) continue;
             ListNode* ids = dynamic_cast<ListNode*>(param->children[0]);
             ASTNode* typeNode = param->children[1];
-            std::string ptype = CodegenUtils::mapType(typeNode->dataType);
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
+                std::string ptype = CodegenUtils::mapType(id->dataType);
                 if (i > 0 || j > 0) oss << ", ";
                 if (param->isVar) oss << ptype << " *" << id->identifier;
                 else oss << ptype << " " << id->identifier;
@@ -260,6 +294,9 @@ std::string CodegenUtils::emitReadStmt(ProcCallNode* node) {
             // var parameter identifier is emitted as (*x); scanf needs x in that case.
             if (expr.size() >= 4 && expr.rfind("(*", 0) == 0 && expr.back() == ')') {
                 args.push_back(expr.substr(2, expr.size() - 3));
+            } else if (expr.size() >= 2 && expr.compare(expr.size() - 2, 2, "()") == 0) {
+                // read(functionName) in Pascal function body means assigning function result.
+                args.push_back("&_retval");
             } else {
                 args.push_back("&" + expr);
             }
@@ -283,6 +320,8 @@ std::string CodegenUtils::emitWriteStmt(ProcCallNode* node) {
     for (ASTNode* arg : node->children) {
         DataType t = DataType::Integer;
         DataType exprType = DataType::Unknown;
+        std::string fmt;
+        bool stringLikeConst = false;
         if (arg != nullptr) {
             if (arg->symbolEntry && arg->symbolEntry->type != DataType::Unknown) {
                 t = arg->symbolEntry->type;
@@ -292,13 +331,32 @@ std::string CodegenUtils::emitWriteStmt(ProcCallNode* node) {
                 t = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
             }
             exprType = arg->dataType;
+
+            if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
+                if (id->symbolEntry != nullptr &&
+                    id->symbolEntry->isConstantLike() &&
+                    id->symbolEntry->hasConstLiteral &&
+                    isMultiCharLiteralText(id->symbolEntry->constLiteralText)) {
+                    stringLikeConst = true;
+                }
+            } else if (LiteralNode* lit = dynamic_cast<LiteralNode*>(arg)) {
+                if (isMultiCharLiteralText(lit->value)) {
+                    stringLikeConst = true;
+                }
+            }
         }
-        oss << getFormat(t);
+        fmt = stringLikeConst ? "%s" : getFormat(t);
+        oss << fmt;
         if (arg) {
             CodeGenerator cg;
             std::string expr = cg.emitNode(arg);
+            if (LiteralNode* lit = dynamic_cast<LiteralNode*>(arg)) {
+                if (isMultiCharLiteralText(lit->value)) {
+                    expr = pascalCharLiteralToCString(lit->value);
+                }
+            }
             // 如果格式符为%f但表达式类型为int，自动加(float)强转
-            if (getFormat(t) == "%f" && exprType == DataType::Integer) {
+            if (fmt == "%f" && exprType == DataType::Integer) {
                 expr = "(float)(" + expr + ")";
             }
             args.push_back(expr);
