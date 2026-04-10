@@ -12,10 +12,10 @@ float arr[40][3];
 int arr2[24][3];
 
 
-float params_f40(int x0, int x1, int x2, int x3, int x4, int x5, int x6, int x7, int x8, int x9, int x10, int x11, int x12, int x13, int x14, int x15, int x16, int x17, int x18, int x19, int x20, int x21, int x22, int x23, int x24, int x25, int x26, int x27, int x28, int x29, int x30, int x31, int x32, int x33, int x34, int x35, int x36, int x37, int x38, int x39);
-float params_f40_i24(int i23, int i2, int i6, int x4, int i1, int i4, int i5, int x8, int x15, int x7, int i22, int x3, int x28, int i0, int x37, int i19, int x30, int x12, int x1, int x11, int x38, int x6, int i7, int x32, int i10, int i13, int x20, int x33, int x23, int x9, int x25, int i8, int x39, int i17, int x21, int x16, int x5, int x34, int i18, int i9, int x14, int x10, int x0, int i12, int x31, int i11, int i16, int x27, int x24, int x13, int x29, int i3, int i21, int i20, int x18, int x19, int x22, int x26, int x36, int x17, int i15, int x2, int i14, int x35);
+float params_f40(float x0, float x1, float x2, float x3, float x4, float x5, float x6, float x7, float x8, float x9, float x10, float x11, float x12, float x13, float x14, float x15, float x16, float x17, float x18, float x19, float x20, float x21, float x22, float x23, float x24, float x25, float x26, float x27, float x28, float x29, float x30, float x31, float x32, float x33, float x34, float x35, float x36, float x37, float x38, float x39);
+float params_f40_i24(int i23, int i2, int i6, float x4, int i1, int i4, int i5, float x8, float x15, float x7, int i22, float x3, float x28, int i0, float x37, int i19, float x30, float x12, float x1, float x11, float x38, float x6, int i7, float x32, int i10, int i13, float x20, float x33, float x23, float x9, float x25, int i8, float x39, int i17, float x21, float x16, float x5, float x34, int i18, int i9, float x14, float x10, float x0, int i12, float x31, int i11, int i16, float x27, float x24, float x13, float x29, int i3, int i21, int i20, float x18, float x19, float x22, float x26, float x36, float x17, int i15, float x2, int i14, float x35);
 
-float params_f40(int x0, int x1, int x2, int x3, int x4, int x5, int x6, int x7, int x8, int x9, int x10, int x11, int x12, int x13, int x14, int x15, int x16, int x17, int x18, int x19, int x20, int x21, int x22, int x23, int x24, int x25, int x26, int x27, int x28, int x29, int x30, int x31, int x32, int x33, int x34, int x35, int x36, int x37, int x38, int x39) {
+float params_f40(float x0, float x1, float x2, float x3, float x4, float x5, float x6, float x7, float x8, float x9, float x10, float x11, float x12, float x13, float x14, float x15, float x16, float x17, float x18, float x19, float x20, float x21, float x22, float x23, float x24, float x25, float x26, float x27, float x28, float x29, float x30, float x31, float x32, float x33, float x34, float x35, float x36, float x37, float x38, float x39) {
     float _retval;
     int i;
 
@@ -43,7 +43,7 @@ _retval = arr[k];
     return _retval;
 }
 
-float params_f40_i24(int i23, int i2, int i6, int x4, int i1, int i4, int i5, int x8, int x15, int x7, int i22, int x3, int x28, int i0, int x37, int i19, int x30, int x12, int x1, int x11, int x38, int x6, int i7, int x32, int i10, int i13, int x20, int x33, int x23, int x9, int x25, int i8, int x39, int i17, int x21, int x16, int x5, int x34, int i18, int i9, int x14, int x10, int x0, int i12, int x31, int i11, int i16, int x27, int x24, int x13, int x29, int i3, int i21, int i20, int x18, int x19, int x22, int x26, int x36, int x17, int i15, int x2, int i14, int x35) {
+float params_f40_i24(int i23, int i2, int i6, float x4, int i1, int i4, int i5, float x8, float x15, float x7, int i22, float x3, float x28, int i0, float x37, int i19, float x30, float x12, float x1, float x11, float x38, float x6, int i7, float x32, int i10, int i13, float x20, float x33, float x23, float x9, float x25, int i8, float x39, int i17, float x21, float x16, float x5, float x34, int i18, int i9, float x14, float x10, float x0, int i12, float x31, int i11, int i16, float x27, float x24, float x13, float x29, int i3, int i21, int i20, float x18, float x19, float x22, float x26, float x36, float x17, int i15, float x2, int i14, float x35) {
     float _retval;
     int i;
 

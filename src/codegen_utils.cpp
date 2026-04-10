@@ -6,13 +6,6 @@
 #include <string>
 #include <cassert>
 
-static bool isMultiCharLiteralText(const std::string& text) {
-    if (text.size() < 2 || text.front() != '\'' || text.back() != '\'') {
-        return false;
-    }
-    return (text.size() - 2) > 1;
-}
-
 static std::string pascalCharLiteralToCString(const std::string& text) {
     if (text.size() < 2 || text.front() != '\'' || text.back() != '\'') {
         return "\"\"";
@@ -165,8 +158,11 @@ std::string CodegenUtils::emitConstDecl(ConstDeclNode* node) {
     std::string ctype = CodegenUtils::mapType(dtype);
     bool useCStringConst = false;
     std::string cStringLiteral;
-    if (auto* lit = dynamic_cast<LiteralNode*>(val)) {
-        if (dtype == DataType::Char && isMultiCharLiteralText(lit->value)) {
+    if (id->symbolEntry != nullptr && id->symbolEntry->isStringLikeConst) {
+        useCStringConst = true;
+        ctype = "char*";
+    } else if (auto* lit = dynamic_cast<LiteralNode*>(val)) {
+        if (dtype == DataType::Char && lit->isStringLikeLiteral) {
             useCStringConst = true;
             ctype = "char*";
             cStringLiteral = pascalCharLiteralToCString(lit->value);
@@ -176,6 +172,13 @@ std::string CodegenUtils::emitConstDecl(ConstDeclNode* node) {
     oss << "const " << ctype << " " << id->identifier << " = ";
     // 支持负号表达式
     if (useCStringConst) {
+        if (cStringLiteral.empty()) {
+            if (id->symbolEntry != nullptr && id->symbolEntry->hasConstLiteral) {
+                cStringLiteral = pascalCharLiteralToCString(id->symbolEntry->constLiteralText);
+            } else {
+                cStringLiteral = "\"\"";
+            }
+        }
         oss << cStringLiteral;
     } else if (LiteralNode* lit = dynamic_cast<LiteralNode*>(val)) {
         if (lit->value == "true") {
@@ -291,12 +294,15 @@ std::string CodegenUtils::emitReadStmt(ProcCallNode* node) {
         if (arg) {
             CodeGenerator cg;
             std::string expr = cg.emitNode(arg);
+            if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
+                if (id->isFunctionResultTarget) {
+                    args.push_back("&_retval");
+                    continue;
+                }
+            }
             // var parameter identifier is emitted as (*x); scanf needs x in that case.
             if (expr.size() >= 4 && expr.rfind("(*", 0) == 0 && expr.back() == ')') {
                 args.push_back(expr.substr(2, expr.size() - 3));
-            } else if (expr.size() >= 2 && expr.compare(expr.size() - 2, 2, "()") == 0) {
-                // read(functionName) in Pascal function body means assigning function result.
-                args.push_back("&_retval");
             } else {
                 args.push_back("&" + expr);
             }
@@ -319,28 +325,26 @@ std::string CodegenUtils::emitWriteStmt(ProcCallNode* node) {
     std::vector<std::string> args;
     for (ASTNode* arg : node->children) {
         DataType t = DataType::Integer;
-        DataType exprType = DataType::Unknown;
         std::string fmt;
         bool stringLikeConst = false;
         if (arg != nullptr) {
-            if (arg->symbolEntry && arg->symbolEntry->type != DataType::Unknown) {
-                t = arg->symbolEntry->type;
-            } else if (arg->dataType != DataType::Unknown) {
+            // Prefer semantic expression type first. Fallback to symbol type.
+            if (arg->dataType != DataType::Unknown) {
                 t = arg->dataType;
+            } else if (arg->symbolEntry && arg->symbolEntry->type != DataType::Unknown) {
+                t = arg->symbolEntry->type;
             } else if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
                 t = id->symbolEntry ? id->symbolEntry->type : DataType::Integer;
             }
-            exprType = arg->dataType;
 
             if (IdentifierNode* id = dynamic_cast<IdentifierNode*>(arg)) {
                 if (id->symbolEntry != nullptr &&
                     id->symbolEntry->isConstantLike() &&
-                    id->symbolEntry->hasConstLiteral &&
-                    isMultiCharLiteralText(id->symbolEntry->constLiteralText)) {
+                    id->symbolEntry->isStringLikeConst) {
                     stringLikeConst = true;
                 }
             } else if (LiteralNode* lit = dynamic_cast<LiteralNode*>(arg)) {
-                if (isMultiCharLiteralText(lit->value)) {
+                if (lit->isStringLikeLiteral) {
                     stringLikeConst = true;
                 }
             }
@@ -351,13 +355,9 @@ std::string CodegenUtils::emitWriteStmt(ProcCallNode* node) {
             CodeGenerator cg;
             std::string expr = cg.emitNode(arg);
             if (LiteralNode* lit = dynamic_cast<LiteralNode*>(arg)) {
-                if (isMultiCharLiteralText(lit->value)) {
+                if (lit->isStringLikeLiteral) {
                     expr = pascalCharLiteralToCString(lit->value);
                 }
-            }
-            // 如果格式符为%f但表达式类型为int，自动加(float)强转
-            if (fmt == "%f" && exprType == DataType::Integer) {
-                expr = "(float)(" + expr + ")";
             }
             args.push_back(expr);
         } else {

@@ -19,14 +19,14 @@ float area;
 float area_trunc;
 
 
-float float_abs(int x);
+float float_abs(float x);
 float circle_area(int radius);
-int float_eq(int a, int b);
+int float_eq(float a, float b);
 void error();
 void ok();
 void assert(int cond);
 
-float float_abs(int x) {
+float float_abs(float x) {
     float _retval;
 if ((x < 0)) {
         _retval = (-x);
@@ -44,7 +44,7 @@ _retval = ((((pi * radius) * radius) + ((radius * radius) * pi)) / 2);
     return _retval;
 }
 
-int float_eq(int a, int b) {
+int float_eq(float a, float b) {
     int _retval;
 if ((float_abs((a - b)) < eps)) {
         _retval = 1;

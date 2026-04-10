@@ -15,7 +15,7 @@ void merge(int p, int q);
 
 int getint() {
     int _retval;
-scanf("%d", &getint());
+scanf("%d", &_retval);
 
     return _retval;
 }

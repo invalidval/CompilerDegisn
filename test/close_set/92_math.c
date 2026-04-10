@@ -1,6 +1,6 @@
 #include <stdio.h>
 const float e = 2.1718281828459045;
-const char split = '--';
+const char* split = "--";
 float x;
 float y;
 
@@ -8,23 +8,23 @@ int num;
 int i;
 
 
-float my_fabs(int x);
-float my_pow(int a, int n);
-float my_sqrt(int x);
-float f1(int x);
-float f2(int x);
-float simpson(int a, int b, int flag);
-float asr5(int a, int b, int eps, int aa, int flag);
-float asr4(int a, int b, int eps, int flag);
-float eee(int x);
-float my_exp(int x);
-float my_ln(int x);
-float my_log(int a, int n);
-float my_powf(int a, int x);
-void putfloat(int f);
+float my_fabs(float x);
+float my_pow(float a, int n);
+float my_sqrt(float x);
+float f1(float x);
+float f2(float x);
+float simpson(float a, float b, int flag);
+float asr5(float a, float b, float eps, float aa, int flag);
+float asr4(float a, float b, float eps, int flag);
+float eee(float x);
+float my_exp(float x);
+float my_ln(float x);
+float my_log(float a, float n);
+float my_powf(float a, float x);
+void putfloat(float f);
 float getfloat();
 
-float my_fabs(int x) {
+float my_fabs(float x) {
     float _retval;
 if ((x > 0)) {
         _retval = x;
@@ -35,7 +35,7 @@ if ((x > 0)) {
     return _retval;
 }
 
-float my_pow(int a, int n) {
+float my_pow(float a, int n) {
     float _retval;
     int i;
 
@@ -54,7 +54,7 @@ _retval = res;
     return _retval;
 }
 
-float my_sqrt(int x) {
+float my_sqrt(float x) {
     float _retval;
     float t;
 
@@ -73,21 +73,21 @@ _retval = t;
     return _retval;
 }
 
-float f1(int x) {
+float f1(float x) {
     float _retval;
 _retval = (1 / x);
 
     return _retval;
 }
 
-float f2(int x) {
+float f2(float x) {
     float _retval;
 _retval = (1 / my_sqrt((1 - (x * x))));
 
     return _retval;
 }
 
-float simpson(int a, int b, int flag) {
+float simpson(float a, float b, int flag) {
     float _retval;
     float c;
 
@@ -102,7 +102,7 @@ if ((flag == 1)) {
     return _retval;
 }
 
-float asr5(int a, int b, int eps, int aa, int flag) {
+float asr5(float a, float b, float eps, float aa, int flag) {
     float _retval;
     float c;
 float l;
@@ -120,14 +120,14 @@ if ((my_fabs(((l + r) - aa)) <= (15 * eps))) {
     return _retval;
 }
 
-float asr4(int a, int b, int eps, int flag) {
+float asr4(float a, float b, float eps, int flag) {
     float _retval;
 _retval = asr5(a, b, eps, simpson(a, b, flag), flag);
 
     return _retval;
 }
 
-float eee(int x) {
+float eee(float x) {
     float _retval;
     float ee;
 
@@ -141,7 +141,7 @@ _retval = (ee * ee);
     return _retval;
 }
 
-float my_exp(int x) {
+float my_exp(float x) {
     float _retval;
     float e1;
 float e2;
@@ -161,35 +161,35 @@ _retval = (e1 * e2);
     return _retval;
 }
 
-float my_ln(int x) {
+float my_ln(float x) {
     float _retval;
 _retval = asr4(1, x, 0.00000001, 1);
 
     return _retval;
 }
 
-float my_log(int a, int n) {
+float my_log(float a, float n) {
     float _retval;
 _retval = (my_ln(n) / my_ln(a));
 
     return _retval;
 }
 
-float my_powf(int a, int x) {
+float my_powf(float a, float x) {
     float _retval;
 _retval = my_exp((x * my_ln(a)));
 
     return _retval;
 }
 
-void putfloat(int f) {
+void putfloat(float f) {
 printf("%f", f);
 
 }
 
 float getfloat() {
     float _retval;
-scanf("%f", &getfloat());
+scanf("%f", &_retval);
 
     return _retval;
 }
@@ -207,17 +207,17 @@ putfloat(my_exp(x));
 if ((x > 0.0)) {
         putfloat(my_ln(x));
     } else {
-        printf("%c", split);
+        printf("%s", split);
     }
 if (((x > 0.0) && (y > 0.0))) {
         putfloat(my_log(x, y));
     } else {
-        printf("%c", split);
+        printf("%s", split);
     }
 if ((x > 0.0)) {
         putfloat(my_powf(x, y));
     } else {
-        printf("%c", split);
+        printf("%s", split);
     }
     }
 scanf("%d", &num);

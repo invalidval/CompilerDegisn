@@ -24,6 +24,14 @@ int arrayAccessDepthForCodegen(const ASTNode* node) {
     }
     return 0;
 }
+
+bool needsTrailingSemicolon(const ASTNode* node) {
+    if (node == nullptr) {
+        return false;
+    }
+    return node->nodeType == NodeType::ProcCall ||
+           node->nodeType == NodeType::BreakStmt;
+}
 }
 
 std::string CodeGenerator::generate(ProgramNode* root) {
@@ -266,8 +274,7 @@ void CodeGenerator::visit(AssignStmtNode* node) {
 void CodeGenerator::visit(IfStmtNode* node) {
     std::string cond = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
     std::string thenStmt = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
-    if (node->children.size() > 1 && node->children[1] &&
-        node->children[1]->nodeType == NodeType::ProcCall &&
+    if (node->children.size() > 1 && needsTrailingSemicolon(node->children[1]) &&
         !thenStmt.empty() && thenStmt.back() != ';') {
         thenStmt.push_back(';');
     }
@@ -284,7 +291,7 @@ void CodeGenerator::visit(IfStmtNode* node) {
 
     if (node->children.size() > 2) {
         std::string elseStmt = emitNode(node->children[2]);
-        if (node->children[2] && node->children[2]->nodeType == NodeType::ProcCall &&
+        if (needsTrailingSemicolon(node->children[2]) &&
             !elseStmt.empty() && elseStmt.back() != ';') {
             elseStmt.push_back(';');
         }
@@ -304,8 +311,7 @@ void CodeGenerator::visit(IfStmtNode* node) {
 void CodeGenerator::visit(WhileStmtNode* node) {
     std::string cond = emitNode(node->children.size() > 0 ? node->children[0] : nullptr);
     std::string bodyStmt = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
-    if (node->children.size() > 1 && node->children[1] &&
-        node->children[1]->nodeType == NodeType::ProcCall &&
+    if (node->children.size() > 1 && needsTrailingSemicolon(node->children[1]) &&
         !bodyStmt.empty() && bodyStmt.back() != ';') {
         bodyStmt.push_back(';');
     }
@@ -327,8 +333,7 @@ void CodeGenerator::visit(ForStmtNode* node) {
     std::string init = emitNode(node->children.size() > 1 ? node->children[1] : nullptr);
     std::string end = emitNode(node->children.size() > 2 ? node->children[2] : nullptr);
     std::string bodyStmt = emitNode(node->children.size() > 3 ? node->children[3] : nullptr);
-    if (node->children.size() > 3 && node->children[3] &&
-        node->children[3]->nodeType == NodeType::ProcCall &&
+    if (node->children.size() > 3 && needsTrailingSemicolon(node->children[3]) &&
         !bodyStmt.empty() && bodyStmt.back() != ';') {
         bodyStmt.push_back(';');
     }
@@ -356,11 +361,15 @@ void CodeGenerator::visit(ForStmtNode* node) {
     currentExpr_ = oss.str();
 }
 
+void CodeGenerator::visit(BreakStmtNode* /*node*/) {
+    currentExpr_ = "break";
+}
+
 void CodeGenerator::visit(CompoundStmtNode* node) {
     std::ostringstream oss;
     for (ASTNode* stmt : node->children) {
         std::string line = emitNode(stmt);
-        if (stmt && stmt->nodeType == NodeType::ProcCall && !line.empty() && line.back() != ';') {
+        if (needsTrailingSemicolon(stmt) && !line.empty() && line.back() != ';') {
             line.push_back(';');
         }
         if (!line.empty()) {
@@ -415,19 +424,12 @@ void CodeGenerator::visit(ListNode* node) {
 }
 
 void CodeGenerator::visit(ProcCallNode* node) {
-    const std::string loweredName = toLowerCopy(node->name);
-    if (loweredName == "break") {
-        currentExpr_ = "break";
-        return;
-    }
-
-    // 特殊处理 read/write
-    if (loweredName == "read") {
+    if (node->builtinKind == BuiltinProcKind::Read) {
         std::string code = CodegenUtils::emitReadStmt(node);
         currentExpr_ = code;
         return;
     }
-    if (loweredName == "write") {
+    if (node->builtinKind == BuiltinProcKind::Write) {
         std::string code = CodegenUtils::emitWriteStmt(node);
         currentExpr_ = code;
         return;

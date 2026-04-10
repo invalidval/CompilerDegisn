@@ -28,6 +28,7 @@ public:
     void visit(IfStmtNode* node) override;
     void visit(WhileStmtNode* node) override;
     void visit(ForStmtNode* node) override;
+    void visit(BreakStmtNode* node) override;
     void visit(CompoundStmtNode* node) override;
     void visit(ArrayAccessNode* node) override;
     void visit(ArrayTypeNode* node) override;

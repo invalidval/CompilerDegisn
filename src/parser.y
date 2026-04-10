@@ -540,7 +540,7 @@ statement:
             }
         | BREAK
             {
-                    $$ = static_cast<void*>(g_astBuilder.makeProcCall("break", {}, currentPos()));
+                    $$ = static_cast<void*>(g_astBuilder.makeBreakStmt(currentPos()));
             }
         | READ '(' variable_list ')'
             {

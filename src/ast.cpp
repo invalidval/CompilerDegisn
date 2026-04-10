@@ -121,6 +121,13 @@ void ForStmtNode::accept(ASTVisitor& visitor) {
     visitor.visit(this);
 }
 
+BreakStmtNode::BreakStmtNode(SourcePos p)
+    : ASTNode(NodeType::BreakStmt, p) {}
+
+void BreakStmtNode::accept(ASTVisitor& visitor) {
+    visitor.visit(this);
+}
+
 // compound_statement -> begin statement_list end
 // children keep source order of statements
 CompoundStmtNode::CompoundStmtNode(const std::vector<ASTNode*>& stmts, SourcePos p)
@@ -282,6 +289,10 @@ WhileStmtNode* ASTBuilder::makeWhileStmt(ASTNode* cond, ASTNode* body, SourcePos
 
 ForStmtNode* ASTBuilder::makeForStmt(ASTNode* id, ASTNode* init, ASTNode* end, ASTNode* body, bool isDownto, SourcePos pos) {
     return create<ForStmtNode>(id, init, end, body, isDownto, pos);
+}
+
+BreakStmtNode* ASTBuilder::makeBreakStmt(SourcePos pos) {
+    return create<BreakStmtNode>(pos);
 }
 
 CompoundStmtNode* ASTBuilder::makeCompoundStmt(const std::vector<ASTNode*>& stmts, SourcePos pos) {

@@ -19,6 +19,7 @@ enum class NodeType {
     IfStmt,
     WhileStmt,
     ForStmt,
+    BreakStmt,
     CompoundStmt,
     ProcCall,
     BinaryExpr,
@@ -51,6 +52,12 @@ enum class ListKind {
     Parameters,
     Declarations,
     ArrayRanges
+};
+
+enum class BuiltinProcKind {
+    None,
+    Read,
+    Write
 };
 
 class ASTVisitor;
@@ -158,6 +165,12 @@ public:
     void accept(ASTVisitor& visitor) override;
 };
 
+class BreakStmtNode : public ASTNode {
+public:
+    explicit BreakStmtNode(SourcePos p = {});
+    void accept(ASTVisitor& visitor) override;
+};
+
 class CompoundStmtNode : public ASTNode {
 public:
     // compound_statement -> begin statement_list end
@@ -174,6 +187,7 @@ public:
 
     std::string name;
     std::vector<bool> isVarParam;
+    BuiltinProcKind builtinKind = BuiltinProcKind::None;
 
     void accept(ASTVisitor& visitor) override;
 };
@@ -204,6 +218,7 @@ public:
 
     std::string identifier;
     bool isLValue = false;
+    bool isFunctionResultTarget = false;
 
     void accept(ASTVisitor& visitor) override;
 };
@@ -214,6 +229,7 @@ public:
     explicit LiteralNode(const std::string& value, SourcePos p = {});
 
     std::string value;
+    bool isStringLikeLiteral = false;
 
     void accept(ASTVisitor& visitor) override;
 };
@@ -275,6 +291,7 @@ public:
     virtual void visit(IfStmtNode* node) = 0;
     virtual void visit(WhileStmtNode* node) = 0;
     virtual void visit(ForStmtNode* node) = 0;
+    virtual void visit(BreakStmtNode* node) = 0;
     virtual void visit(CompoundStmtNode* node) = 0;
     virtual void visit(ProcCallNode* node) = 0;
     virtual void visit(BinaryExprNode* node) = 0;
@@ -301,6 +318,7 @@ public:
     IfStmtNode* makeIfStmt(ASTNode* cond, ASTNode* thenBranch, ASTNode* elseBranch, SourcePos pos = {});
     WhileStmtNode* makeWhileStmt(ASTNode* cond, ASTNode* body, SourcePos pos = {});
     ForStmtNode* makeForStmt(ASTNode* id, ASTNode* init, ASTNode* end, ASTNode* body, bool isDownto = false, SourcePos pos = {});
+    BreakStmtNode* makeBreakStmt(SourcePos pos = {});
     CompoundStmtNode* makeCompoundStmt(const std::vector<ASTNode*>& stmts, SourcePos pos = {});
     ProcCallNode* makeProcCall(const std::string& name, const std::vector<ASTNode*>& args, SourcePos pos = {});
     BinaryExprNode* makeBinaryExpr(const std::string& op, ASTNode* lhs, ASTNode* rhs, SourcePos pos = {});

@@ -13,7 +13,9 @@ const char* nodeTypeName(NodeType type) {
            type == NodeType::FuncDecl ? "FuncDecl" :
            type == NodeType::AssignStmt ? "AssignStmt" :
            type == NodeType::IfStmt ? "IfStmt" :
+           type == NodeType::WhileStmt ? "WhileStmt" :
            type == NodeType::ForStmt ? "ForStmt" :
+           type == NodeType::BreakStmt ? "BreakStmt" :
            type == NodeType::CompoundStmt ? "CompoundStmt" :
            type == NodeType::ProcCall ? "ProcCall" :
            type == NodeType::BinaryExpr ? "BinaryExpr" :

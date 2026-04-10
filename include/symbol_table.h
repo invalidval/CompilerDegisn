@@ -38,6 +38,7 @@ struct SymbolEntry {
 
     bool hasConstLiteral = false;
     std::string constLiteralText;
+    bool isStringLikeConst = false;
 
     std::vector<ParamInfo> params;
     bool isVarParam = false;

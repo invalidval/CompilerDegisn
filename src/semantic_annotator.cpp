@@ -68,6 +68,7 @@ void SemanticAnnotator::annotateNode(ASTNode* node) {
     case NodeType::IfStmt:       annotateIfStmt(static_cast<IfStmtNode*>(node)); break;
     case NodeType::WhileStmt:    annotateWhileStmt(static_cast<WhileStmtNode*>(node)); break;
     case NodeType::ForStmt:      annotateForStmt(static_cast<ForStmtNode*>(node)); break;
+    case NodeType::BreakStmt:    annotateBreakStmt(static_cast<BreakStmtNode*>(node)); break;
     case NodeType::CompoundStmt: annotateCompoundStmt(static_cast<CompoundStmtNode*>(node)); break;
     case NodeType::ProcCall:     annotateProcCall(static_cast<ProcCallNode*>(node)); break;
 
@@ -126,12 +127,14 @@ void SemanticAnnotator::annotateConstDecl(ConstDeclNode* node) {
     if (auto* literal = dynamic_cast<LiteralNode*>(valueNode)) {
         entry.hasConstLiteral = true;
         entry.constLiteralText = literal->value;
+        entry.isStringLikeConst = literal->isStringLikeLiteral;
     } else if (auto* unary = dynamic_cast<UnaryExprNode*>(valueNode)) {
         // 递归查找字面量
         ASTNode* sub = unary->children.empty() ? nullptr : unary->children[0];
         if (auto* lit = dynamic_cast<LiteralNode*>(sub)) {
             entry.hasConstLiteral = true;
             entry.constLiteralText = unary->op + lit->value;
+            entry.isStringLikeConst = lit->isStringLikeLiteral;
         }
     }
 
@@ -153,6 +156,7 @@ void SemanticAnnotator::annotateVarDecl(VarDeclNode* node) {
     ASTNode* idList = node->children[0];
     ASTNode* typeNode = node->children[1];
     DataType declaredType = inferTypeFromTypeNode(typeNode);
+    typeNode->dataType = declaredType;
     const std::vector<ArrayBound> arrayBounds = collectArrayBounds(typeNode);
 
     auto declareOne = [&](IdentifierNode* id) {
@@ -196,6 +200,7 @@ void SemanticAnnotator::annotateParamDecl(ParamDeclNode* node) {
     ASTNode* idList = node->children[0];
     ASTNode* typeNode = node->children[1];
     DataType declaredType = inferTypeFromTypeNode(typeNode);
+    typeNode->dataType = declaredType;
 
     auto declareOne = [&](IdentifierNode* id) {
         SymbolEntry entry = SymbolEntry::makeParameter(id->identifier, declaredType, node->isVar);
@@ -353,6 +358,15 @@ void SemanticAnnotator::annotateForStmt(ForStmtNode* node) {
     --loopDepth_;
 }
 
+void SemanticAnnotator::annotateBreakStmt(BreakStmtNode* node) {
+    if (loopDepth_ <= 0) {
+        errorHandler_.report(node->pos.line, node->pos.col,
+            "break can only be used inside while/for loop");
+    }
+    node->dataType = DataType::Unknown;
+    node->symbolEntry = nullptr;
+}
+
 void SemanticAnnotator::annotateCompoundStmt(CompoundStmtNode* node) {
     for (ASTNode* child : node->children) {
         annotateNode(child);
@@ -361,18 +375,12 @@ void SemanticAnnotator::annotateCompoundStmt(CompoundStmtNode* node) {
 
 void SemanticAnnotator::annotateProcCall(ProcCallNode* node) {
     const std::string calleeName = toLower(node->name);
-    if (calleeName == "break") {
-        if (!node->children.empty()) {
-            errorHandler_.report(node->pos.line, node->pos.col,
-                "break does not take arguments");
-        }
-        if (loopDepth_ <= 0) {
-            errorHandler_.report(node->pos.line, node->pos.col,
-                "break can only be used inside while/for loop");
-        }
-        node->dataType = DataType::Unknown;
-        node->symbolEntry = nullptr;
-        return;
+    if (calleeName == "read") {
+        node->builtinKind = BuiltinProcKind::Read;
+    } else if (calleeName == "write") {
+        node->builtinKind = BuiltinProcKind::Write;
+    } else {
+        node->builtinKind = BuiltinProcKind::None;
     }
 
     for (ASTNode* arg : node->children) {
@@ -540,6 +548,7 @@ void SemanticAnnotator::annotateIdentifier(IdentifierNode* node) {
 
 void SemanticAnnotator::annotateLiteral(LiteralNode* node) {
     const std::string text = toLower(node->value);
+    node->isStringLikeLiteral = false;
     if (text == "true" || text == "false") {
         node->dataType = DataType::Boolean;
         return;
@@ -547,6 +556,7 @@ void SemanticAnnotator::annotateLiteral(LiteralNode* node) {
 
     if (!text.empty() && text.front() == '\'' && text.back() == '\'' && text.size() >= 3) {
         node->dataType = DataType::Char;
+        node->isStringLikeLiteral = (text.size() - 2) > 1;
         return;
     }
 
@@ -680,6 +690,12 @@ void SemanticAnnotator::checkCallArguments(ProcCallNode* node, const SymbolEntry
         for (std::size_t i = 0; i < node->children.size(); ++i) {
             ASTNode* arg = node->children[i];
             const bool functionResultTarget = isFunctionResultAssignment(arg);
+            if (functionResultTarget) {
+                if (auto* id = dynamic_cast<IdentifierNode*>(arg)) {
+                    id->isFunctionResultTarget = true;
+                    id->isLValue = true;
+                }
+            }
             if (!isLValue(arg) && !functionResultTarget) {
                 errorHandler_.report(
                     arg->pos.line,

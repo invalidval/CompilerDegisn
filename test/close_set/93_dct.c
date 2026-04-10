@@ -12,17 +12,17 @@ int i;
 int j;
 
 
-float my_fabs(int x);
-float p(int x);
-float my_sin_impl(int x);
-float my_sin(int x);
-float my_cos(int x);
+float my_fabs(float x);
+float p(float x);
+float my_sin_impl(float x);
+float my_sin(float x);
+float my_cos(float x);
 void write_mat(int n, int m);
 void write_mat2(int n, int m);
 void dct(int n, int m);
 void idct(int n, int m);
 
-float my_fabs(int x) {
+float my_fabs(float x) {
     float _retval;
 if ((x > 0.0)) {
         _retval = x;
@@ -33,14 +33,14 @@ if ((x > 0.0)) {
     return _retval;
 }
 
-float p(int x) {
+float p(float x) {
     float _retval;
 _retval = ((3 * x) - (((4 * x) * x) * x));
 
     return _retval;
 }
 
-float my_sin_impl(int x) {
+float my_sin_impl(float x) {
     float _retval;
 if ((my_fabs(x) <= epsilon)) {
         _retval = x;
@@ -51,7 +51,7 @@ if ((my_fabs(x) <= epsilon)) {
     return _retval;
 }
 
-float my_sin(int x) {
+float my_sin(float x) {
     float _retval;
     int xx;
 
@@ -70,7 +70,7 @@ _retval = my_sin_impl(x);
     return _retval;
 }
 
-float my_cos(int x) {
+float my_cos(float x) {
     float _retval;
 _retval = my_sin(((x * pi) / 2));
 
