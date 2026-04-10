@@ -446,9 +446,14 @@ void CodeGenerator::visit(ProcCallNode* node) {
         ASTNode* rawArgNode = node->children[i];
         std::string arg = emitNode(rawArgNode);
         if (i < node->isVarParam.size() && node->isVarParam[i]) {
-            // Normalize forwarded var-parameter: &(*x) -> x
-            if (arg.size() >= 4 && arg.rfind("(*", 0) == 0 && arg.back() == ')') {
-                oss << arg.substr(2, arg.size() - 3);
+            if (auto* id = dynamic_cast<IdentifierNode*>(rawArgNode)) {
+                if (id->symbolEntry != nullptr &&
+                    id->symbolEntry->kind == SymbolKind::Parameter &&
+                    id->symbolEntry->isVarParam) {
+                    oss << id->identifier;
+                } else {
+                    oss << "&" << arg;
+                }
             } else {
                 oss << "&" << arg;
             }
