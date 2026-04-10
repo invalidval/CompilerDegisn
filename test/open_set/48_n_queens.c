@@ -22,14 +22,14 @@ void f(int step);
 void printans() {
     int i;
 
-sum = (sum + 1);
-for (i = 1; i <= n; i++) {
+    sum = (sum + 1);
+    for (i = 1; i <= n; i++) {
         printf("%d", ans[(i) - 1]);
-if ((i == n)) {
-        printf("%c", newline);
-    } else {
-        printf("%c", blank);
-    }
+        if ((i == n)) {
+            printf("%c", newline);
+        } else {
+            printf("%c", blank);
+        }
     }
 
 }
@@ -37,33 +37,33 @@ if ((i == n)) {
 void f(int step) {
     int i;
 
-for (i = 1; i <= n; i++) {
+    for (i = 1; i <= n; i++) {
         if ((((row[(i) - 1] != 1) && (line1[((step + i)) - 1] == 0)) && (line2[(((n + step) - i)) - 1] == 0))) {
-        ans[(step) - 1] = i;
-if ((step == n)) {
-        printans();
-    }
-row[(i) - 1] = 1;
-line1[((step + i)) - 1] = 1;
-line2[(((n + step) - i)) - 1] = 1;
-f((step + 1));
-row[(i) - 1] = 0;
-line1[((step + i)) - 1] = 0;
-line2[(((n + step) - i)) - 1] = 0;
-    }
+            ans[(step) - 1] = i;
+            if ((step == n)) {
+                printans();
+            }
+            row[(i) - 1] = 1;
+            line1[((step + i)) - 1] = 1;
+            line2[(((n + step) - i)) - 1] = 1;
+            f((step + 1));
+            row[(i) - 1] = 0;
+            line1[((step + i)) - 1] = 0;
+            line2[(((n + step) - i)) - 1] = 0;
+        }
     }
 
 }
 
 
 int main(void) {
-sum = 0;
-scanf("%d", &k);
-for (i = 1; i <= k; i++) {
+    sum = 0;
+    scanf("%d", &k);
+    for (i = 1; i <= k; i++) {
         scanf("%d", &n);
-f(1);
+        f(1);
     }
-printf("%d", sum);
+    printf("%d", sum);
 
     return 0;
 }

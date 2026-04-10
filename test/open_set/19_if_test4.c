@@ -4,25 +4,25 @@ int if_ifelse_();
 int if_ifelse_() {
     int _retval;
     int a;
-int b;
+    int b;
 
-a = 5;
-b = 10;
-if ((a == 5)) {
+    a = 5;
+    b = 10;
+    if ((a == 5)) {
         if ((b == 10)) {
-        a = 25;
-    } else {
-        a = (a + 15);
+            a = 25;
+        } else {
+            a = (a + 15);
+        }
     }
-    }
-_retval = a;
+    _retval = a;
 
     return _retval;
 }
 
 
 int main(void) {
-printf("%d", if_ifelse_());
+    printf("%d", if_ifelse_());
 
     return 0;
 }

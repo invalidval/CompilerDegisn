@@ -14,6 +14,29 @@ std::string toLowerCopy(const std::string& text) {
     return out;
 }
 
+std::string indentText(const std::string& text, int spaces) {
+    if (text.empty() || spaces <= 0) {
+        return text;
+    }
+
+    const std::string indent(static_cast<std::size_t>(spaces), ' ');
+    std::ostringstream oss;
+    std::size_t lineStart = 0;
+    while (lineStart < text.size()) {
+        std::size_t lineEnd = text.find('\n', lineStart);
+        std::string line = text.substr(lineStart, lineEnd == std::string::npos ? std::string::npos : lineEnd - lineStart);
+        if (!line.empty()) {
+            oss << indent << line;
+        }
+        if (lineEnd == std::string::npos) {
+            break;
+        }
+        oss << '\n';
+        lineStart = lineEnd + 1;
+    }
+    return oss.str();
+}
+
 int arrayAccessDepthForCodegen(const ASTNode* node) {
     if (node == nullptr || node->nodeType != NodeType::ArrayAccess || node->children.empty()) {
         return 0;
@@ -139,7 +162,7 @@ void CodeGenerator::visit(BlockNode* node) {
                 }
                 std::string line = CodegenUtils::emitVarDecl(vdecl);
                 if (!line.empty()) {
-                    oss << "    " << line << "\n";
+                    oss << indentText(line, 4) << "\n";
                 }
             }
         }
@@ -156,7 +179,7 @@ void CodeGenerator::visit(BlockNode* node) {
     if (bodyNode) {
         std::string body = emitNode(bodyNode);
         if (!body.empty()) {
-            oss << body;
+            oss << indentText(body, 4);
             if (body.back() != '\n') {
                 oss << "\n";
             }
@@ -282,12 +305,12 @@ void CodeGenerator::visit(IfStmtNode* node) {
     std::ostringstream oss;
     oss << "if (" << cond << ") {\n";
     if (!thenStmt.empty()) {
-        oss << "        " << thenStmt;
+        oss << indentText(thenStmt, 4);
         if (thenStmt.back() != '\n') {
             oss << "\n";
         }
     }
-    oss << "    }";
+    oss << "}";
 
     if (node->children.size() > 2) {
         std::string elseStmt = emitNode(node->children[2]);
@@ -297,12 +320,12 @@ void CodeGenerator::visit(IfStmtNode* node) {
         }
         oss << " else {\n";
         if (!elseStmt.empty()) {
-            oss << "        " << elseStmt;
+            oss << indentText(elseStmt, 4);
             if (elseStmt.back() != '\n') {
                 oss << "\n";
             }
         }
-        oss << "    }";
+        oss << "}";
     }
 
     currentExpr_ = oss.str();
@@ -319,12 +342,12 @@ void CodeGenerator::visit(WhileStmtNode* node) {
     std::ostringstream oss;
     oss << "while (" << cond << ") {\n";
     if (!bodyStmt.empty()) {
-        oss << "        " << bodyStmt;
+        oss << indentText(bodyStmt, 4);
         if (bodyStmt.back() != '\n') {
             oss << "\n";
         }
     }
-    oss << "    }";
+    oss << "}";
     currentExpr_ = oss.str();
 }
 
@@ -352,12 +375,12 @@ void CodeGenerator::visit(ForStmtNode* node) {
     oss
         << "; " << iter << step << ") {\n";
     if (!bodyStmt.empty()) {
-        oss << "        " << bodyStmt;
+        oss << indentText(bodyStmt, 4);
         if (bodyStmt.back() != '\n') {
             oss << "\n";
         }
     }
-    oss << "    }";
+    oss << "}";
     currentExpr_ = oss.str();
 }
 

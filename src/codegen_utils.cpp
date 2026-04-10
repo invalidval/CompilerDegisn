@@ -6,6 +6,33 @@
 #include <string>
 #include <cassert>
 
+namespace {
+
+std::string indentBlock(const std::string& text, int spaces) {
+    if (text.empty() || spaces <= 0) {
+        return text;
+    }
+
+    const std::string indent(static_cast<std::size_t>(spaces), ' ');
+    std::ostringstream oss;
+    std::size_t lineStart = 0;
+    while (lineStart < text.size()) {
+        std::size_t lineEnd = text.find('\n', lineStart);
+        std::string line = text.substr(lineStart, lineEnd == std::string::npos ? std::string::npos : lineEnd - lineStart);
+        if (!line.empty()) {
+            oss << indent << line;
+        }
+        if (lineEnd == std::string::npos) {
+            break;
+        }
+        oss << '\n';
+        lineStart = lineEnd + 1;
+    }
+    return oss.str();
+}
+
+}  // namespace
+
 static std::string pascalCharLiteralToCString(const std::string& text) {
     if (text.size() < 2 || text.front() != '\'' || text.back() != '\'') {
         return "\"\"";
@@ -32,7 +59,11 @@ std::string CodegenUtils::wrapAsCProgram(const std::string& globals,
     if (!globals.empty()) oss << globals << "\n";
     if (!prototypes.empty()) oss << prototypes << "\n";
     if (!definitions.empty()) oss << definitions << "\n";
-    oss << "int main(void) {\n" << mainBody << "\n    return 0;\n}\n";
+    oss << "int main(void) {\n";
+    if (!mainBody.empty()) {
+        oss << indentBlock(mainBody, 4) << "\n";
+    }
+    oss << "    return 0;\n}\n";
     return oss.str();
 }
 // 过程原型声明

@@ -4,8 +4,8 @@ int b;
 
 
 int main(void) {
-b = 2;
-printf("%d", (b - a));
+    b = 2;
+    printf("%d", (b - a));
 
     return 0;
 }
