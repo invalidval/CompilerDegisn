@@ -135,7 +135,7 @@ ASTNode* buildArrayAccessFromIndices(ASTNode* base, ASTNode* indicesNode, Source
 %type <node> var_declarations var_declaration_list var_declaration type basic_type period range
 %type <node> subprogram_declarations subprogram
 %type <node> formal_parameter parameter_list parameter var_parameter value_parameter
-%type <node> compound_statement statement_list statement
+%type <node> compound_statement statement_list statement_list_opt statement nonempty_statement
 %type <node> variable id_varpart procedure_call expression_list variable_list
 %type <node> expression simple_expression term factor
 
@@ -464,19 +464,30 @@ subprogram_body:
         ;
 
 compound_statement:
-            KW_BEGIN statement_list KW_END
+            KW_BEGIN statement_list_opt KW_END
             {
                     auto* stmtList = asList($2);
                     $$ = static_cast<void*>(g_astBuilder.makeCompoundStmt(stmtList->children, currentPos()));
             }
         ;
 
-statement_list:
+statement_list_opt:
             /* empty */
             {
                     $$ = static_cast<void*>(g_astBuilder.makeList(ListKind::Statements, currentPos()));
             }
-        | statement
+        | ';' statement_list_opt
+            {
+                    $$ = $2;
+            }
+        | statement_list
+            {
+                    $$ = $1;
+            }
+        ;
+
+statement_list:
+            nonempty_statement
             {
                     auto* list = g_astBuilder.makeList(ListKind::Statements, currentPos());
                     list->add(asNode($1));
@@ -502,7 +513,14 @@ statement:
             {
                     $$ = nullptr;
             }
-        | variable ASSIGN expression
+        | nonempty_statement
+            {
+                    $$ = $1;
+            }
+        ;
+
+nonempty_statement:
+            variable ASSIGN expression
             {
                     $$ = static_cast<void*>(g_astBuilder.makeAssignStmt(asNode($1), asNode($3), currentPos()));
             }
