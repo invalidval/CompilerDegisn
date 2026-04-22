@@ -1,11 +1,5 @@
 ---
 marp: true
-theme: default
-size: 16:9
-paginate: true
-header: "编译原理课程设计-中期汇报"
-footer: "张宸宇 胡航宾 王嘉晗 李思远 谢康  ·  2026.4.22"
-math: katex
 ---
 
 <!-- #region 样式 -->
@@ -491,3 +485,4 @@ bash test/run_openset_check.sh
 
 
 <!--- #endregion -->
+---

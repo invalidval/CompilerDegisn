@@ -1,5 +1,6 @@
 #include "code_generator.h"
 #include "codegen_utils.h"
+#include "debug_utils.h"
 #include "symbol_table.h" // 新增：引入符号表类型定义
 
 #include <sstream>
@@ -59,7 +60,11 @@ bool needsTrailingSemicolon(const ASTNode* node) {
 
 std::string CodeGenerator::generate(ProgramNode* root) {
     reset();
-    if (!root) return "";
+    if (!root) {
+        pasccLog("codegen", PasccLogLevel::Error, "AST根节点为空，无法生成代码");
+        return "";
+    }
+    pasccLog("codegen", PasccLogLevel::Info, "开始遍历AST生成C代码");
     // 递归遍历 AST，分区收集
     // 约定：
     // BlockNode: children = [consts, vars, subprograms, compound]
@@ -70,12 +75,17 @@ std::string CodeGenerator::generate(ProgramNode* root) {
         block = dynamic_cast<BlockNode*>(child);
         if (block) break;
     }
-    if (!block) return "/* Invalid AST: no program body */\n";
+    if (!block) {
+        pasccLog("codegen", PasccLogLevel::Error, "未找到程序体BlockNode");
+        return "/* Invalid AST: no program body */\n";
+    }
 
     // 1. 全局常量/变量声明
     if (block->children.size() > 0) {
         ListNode* consts = dynamic_cast<ListNode*>(block->children[0]);
         if (consts) {
+            pasccLog("codegen", PasccLogLevel::Debug,
+                std::string("收集全局常量声明: ") + std::to_string(consts->children.size()));
             for (ASTNode* decl : consts->children) {
                 ConstDeclNode* cdecl = dynamic_cast<ConstDeclNode*>(decl);
                 if (cdecl) globalDecls_ += CodegenUtils::emitConstDecl(cdecl) + "\n";
@@ -85,6 +95,8 @@ std::string CodeGenerator::generate(ProgramNode* root) {
     if (block->children.size() > 1) {
         ListNode* vars = dynamic_cast<ListNode*>(block->children[1]);
         if (vars) {
+            pasccLog("codegen", PasccLogLevel::Debug,
+                std::string("收集全局变量声明: ") + std::to_string(vars->children.size()));
             for (ASTNode* decl : vars->children) {
                 VarDeclNode* vdecl = dynamic_cast<VarDeclNode*>(decl);
                 if (vdecl) globalDecls_ += CodegenUtils::emitVarDecl(vdecl) + "\n";
@@ -96,11 +108,15 @@ std::string CodeGenerator::generate(ProgramNode* root) {
     if (block->children.size() > 2) {
         ListNode* subs = dynamic_cast<ListNode*>(block->children[2]);
         if (subs) {
+            pasccLog("codegen", PasccLogLevel::Info,
+                std::string("开始生成子程序声明/定义，数量=") + std::to_string(subs->children.size()));
             for (ASTNode* sub : subs->children) {
                 if (auto* proc = dynamic_cast<ProcDeclNode*>(sub)) {
+                    pasccLog("codegen", PasccLogLevel::Debug, std::string("生成过程: ") + proc->name);
                     prototypes_ += CodegenUtils::emitProcPrototype(proc) + "\n";
                     definitions_ += CodegenUtils::emitProcDecl(proc, *this) + "\n";
                 } else if (auto* func = dynamic_cast<FuncDeclNode*>(sub)) {
+                    pasccLog("codegen", PasccLogLevel::Debug, std::string("生成函数: ") + func->name);
                     prototypes_ += CodegenUtils::emitFuncPrototype(func) + "\n";
                     definitions_ += CodegenUtils::emitFuncDecl(func, *this) + "\n";
                 }
@@ -112,13 +128,19 @@ std::string CodeGenerator::generate(ProgramNode* root) {
     if (block->children.size() > 3) {
         CompoundStmtNode* mainStmt = dynamic_cast<CompoundStmtNode*>(block->children[3]);
         if (mainStmt) {
+            pasccLog("codegen", PasccLogLevel::Info, "开始生成主程序体");
             visit(mainStmt);
             mainBody_ = currentExpr_;
+            pasccLog("codegen", PasccLogLevel::Debug,
+                std::string("主程序体代码长度=") + std::to_string(mainBody_.size()));
         }
     }
 
     // 4. 组装
-    return CodegenUtils::wrapAsCProgram(globalDecls_, prototypes_, definitions_, mainBody_);
+    const std::string merged = CodegenUtils::wrapAsCProgram(globalDecls_, prototypes_, definitions_, mainBody_);
+    pasccLog("codegen", PasccLogLevel::Info,
+        std::string("C代码组装完成，总长度=") + std::to_string(merged.size()));
+    return merged;
 }
 
 void CodeGenerator::reset() {

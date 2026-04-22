@@ -1,4 +1,5 @@
 #include "semantic_annotator.h"
+#include "debug_utils.h"
 
 #include <cctype>
 #include <string>
@@ -32,10 +33,13 @@ SemanticAnnotator::SemanticAnnotator(SymbolTable& symbolTable, ErrorHandler& err
     // 插入 Pascal 标准布尔常量 true/false
     symbolTable_.insert(SymbolEntry::makeConstant("true", DataType::Boolean, "true"));
     symbolTable_.insert(SymbolEntry::makeConstant("false", DataType::Boolean, "false"));
+    pasccLog("semantic", PasccLogLevel::Debug, "注册内建常量 true/false");
 }
 
 void SemanticAnnotator::annotate(ASTNode* root) {
+    pasccLog("semantic", PasccLogLevel::Info, "开始遍历AST执行语义注解");
     annotateNode(root);
+    pasccLog("semantic", PasccLogLevel::Info, "语义注解遍历结束");
 }
 
 void SemanticAnnotator::annotateValueNode(ASTNode* node) {
@@ -140,8 +144,12 @@ void SemanticAnnotator::annotateConstDecl(ConstDeclNode* node) {
 
     if (!symbolTable_.insert(entry)) {
         errorHandler_.report(id->pos.line, id->pos.col, "Redefinition of identifier: " + id->identifier);
+        pasccLog("semantic", PasccLogLevel::Warn, std::string("常量重定义: ") + id->identifier);
         return;
     }
+
+    pasccLog("semantic", PasccLogLevel::Debug,
+        std::string("注册常量: ") + id->identifier + " type=" + dataTypeToString(entry.type));
 
     id->symbolEntry = symbolTable_.lookup(id->identifier);
     id->dataType = entry.type;
@@ -170,8 +178,12 @@ void SemanticAnnotator::annotateVarDecl(VarDeclNode* node) {
         if (!symbolTable_.insert(entry)) {
             errorHandler_.report(id->pos.line, id->pos.col,
                 "Redefinition of identifier: " + id->identifier);
+            pasccLog("semantic", PasccLogLevel::Warn, std::string("变量重定义: ") + id->identifier);
             return;
         }
+
+        pasccLog("semantic", PasccLogLevel::Debug,
+            std::string("注册变量: ") + id->identifier + " type=" + dataTypeToString(declaredType));
 
         id->symbolEntry = symbolTable_.lookup(id->identifier);
         id->dataType = declaredType;
@@ -208,8 +220,13 @@ void SemanticAnnotator::annotateParamDecl(ParamDeclNode* node) {
         if (!symbolTable_.insert(entry)) {
             errorHandler_.report(id->pos.line, id->pos.col,
                 "Redefinition of parameter: " + id->identifier);
+            pasccLog("semantic", PasccLogLevel::Warn, std::string("参数重定义: ") + id->identifier);
             return;
         }
+
+        pasccLog("semantic", PasccLogLevel::Debug,
+            std::string("注册参数: ") + id->identifier + " type=" + dataTypeToString(declaredType) +
+                (node->isVar ? " (var)" : ""));
 
         id->symbolEntry = symbolTable_.lookup(id->identifier);
         id->dataType = declaredType;
@@ -239,14 +256,20 @@ void SemanticAnnotator::annotateProcDecl(ProcDeclNode* node) {
     if (!symbolTable_.insert(procEntry)) {
         errorHandler_.report(node->pos.line, node->pos.col,
             "Redefinition of procedure: " + node->name);
+        pasccLog("semantic", PasccLogLevel::Warn, std::string("过程重定义: ") + node->name);
         return;
     }
+
+    pasccLog("semantic", PasccLogLevel::Info,
+        std::string("进入过程声明: ") + node->name +
+            ", param_count=" + std::to_string(procEntry.params.size()));
 
     symbolTable_.enterScope();
     for (ASTNode* child : node->children) {
         annotateNode(child);
     }
     symbolTable_.exitScope();
+    pasccLog("semantic", PasccLogLevel::Info, std::string("离开过程声明: ") + node->name);
 }
 
 void SemanticAnnotator::annotateFuncDecl(FuncDeclNode* node) {
@@ -258,8 +281,14 @@ void SemanticAnnotator::annotateFuncDecl(FuncDeclNode* node) {
     if (!symbolTable_.insert(funcEntry)) {
         errorHandler_.report(node->pos.line, node->pos.col,
             "Redefinition of function: " + node->name);
+        pasccLog("semantic", PasccLogLevel::Warn, std::string("函数重定义: ") + node->name);
         return;
     }
+
+    pasccLog("semantic", PasccLogLevel::Info,
+        std::string("进入函数声明: ") + node->name +
+            ", return_type=" + dataTypeToString(node->retType) +
+            ", param_count=" + std::to_string(funcEntry.params.size()));
 
     functionContextStack_.push_back(toLower(node->name));
     // std::cout << "Entering function context: " << node->name << "\n";
@@ -269,6 +298,7 @@ void SemanticAnnotator::annotateFuncDecl(FuncDeclNode* node) {
     }
     symbolTable_.exitScope();
     functionContextStack_.pop_back();
+    pasccLog("semantic", PasccLogLevel::Info, std::string("离开函数声明: ") + node->name);
     // std::cout << "Exiting function context: " << node->name << "\n";
 }
 
@@ -387,10 +417,14 @@ void SemanticAnnotator::annotateProcCall(ProcCallNode* node) {
         annotateValueNode(arg);
     }
 
+    pasccLog("semantic", PasccLogLevel::Debug,
+        std::string("分析调用: ") + node->name + ", arg_count=" + std::to_string(node->children.size()));
+
     const SymbolEntry* entry = symbolTable_.lookup(node->name);
     if (entry == nullptr) {
         errorHandler_.report(node->pos.line, node->pos.col,
             "Undefined procedure/function: " + node->name);
+        pasccLog("semantic", PasccLogLevel::Warn, std::string("未定义可调用符号: ") + node->name);
         return;
     }
 

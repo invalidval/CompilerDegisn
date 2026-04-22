@@ -1,7 +1,7 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Iinclude -Ibuild
 
-SRC := src/main.cpp src/ast.cpp src/semantic_annotator.cpp src/code_generator.cpp src/symbol_table.cpp src/error_handler.cpp src/codegen_utils.cpp
+SRC := src/main.cpp src/ast.cpp src/semantic_annotator.cpp src/code_generator.cpp src/symbol_table.cpp src/error_handler.cpp src/codegen_utils.cpp src/debug_utils.cpp
 GEN := build/parser.cpp build/lexer.cpp
 
 TARGET := pascc

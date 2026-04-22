@@ -42,6 +42,28 @@ bash scripts/build.sh
 bash test/run_tests.sh
 ```
 
+## 编译过程可视化终端（可选）
+
+默认 `pascc` 命令行行为不变。只有在你主动运行 TUI 包装器时，才会显示编译阶段可视化。
+
+```bash
+# 先构建
+bash scripts/build.sh
+
+# 启动可视化终端（示例）
+bash scripts/run_tui.sh -i test/close_set/00_main.pas
+
+# 调高日志细节（可选）
+bash scripts/run_tui.sh -i test/close_set/00_main.pas --log-level debug
+```
+
+说明：
+
+- 该模式通过环境变量 `PASCC_EVENT_STREAM=1` 启用结构化事件流，仅影响当前 TUI 进程。
+- 该模式通过环境变量 `PASCC_LOG_LEVEL` 控制过程日志粒度（`off/error/warn/info/debug`）。
+- 普通执行（如 `./build/pascc -i xxx.pas`）不会显示任何额外 UI。
+- TUI 中按 `q` 可中止编译，编译结束后按 `Enter` 或 `q` 退出界面。
+
 ## 分工映射建议
 
 - 词法分析：`src/lexer.l`

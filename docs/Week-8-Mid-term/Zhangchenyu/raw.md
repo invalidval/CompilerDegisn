@@ -1,3 +1,12 @@
+---
+marp: true
+theme: default
+size: 16:9
+paginate: true
+header: "编译原理课程设计-中期汇报"
+# footer: "张宸宇 胡航宾 王嘉晗 李思远 谢康  ·  2026.4.22"
+math: katex
+---
 
 <!-- #region 样式 -->
 <style>
@@ -131,7 +140,7 @@ section.mechanism-tight .box-tip {
 <!-- _footer: "" -->
 
 
-
+<!-- #region 每个人负责自己的部分 -->
 <!-- _class: transition -->
 # 03
 ## 符号表和语义分析
@@ -141,7 +150,7 @@ section.mechanism-tight .box-tip {
 
 ## 模块边界与职责
 
-
+<div class="cols-4060">
 <div>
 
 
@@ -149,7 +158,7 @@ section.mechanism-tight .box-tip {
 - 依赖：`SymbolTable` + `ErrorHandler`
 - 输出：
   - 为 AST 节点补全 `dataType` 与 `symbolEntry`
-  - 记录语义错误：重定义、未定义、类型不匹配等（详见后文表格）
+  - 记录语义错误：重定义、未定义、类型不匹配等
 - 与主流程关系：
   - `main.cpp` 中 `SemanticAnnotator::annotate(root)` 在代码生成前执行
   - `errorHandler.hasErrors()` 为真则直接终止编译
@@ -159,21 +168,43 @@ section.mechanism-tight .box-tip {
 </div>
 <div>
 
-在主程序中的调用：
-```cpp
-SymbolTable symbolTable; // 创建符号表实例
-semantic_register::preregisterBuiltins(symbolTable); // 预注册内建符号（如 true/false/read/write）
-ErrorHandler errorHandler; // 创建错误处理器实例
-SemanticAnnotator annotator(symbolTable, errorHandler); // 创建语义注解器，传入符号表和错误处理器
-annotator.annotate(root); // 对 AST 根节点进行语义注解，完成类型推断、符号绑定和错误检查
+```text
+Pascal-S 源码
+   -> Parser
+   -> AST
+   -> SemanticAnnotator
+      (读写 SymbolTable)
+   -> Annotated AST
+   -> CodeGenerator
 ```
+
+```cpp
+SymbolTable symbolTable;
+semantic_register::preregisterBuiltins(symbolTable);
+ErrorHandler errorHandler;
+SemanticAnnotator annotator(symbolTable, errorHandler);
+annotator.annotate(root);
+```
+
+<div class="box-note">
+
+在项目中的文件：
+`include/symbol_table.h` / `src/symbol_table.cpp`  
+`include/semantic_annotator.h` / `src/semantic_annotator.cpp`
 
 </div>
 
 
----
-## 符号表数据结构（一）：作用域与条目管理
+</div>
+</div>
 
+---
+
+
+## 符号表数据结构（一）：作用域与条目托管
+
+<div class="cols">
+<div>
 
 ### 作用域栈与条目池
 
@@ -185,14 +216,10 @@ private:
 };
 ```
 
-采用**栈式哈希符号表**，在课本中的数据结构基础上进行优化：
-
 - scopes_：每层作用域一个哈希表，支持嵌套与遮蔽
-- entryArena_：采用所有符号条目集中托管的方式，使用指针访问
+- entryArena_：所有符号条目集中托管，保证指针稳定
 
-
----
-
+</div>
 <div>
 
 ### 名称规范化
@@ -201,24 +228,103 @@ private:
 static std::string normalizeName(const std::string& name);
 ```
 
-- 所有符号名插入/查找前**统一转小写**，保证大小写不敏感
+- 所有符号名插入/查找前统一转小写，保证大小写不敏感
 - 语法、语义、代码生成各阶段都依赖此规范
 
 <div class="box-tip">
 构造时自动创建全局作用域，无需手动初始化
 </div>
 
-
+</div>
+</div>
 
 ---
 
-## 符号表数据结构（二）：符号表条目（SymbolEntry）设计
-
+## 符号表数据结构（二）：SymbolEntry 字段
 
 <div class="cols">
 <div>
 
-### 1. 基础字段
+### 基础与类型信息
+
+```cpp
+struct SymbolEntry {
+    std::string name;
+    SymbolKind kind;
+    DataType type;
+    int scopeLevel;
+    // ...
+};
+```
+- name：小写名
+- kind：符号类别（变量/常量/过程/函数/参数）
+- type：语义类型（整型/实型/布尔/字符/函数/过程）
+- scopeLevel：定义时的作用域层级
+
+</div>
+<div>
+
+### 数组、常量、参数扩展
+
+- isArray：是否为数组
+- arrayBounds：多维数组边界
+- hasConstLiteral/constLiteralText：常量原始文本
+- isStringLikeConst：区分字符/字符串常量
+- params：过程/函数参数列表
+- isVarParam：过程/函数本身是否为 var 参数
+
+<div class="box-tip">
+所有字段均在 include/symbol_table.h 明确声明，类型安全
+</div>
+
+</div>
+</div>
+
+---
+
+## 符号表数据结构（三）：参数结构 ParamInfo
+
+<div class="cols">
+<div>
+
+### 参数信息结构体
+
+```cpp
+struct ParamInfo {
+    std::string name;
+    DataType type;
+    bool isVarParam;
+};
+```
+
+- name：参数名
+- type：参数类型
+- isVarParam：是否为 var 参数（引用传递）
+
+</div>
+<div>
+
+### 典型用途
+
+- params 字段用于过程/函数的参数签名
+- 语义分析阶段用于参数类型检查和调用匹配
+- 支持多参数、混合值传递与引用传递
+
+<div class="box-tip">
+ParamInfo 结构与 SymbolEntry 解耦，便于参数独立扩展
+</div>
+
+</div>
+</div>
+
+---
+
+## 符号表条目设计
+
+<div class="cols">
+<div>
+
+### 基础字段
 
 ```cpp
 struct SymbolEntry {
@@ -233,21 +339,8 @@ struct SymbolEntry {
 - `kind`：符号种类
 - `type`：语义类型
 - `scopeLevel`：插入时记录所在层级
-</div>
 
-
-<div>
-
-### 2. 数组与常量扩展
-
-```cpp
-bool isArray = false;
-std::vector<ArrayBound> arrayBounds;
-bool hasConstLiteral = false;
-std::string constLiteralText;
-bool isStringLikeConst = false;
-```
-
+### 数组与常量扩展
 
 - `isArray`：标记是否为数组变量
 - `arrayBounds`：保存多维数组边界
@@ -256,97 +349,42 @@ bool isStringLikeConst = false;
 - `isStringLikeConst`：区分字符常量和字符串常量
 
 </div>
-
-</div>
-
-
----
-
-## 符号表数据结构（二）：符号表条目（SymbolEntry）设计
-
-<div class="cols">
 <div>
 
-### 3. 参数信息结构体
+### 参数与调用信息
+
+- `params`：过程和函数的形参列表
+- `isVarParam`：标记过程或函数本身是否来自 `var` 参数
+- `ParamInfo.name`：参数名
+- `ParamInfo.type`：参数类型
+- `ParamInfo.isVarParam`：该参数是否按引用传递
+
+### 工厂方法
 
 ```cpp
-// 定义
-struct ParamInfo {
-    std::string name;
-    DataType type;
-    bool isVarParam;
-};
-
-// 函数/过程条目中使用
-std::vector<ParamInfo> params;
-
-```
-
-- name：参数名
-- type：参数类型
-- isVarParam：是否为 var 参数（引用传递）
-
-</div>
-<div>
-
-### 用途
-
-- params 字段用于过程/函数的参数签名
-- 语义分析阶段用于参数类型检查和调用匹配
-- 支持多参数、混合值传递与引用传递
-
-<div class="box-tip">
-ParamInfo 结构与 SymbolEntry 解耦，便于参数独立扩展
-
-</div>
-
-</div>
-</div>
-
----
-## 符号表数据结构（二）：符号表条目（SymbolEntry）设计
-
-<div>
-
-### 4. 工厂方法
-
-```cpp
-static SymbolEntry makeVariable(...); // 构造变量条目
-static SymbolEntry makeConstant(...); // 构造常量条目
-static SymbolEntry makeProcedure(...); // 构造过程条目
-static SymbolEntry makeFunction(...); // 构造函数条目
-static SymbolEntry makeParameter(...); // 构造参数条目
+static SymbolEntry makeVariable(...);
+static SymbolEntry makeConstant(...);
+static SymbolEntry makeProcedure(...);
+static SymbolEntry makeFunction(...);
+static SymbolEntry makeParameter(...);
 ```
 
 工厂方法把构造逻辑集中到一处，避免语义阶段手工拼装字段。
 
-例如构造变量的符号条目：
-```cpp
-SymbolEntry SymbolEntry::makeVariable(const std::string& name, DataType type, bool isArray) {
-    SymbolEntry entry; // 创建一个空的 SymbolEntry 实例
-    entry.name = name; // 设置符号名称
-    entry.kind = SymbolKind::Variable; // 设置符号种类为变量
-    entry.type = type; // 设置符号类型
-    entry.isArray = isArray; // 设置是否为数组
-    return entry; // 返回构造好的 SymbolEntry 实例
-}
-```
-
 </div>
-
+</div>
 
 ---
 
-## 符号表数据结构（三）：作用域栈设计
+## 作用域栈设计
 
 <div class="cols-6040">
 <div>
 
-### 作用域栈（scopes_）设计
+### 作用域组织
 
 ```cpp
-std::vector<std::unordered_map
-<std::string, const SymbolEntry*>> scopes_;
+std::vector<std::unordered_map<std::string, const SymbolEntry*>> scopes_;
 ```
 
 - `scopes_[0]` 是全局作用域
@@ -390,7 +428,10 @@ void exitScope();
 
 ---
 
-## 符号表数据结构（三）：作用域的插入与查找机制
+## 插入与查找机制
+
+<div class="cols">
+<div>
 
 ### 插入流程
 
@@ -414,14 +455,7 @@ bool insert(SymbolEntry entry) {
 - 成功后写入 `entryArena_`
 - 最后把地址挂到当前作用域表
 
----
-
-## 符号表数据结构（三）：作用域的插入与查找机制
-
-<div class="cols">
-<div>
-
-### 插入失败场景
+### 失败场景
 
 - 变量重定义
 - 参数重定义
@@ -454,16 +488,16 @@ const SymbolEntry* lookup(const std::string& name) const;
 
 ---
 
-## 符号表与语义分析（SemanticAnnotator注解器）的协作
+## 符号表与语义阶段协作
 
-<div class="cols">
+<div class="cols-6040">
 <div>
 
-### 自动插入预置符号
+### 预置符号
 
 - `SemanticAnnotator` 构造时插入 `true` 和 `false`
 - `main.cpp` 在语义分析前预注册 `read` 和 `write`
-- 这样内建符号在**全局层**始终可见
+- 这样内建符号在全局层始终可见
 
 ### 语义阶段对符号表的使用
 
@@ -485,7 +519,7 @@ SemanticAnnotator annotator(symbolTable, errorHandler);
 annotator.annotate(root);
 ```
 
-### 协作的实际作用
+### 这一层的实际作用
 
 - 为变量、常量、参数建立唯一来源
 - 为过程和函数调用提供参数签名
@@ -497,63 +531,27 @@ annotator.annotate(root);
 
 <div class="box-note">
 
-类型检查、参数检查、数组越界检查均依赖这部分的协作模式
+这部分是整个语义分析的基础层，后面的类型检查、参数检查、数组越界检查都依赖它。
 
 </div>
 
 ---
 
-## 语义注解器 SemanticAnnotator 详细设计
+## 语义分析详细设计
 
-<div class="cols">
-<div>
-
-### 类定义
-
-```cpp
-class SemanticAnnotator {
-public:
-    SemanticAnnotator(SymbolTable& symbolTable,
-     ErrorHandler& errorHandler);
-
-    void annotate(ASTNode* root);
-
-private:
-    void annotateNode(ASTNode* node);
-    void annotateProgram(ProgramNode* node);
-    void annotateBlock(BlockNode* node);
-    // 其他 annotateXXX 方法
-}
-```
-
-</div>
-
+<div class="cols-6040">
 <div>
 
 ### `SemanticAnnotator` 运行时上下文
 
-```cpp
-std::vector<std::string> functionContextStack_;
-int valueContextDepth_ = 0;
-int loopDepth_ = 0;
-```
-
 - `functionContextStack_`
-  - 跟踪当前函数，支持函数名左值赋值（即return）
+  - 跟踪当前函数，支持函数名左值赋值即返回值赋值
 - `valueContextDepth_`
   - 区分值上下文，禁止把过程当作值使用
 - `loopDepth_`
   - 约束 `break` 只能出现在 while/for 内
 
----
-
-## 语义注解器 SemanticAnnotator 详细设计
-
-<div class="cols">
-
-<div>
-
-**注解入口与分发**
+### 注解入口与分发
 
 ```cpp
 void annotate(ASTNode* root) {
@@ -561,21 +559,17 @@ void annotate(ASTNode* root) {
 }
 
 switch(node->nodeType) {
-  case NodeType::VarDecl: annotateVarDecl(...); 
-  break;
-  case NodeType::AssignStmt: annotateAssignStmt(...); 
-  break;
-  case NodeType::BinaryExpr: annotateBinaryExpr(...); 
-  break;
+  case NodeType::VarDecl: annotateVarDecl(...); break;
+  case NodeType::AssignStmt: annotateAssignStmt(...); break;
+  case NodeType::BinaryExpr: annotateBinaryExpr(...); break;
   ...
 }
 ```
 
 </div>
-
 <div>
 
-**例如，处理声明的策略：**
+### 声明阶段核心策略
 
 - `ConstDecl`
   - 先注解右值，再推断类型并插入符号
@@ -587,17 +581,16 @@ switch(node->nodeType) {
   - 先插入过程或函数签名，再 `enterScope()` 分析体
   - 退出时 `exitScope()`
 
-
 <div class="box-note">
 构造函数预置 `true/false` 布尔常量；
 主流程还会预注册内建过程 `read/write`。
 </div>
 
 </div>
-
 </div>
 
 ---
+
 <!-- _class: compact -->
 ## 类型系统与语句检查规则
 
@@ -677,10 +670,6 @@ depth=1 -> 检查第2维
 
 ## 本模块错误覆盖与可验证点
 
-<div class="cols">
-
-<div>
-
 ### 语义错误覆盖
 
 - 重定义：变量/常量/参数/过程/函数
@@ -690,16 +679,12 @@ depth=1 -> 检查第2维
 - 控制流错误：循环外 `break`
 - 数组错误：非数组下标、下标类型错误、可判定越界
 
+### 测试与汇报建议展示
+
+1. 选 2 个通过样例，展示注解后 AST 中 `dataType/symbolEntry` 生效。
+2. 选 2 个失败样例，展示错误位置与报错文案。
+3. 展示同名遮蔽与作用域退出后查找回退的对比样例。
+
+<div class="note">
+内容来源：严格依据当前仓库实现；`docs/详细设计.md` 仅用于章节组织与术语对齐。
 </div>
-
-<div>
-
-### 注解后的语法树输出（含对应节点符号条目）
-
-![alt text](Figs/image.png)
-
-</div>
-
-</div>
-
----
