@@ -7,12 +7,12 @@ int d;
 
 
 int main(void) {
-b = 8;
-c = 12;
-a = (b + c);
-d = 9;
-a = ((aa - b) * c);
-printf("%d", a);
+    b = 8;
+    c = 12;
+    a = (b + c);
+    d = 9;
+    a = ((aa - b) * c);
+    printf("%d", a);
 
     return 0;
 }

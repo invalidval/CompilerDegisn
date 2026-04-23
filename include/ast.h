@@ -28,8 +28,12 @@ enum class NodeType {
     Literal,
     ArrayAccess,
     ArrayType,
-    ParamDecl, 
-    List
+    ParamDecl,
+    List,
+    TypeDecl,      // 类型声明
+    RecordType,    // record 类型定义
+    FieldDecl,     // 字段声明
+    FieldAccess    // 字段访问 (p.age)
 };
 
 struct SourcePos {
@@ -51,7 +55,8 @@ enum class ListKind {
     Expressions,
     Parameters,
     Declarations,
-    ArrayRanges
+    ArrayRanges,
+    FieldAccess    // 字段访问链 (p.x.y)
 };
 
 enum class BuiltinProcKind {
@@ -276,6 +281,33 @@ public:
     void accept(ASTVisitor& visitor) override;
 };
 
+// Record 类型相关节点
+class TypeDeclNode : public ASTNode {
+public:
+    explicit TypeDeclNode(const std::string& name, ASTNode* typeNode, SourcePos p = {});
+    std::string name;  // 类型名
+    void accept(ASTVisitor& visitor) override;
+};
+
+class RecordTypeNode : public ASTNode {
+public:
+    explicit RecordTypeNode(ASTNode* fieldList, SourcePos p = {});
+    void accept(ASTVisitor& visitor) override;
+};
+
+class FieldDeclNode : public ASTNode {
+public:
+    explicit FieldDeclNode(ASTNode* idList, ASTNode* typeNode, SourcePos p = {});
+    void accept(ASTVisitor& visitor) override;
+};
+
+class FieldAccessNode : public ASTNode {
+public:
+    explicit FieldAccessNode(ASTNode* base, const std::string& fieldName, SourcePos p = {});
+    std::string fieldName;
+    void accept(ASTVisitor& visitor) override;
+};
+
 
 class ASTVisitor {
 public:
@@ -299,9 +331,13 @@ public:
     virtual void visit(IdentifierNode* node) = 0;
     virtual void visit(LiteralNode* node) = 0;
     virtual void visit(ArrayAccessNode* node) = 0;
-    virtual void visit(ArrayTypeNode* node) = 0;    
-    virtual void visit(ParamDeclNode* node) = 0;    
-    virtual void visit(ListNode* node) = 0;  
+    virtual void visit(ArrayTypeNode* node) = 0;
+    virtual void visit(ParamDeclNode* node) = 0;
+    virtual void visit(ListNode* node) = 0;
+    virtual void visit(TypeDeclNode* node) = 0;
+    virtual void visit(RecordTypeNode* node) = 0;
+    virtual void visit(FieldDeclNode* node) = 0;
+    virtual void visit(FieldAccessNode* node) = 0;
 };
 
 class ASTBuilder {
@@ -329,6 +365,10 @@ public:
     ArrayTypeNode* makeArrayType(ASTNode* lower, ASTNode* upper, ASTNode* elemType, SourcePos pos = {});
     ParamDeclNode* makeParamDecl(bool isVar, ASTNode* idList, ASTNode* typeNode, SourcePos pos = {});
     ListNode* makeList(ListKind kind = ListKind::Unknown, SourcePos pos = {});
+    TypeDeclNode* makeTypeDecl(const std::string& name, ASTNode* typeNode, SourcePos pos = {});
+    RecordTypeNode* makeRecordType(ASTNode* fieldList, SourcePos pos = {});
+    FieldDeclNode* makeFieldDecl(ASTNode* idList, ASTNode* typeNode, SourcePos pos = {});
+    FieldAccessNode* makeFieldAccess(ASTNode* base, const std::string& fieldName, SourcePos pos = {});
 
 private:
     template <typename T, typename... Args>

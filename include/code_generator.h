@@ -35,6 +35,10 @@ public:
     void visit(ParamDeclNode* node) override;
     void visit(ListNode* node) override;
     void visit(ProcCallNode* node) override;
+    void visit(TypeDeclNode* node) override;
+    void visit(RecordTypeNode* node) override;
+    void visit(FieldDeclNode* node) override;
+    void visit(FieldAccessNode* node) override;
 
     // 可选：重置生成器状态
     void reset();

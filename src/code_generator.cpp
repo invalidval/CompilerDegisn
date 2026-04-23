@@ -67,7 +67,8 @@ std::string CodeGenerator::generate(ProgramNode* root) {
     pasccLog("codegen", PasccLogLevel::Info, "开始遍历AST生成C代码");
     // 递归遍历 AST，分区收集
     // 约定：
-    // BlockNode: children = [consts, vars, subprograms, compound]
+    // program_body BlockNode: children = [consts, types, vars, subprograms, compound]
+    // subprogram_body BlockNode: children = [consts, vars, compound]
     // subprograms: ListNode，每个元素为 ProcDeclNode/FuncDeclNode
     // compound: CompoundStmtNode
     BlockNode* block = nullptr;
@@ -80,7 +81,7 @@ std::string CodeGenerator::generate(ProgramNode* root) {
         return "/* Invalid AST: no program body */\n";
     }
 
-    // 1. 全局常量/变量声明
+    // 1. 全局常量声明
     if (block->children.size() > 0) {
         ListNode* consts = dynamic_cast<ListNode*>(block->children[0]);
         if (consts) {
@@ -92,8 +93,28 @@ std::string CodeGenerator::generate(ProgramNode* root) {
             }
         }
     }
+
+    // 2. 类型声明 (record types)
     if (block->children.size() > 1) {
-        ListNode* vars = dynamic_cast<ListNode*>(block->children[1]);
+        ListNode* types = dynamic_cast<ListNode*>(block->children[1]);
+        if (types) {
+            pasccLog("codegen", PasccLogLevel::Debug,
+                std::string("收集类型声明: ") + std::to_string(types->children.size()));
+            for (ASTNode* decl : types->children) {
+                TypeDeclNode* tdecl = dynamic_cast<TypeDeclNode*>(decl);
+                if (tdecl) {
+                    std::string typeCode = emitNode(tdecl);
+                    if (!typeCode.empty()) {
+                        globalDecls_ += typeCode + "\n";
+                    }
+                }
+            }
+        }
+    }
+
+    // 3. 全局变量声明
+    if (block->children.size() > 2) {
+        ListNode* vars = dynamic_cast<ListNode*>(block->children[2]);
         if (vars) {
             pasccLog("codegen", PasccLogLevel::Debug,
                 std::string("收集全局变量声明: ") + std::to_string(vars->children.size()));
@@ -104,9 +125,9 @@ std::string CodeGenerator::generate(ProgramNode* root) {
         }
     }
 
-    // 2. 子程序原型和定义
-    if (block->children.size() > 2) {
-        ListNode* subs = dynamic_cast<ListNode*>(block->children[2]);
+    // 4. 子程序原型和定义
+    if (block->children.size() > 3) {
+        ListNode* subs = dynamic_cast<ListNode*>(block->children[3]);
         if (subs) {
             pasccLog("codegen", PasccLogLevel::Info,
                 std::string("开始生成子程序声明/定义，数量=") + std::to_string(subs->children.size()));
@@ -124,9 +145,9 @@ std::string CodeGenerator::generate(ProgramNode* root) {
         }
     }
 
-    // 3. 主程序体
-    if (block->children.size() > 3) {
-        CompoundStmtNode* mainStmt = dynamic_cast<CompoundStmtNode*>(block->children[3]);
+    // 5. 主程序体
+    if (block->children.size() > 4) {
+        CompoundStmtNode* mainStmt = dynamic_cast<CompoundStmtNode*>(block->children[4]);
         if (mainStmt) {
             pasccLog("codegen", PasccLogLevel::Info, "开始生成主程序体");
             visit(mainStmt);
@@ -519,3 +540,90 @@ std::string CodeGenerator::emitNode(ASTNode* node) {
     node->accept(*this); // 调用对应节点的 visit 方法
     return currentExpr_; // 返回生成的代码
 }
+
+// Record 类型相关节点
+void CodeGenerator::visit(TypeDeclNode* node) {
+    // TypeDecl generates a C struct typedef
+    // This should be collected in the global declarations section
+    if (node->children.size() < 1) {
+        currentExpr_.clear();
+        return;
+    }
+
+    ASTNode* typeDefNode = node->children[0];
+    if (typeDefNode->nodeType == NodeType::RecordType) {
+        std::ostringstream oss;
+        oss << "typedef struct {\n";
+
+        // Generate field declarations
+        auto* recordNode = static_cast<RecordTypeNode*>(typeDefNode);
+        if (recordNode->children.size() > 0) {
+            auto* fieldList = recordNode->children[0];
+            if (auto* list = dynamic_cast<ListNode*>(fieldList)) {
+                for (ASTNode* fieldDeclListNode : list->children) {
+                    if (auto* fieldDeclList = dynamic_cast<ListNode*>(fieldDeclListNode)) {
+                        for (ASTNode* fieldDeclNode : fieldDeclList->children) {
+                            if (auto* fieldDecl = dynamic_cast<FieldDeclNode*>(fieldDeclNode)) {
+                                // Generate field declaration
+                                std::string fieldCode = emitNode(fieldDecl);
+                                if (!fieldCode.empty()) {
+                                    oss << "    " << fieldCode << "\n";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        oss << "} " << node->name << ";";
+        currentExpr_ = oss.str();
+    } else {
+        currentExpr_.clear();
+    }
+}
+
+void CodeGenerator::visit(RecordTypeNode* /*node*/) {
+    // RecordType itself doesn't generate code; handled by TypeDecl
+    currentExpr_.clear();
+}
+
+void CodeGenerator::visit(FieldDeclNode* node) {
+    // FieldDecl: children[0] = id list, children[1] = type
+    if (node->children.size() < 2) {
+        currentExpr_.clear();
+        return;
+    }
+
+    auto* idList = node->children[0];
+    auto* typeNode = node->children[1];
+
+    // Get the C type for the field
+    std::string ctype = CodegenUtils::mapType(node->dataType);
+
+    // Generate declarations for all identifiers
+    std::ostringstream oss;
+    if (auto* ids = dynamic_cast<ListNode*>(idList)) {
+        for (size_t i = 0; i < ids->children.size(); ++i) {
+            if (auto* id = dynamic_cast<IdentifierNode*>(ids->children[i])) {
+                if (i > 0) oss << "    ";
+                oss << ctype << " " << id->identifier << ";";
+                if (i < ids->children.size() - 1) oss << "\n";
+            }
+        }
+    }
+
+    currentExpr_ = oss.str();
+}
+
+void CodeGenerator::visit(FieldAccessNode* node) {
+    // FieldAccess: children[0] = base expression, fieldName = field name
+    if (node->children.size() < 1) {
+        currentExpr_.clear();
+        return;
+    }
+
+    std::string base = emitNode(node->children[0]);
+    currentExpr_ = base + "." + node->fieldName;
+}
+

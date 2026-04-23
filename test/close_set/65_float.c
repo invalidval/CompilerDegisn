@@ -28,7 +28,7 @@ void assert(int cond);
 
 float float_abs(float x) {
     float _retval;
-if ((x < 0)) {
+    if ((x < 0)) {
         _retval = (-x);
     } else {
         _retval = x;
@@ -39,14 +39,14 @@ if ((x < 0)) {
 
 float circle_area(int radius) {
     float _retval;
-_retval = ((((pi * radius) * radius) + ((radius * radius) * pi)) / 2);
+    _retval = ((((pi * radius) * radius) + ((radius * radius) * pi)) / 2);
 
     return _retval;
 }
 
 int float_eq(float a, float b) {
     int _retval;
-if ((float_abs((a - b)) < eps)) {
+    if ((float_abs((a - b)) < eps)) {
         _retval = 1;
     } else {
         _retval = 0;
@@ -56,17 +56,17 @@ if ((float_abs((a - b)) < eps)) {
 }
 
 void error() {
-printf("%c", e);
+    printf("%c", e);
 
 }
 
 void ok() {
-printf("%c", o);
+    printf("%c", o);
 
 }
 
 void assert(int cond) {
-if ((cond == 0)) {
+    if ((cond == 0)) {
         error();
     } else {
         ok();
@@ -76,29 +76,29 @@ if ((cond == 0)) {
 
 
 int main(void) {
-assert(float_eq(circle_area(5), circle_area(five)));
-if ((1.5 != 0.0)) {
+    assert(float_eq(circle_area(5), circle_area(five)));
+    if ((1.5 != 0.0)) {
         ok();
     }
-if ((!(3.3 == 0.0))) {
+    if ((!(3.3 == 0.0))) {
         ok();
     }
-if (((0.0 != 0.0) && (3 != 0.0))) {
+    if (((0.0 != 0.0) && (3 != 0.0))) {
         error();
     }
-if (((0 != 0.0) || (0.3 != 0.0))) {
+    if (((0 != 0.0) || (0.3 != 0.0))) {
         ok();
     }
-p = 0;
-arr[0] = 1.0;
-arr[1] = 2.0;
-input = 0.520;
-area = ((pi * input) * input);
-area_trunc = circle_area(0);
-arr[p] = (arr[p] + input);
-printf("%f", area);
-printf("%f", area_trunc);
-printf("%f", arr[0]);
+    p = 0;
+    arr[0] = 1.0;
+    arr[1] = 2.0;
+    input = 0.520;
+    area = ((pi * input) * input);
+    area_trunc = circle_area(0);
+    arr[p] = (arr[p] + input);
+    printf("%f", area);
+    printf("%f", area_trunc);
+    printf("%f", arr[0]);
 
     return 0;
 }

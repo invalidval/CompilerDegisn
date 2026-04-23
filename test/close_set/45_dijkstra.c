@@ -18,60 +18,60 @@ void dijkstra();
 
 void dijkstra() {
     int i;
-int min_num;
-int min_index;
-int k;
-int j;
+    int min_num;
+    int min_index;
+    int k;
+    int j;
 
-for (i = 1; i <= n; i++) {
+    for (i = 1; i <= n; i++) {
         dis[i] = e[1][i];
-book[i] = 0;
+        book[i] = 0;
     }
-book[1] = 1;
-for (i = 1; i <= (n - 1); i++) {
+    book[1] = 1;
+    for (i = 1; i <= (n - 1); i++) {
         min_num = inf;
-min_index = 0;
-for (k = 1; k <= n; k++) {
-        if (((min_num > dis[k]) && (book[k] == 0))) {
-        min_num = dis[k];
-min_index = k;
-    }
-    }
-book[min_index] = 1;
-for (j = 1; j <= n; j++) {
-        if ((e[min_index][j] < inf)) {
-        if ((dis[j] > (dis[min_index] + e[min_index][j]))) {
-        dis[j] = (dis[min_index] + e[min_index][j]);
-    }
-    }
-    }
+        min_index = 0;
+        for (k = 1; k <= n; k++) {
+            if (((min_num > dis[k]) && (book[k] == 0))) {
+                min_num = dis[k];
+                min_index = k;
+            }
+        }
+        book[min_index] = 1;
+        for (j = 1; j <= n; j++) {
+            if ((e[min_index][j] < inf)) {
+                if ((dis[j] > (dis[min_index] + e[min_index][j]))) {
+                    dis[j] = (dis[min_index] + e[min_index][j]);
+                }
+            }
+        }
     }
 
 }
 
 
 int main(void) {
-scanf("%d", &n);
-scanf("%d", &m);
-for (i = 1; i <= n; i++) {
+    scanf("%d", &n);
+    scanf("%d", &m);
+    for (i = 1; i <= n; i++) {
         for (j = 1; j <= n; j++) {
-        if ((i == j)) {
-        e[i][j] = 0;
-    } else {
-        e[i][j] = inf;
+            if ((i == j)) {
+                e[i][j] = 0;
+            } else {
+                e[i][j] = inf;
+            }
+        }
     }
-    }
-    }
-for (i = 1; i <= m; i++) {
+    for (i = 1; i <= m; i++) {
         scanf("%d", &u);
-scanf("%d", &v);
-scanf("%d", &e[u][v]);
+        scanf("%d", &v);
+        scanf("%d", &e[u][v]);
     }
-dijkstra();
-for (i = 1; i <= n; i++) {
+    dijkstra();
+    for (i = 1; i <= n; i++) {
         printf("%d", dis[i]);
     }
-scanf("%d", &e[0][0]);
+    scanf("%d", &e[0][0]);
 
     return 0;
 }

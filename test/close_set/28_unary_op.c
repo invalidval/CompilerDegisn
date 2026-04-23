@@ -3,8 +3,8 @@ int a;
 
 
 int main(void) {
-a = 60;
-printf("%d", (~a));
+    a = 60;
+    printf("%d", (~a));
 
     return 0;
 }

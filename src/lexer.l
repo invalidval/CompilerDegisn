@@ -48,7 +48,8 @@ const std::unordered_map<std::string, int> g_keyword_tokens = {
 	{"else", ELSE}, {"while", WHILE}, {"do", DO}, {"for", FOR},
 	{"to", TO}, {"downto", DOWNTO}, {"break", BREAK}, {"read", READ}, {"write", WRITE},
 	{"not", NOT}, {"and", AND}, {"or", OR}, {"div", DIV}, {"mod", MOD},
-	{"true", TRUE}, {"false", FALSE}
+	{"true", TRUE}, {"false", FALSE},
+	{"type", TYPE}, {"record", RECORD}
 };
 
 void advancePosition(const char* text, int len) {

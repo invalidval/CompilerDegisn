@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash:*)",
+      "Bash(echo:*)",
+      "Bash(./build/pasc:*)",
+      "Bash(gc:*)",
+      "Bash(/tmp/test_downto:*)",
+      "Bash(make clean:*)",
+      "Bash(make:*)",
+      "Bash(./pasc:*)",
+      "Bash(/tmp/test_record_field:*)",
+      "Bash(/tmp/test_record_comprehensive:*)",
+      "Bash(PASCC_EVENT_STREAM=1 ./build/pasc:*)",
+      "Bash(PASCC_EVENT_STREAM=1 PASCC_LOG_LEVEL=debug ./build/pasc:*)",
+      "Bash(python3:*)",
+      "Bash(chmod:*)"
+    ]
+  }
+}

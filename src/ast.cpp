@@ -337,4 +337,58 @@ ListNode* ASTBuilder::makeList(ListKind kind, SourcePos pos) {
     return create<ListNode>(kind, pos);
 }
 
+// Record 类型相关节点实现
+TypeDeclNode::TypeDeclNode(const std::string& name, ASTNode* typeNode, SourcePos p)
+    : ASTNode(NodeType::TypeDecl, p), name(name) {
+    if (typeNode) children.push_back(typeNode);
+}
+
+void TypeDeclNode::accept(ASTVisitor& visitor) {
+    visitor.visit(this);
+}
+
+RecordTypeNode::RecordTypeNode(ASTNode* fieldList, SourcePos p)
+    : ASTNode(NodeType::RecordType, p) {
+    if (fieldList) children.push_back(fieldList);
+}
+
+void RecordTypeNode::accept(ASTVisitor& visitor) {
+    visitor.visit(this);
+}
+
+FieldDeclNode::FieldDeclNode(ASTNode* idList, ASTNode* typeNode, SourcePos p)
+    : ASTNode(NodeType::FieldDecl, p) {
+    if (idList) children.push_back(idList);
+    if (typeNode) children.push_back(typeNode);
+}
+
+void FieldDeclNode::accept(ASTVisitor& visitor) {
+    visitor.visit(this);
+}
+
+FieldAccessNode::FieldAccessNode(ASTNode* base, const std::string& fieldName, SourcePos p)
+    : ASTNode(NodeType::FieldAccess, p), fieldName(fieldName) {
+    if (base) children.push_back(base);
+}
+
+void FieldAccessNode::accept(ASTVisitor& visitor) {
+    visitor.visit(this);
+}
+
+TypeDeclNode* ASTBuilder::makeTypeDecl(const std::string& name, ASTNode* typeNode, SourcePos pos) {
+    return create<TypeDeclNode>(name, typeNode, pos);
+}
+
+RecordTypeNode* ASTBuilder::makeRecordType(ASTNode* fieldList, SourcePos pos) {
+    return create<RecordTypeNode>(fieldList, pos);
+}
+
+FieldDeclNode* ASTBuilder::makeFieldDecl(ASTNode* idList, ASTNode* typeNode, SourcePos pos) {
+    return create<FieldDeclNode>(idList, typeNode, pos);
+}
+
+FieldAccessNode* ASTBuilder::makeFieldAccess(ASTNode* base, const std::string& fieldName, SourcePos pos) {
+    return create<FieldAccessNode>(base, fieldName, pos);
+}
+
 

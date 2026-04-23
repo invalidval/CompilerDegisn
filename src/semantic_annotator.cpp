@@ -21,6 +21,7 @@ std::string dataTypeToString(DataType t) {
     case DataType::Char: return "char";
     case DataType::Procedure: return "procedure";
     case DataType::Function: return "function";
+    case DataType::Record: return "record";
     case DataType::Unknown: return "unknown";
     }
     return "unknown";
@@ -82,6 +83,11 @@ void SemanticAnnotator::annotateNode(ASTNode* node) {
     case NodeType::Literal:      annotateLiteral(static_cast<LiteralNode*>(node)); break;
     case NodeType::ArrayAccess:  annotateArrayAccess(static_cast<ArrayAccessNode*>(node)); break;
     case NodeType::ArrayType:    annotateArrayType(static_cast<ArrayTypeNode*>(node)); break;
+
+    case NodeType::TypeDecl:     annotateTypeDecl(static_cast<TypeDeclNode*>(node)); break;
+    case NodeType::RecordType:   annotateRecordType(static_cast<RecordTypeNode*>(node)); break;
+    case NodeType::FieldDecl:    annotateFieldDecl(static_cast<FieldDeclNode*>(node)); break;
+    case NodeType::FieldAccess:  annotateFieldAccess(static_cast<FieldAccessNode*>(node)); break;
     }
 }
 
@@ -167,6 +173,20 @@ void SemanticAnnotator::annotateVarDecl(VarDeclNode* node) {
     typeNode->dataType = declaredType;
     const std::vector<ArrayBound> arrayBounds = collectArrayBounds(typeNode);
 
+    // Check if this is a user-defined type (record type)
+    std::string userTypeName;
+    const SymbolEntry* typeSym = nullptr;
+    if (auto* typeId = dynamic_cast<IdentifierNode*>(typeNode)) {
+        std::string typeName = toLower(typeId->identifier);
+        typeSym = symbolTable_.lookup(typeName);
+        if (typeSym) {
+            if (typeSym->kind == SymbolKind::TypeAlias) {
+                userTypeName = typeName;
+                declaredType = typeSym->type;
+            }
+        }
+    }
+
     auto declareOne = [&](IdentifierNode* id) {
         SymbolEntry entry = SymbolEntry::makeVariable(
             id->identifier,
@@ -174,6 +194,12 @@ void SemanticAnnotator::annotateVarDecl(VarDeclNode* node) {
             typeNode->nodeType == NodeType::ArrayType // isArray
         );
         entry.arrayBounds = arrayBounds;
+
+        // Store the type name and fields for user-defined types
+        if (!userTypeName.empty() && typeSym) {
+            entry.typeName = userTypeName;
+            entry.fields = typeSym->fields;  // Copy fields from type definition
+        }
 
         if (!symbolTable_.insert(entry)) {
             errorHandler_.report(id->pos.line, id->pos.col,
@@ -972,11 +998,170 @@ bool SemanticAnnotator::isLValue(ASTNode* node) const {
     if (auto* id = dynamic_cast<IdentifierNode*>(node)) {
         return id->isLValue;
     }
-    return node->nodeType == NodeType::ArrayAccess;
+    return node->nodeType == NodeType::ArrayAccess || node->nodeType == NodeType::FieldAccess;
 }
 
 void SemanticAnnotator::reportTypeMismatch(ASTNode* node, DataType expected, DataType actual, const std::string& where) {
     errorHandler_.report(node->pos.line, node->pos.col,
         "Type mismatch in " + where + ": expected " + dataTypeToString(expected) +
         ", got " + dataTypeToString(actual));
+}
+
+void SemanticAnnotator::annotateTypeDecl(TypeDeclNode* node) {
+    // TypeDecl: name = type name (string), children[0] = type definition
+    if (node->children.size() < 1) {
+        return;
+    }
+
+    std::string typeName = toLower(node->name);
+    ASTNode* typeDefNode = node->children[0];
+
+    // Check if type name already exists
+    if (symbolTable_.lookupCurrentScope(typeName)) {
+        errorHandler_.report(node->pos.line, node->pos.col,
+            "Type '" + typeName + "' is already defined");
+        return;
+    }
+
+    // Process the type definition
+    if (typeDefNode->nodeType == NodeType::RecordType) {
+        // Create a type alias entry for the record type
+        SymbolEntry entry = SymbolEntry::makeTypeAlias(typeName, DataType::Record);
+
+        // Collect field information from the record type
+        auto* recordNode = static_cast<RecordTypeNode*>(typeDefNode);
+        if (recordNode->children.size() > 0) {
+            auto* fieldList = recordNode->children[0];
+            if (auto* list = dynamic_cast<ListNode*>(fieldList)) {
+                // Each child is a ListNode containing FieldDeclNode objects
+                for (ASTNode* fieldDeclListNode : list->children) {
+                    // field_declaration returns a ListNode containing FieldDeclNode objects
+                    if (auto* fieldDeclList = dynamic_cast<ListNode*>(fieldDeclListNode)) {
+                        for (ASTNode* fieldDeclNode : fieldDeclList->children) {
+                            if (auto* fieldDecl = dynamic_cast<FieldDeclNode*>(fieldDeclNode)) {
+                                // FieldDecl: children[0] = id list, children[1] = type
+                                if (fieldDecl->children.size() >= 2) {
+                                    auto* idList = fieldDecl->children[0];
+                                    auto* typeNode = fieldDecl->children[1];
+                                    DataType fieldType = inferTypeFromTypeNode(typeNode);
+
+                                    // Add each field to the entry
+                                    if (auto* ids = dynamic_cast<ListNode*>(idList)) {
+                                        for (ASTNode* id : ids->children) {
+                                            if (auto* fieldId = dynamic_cast<IdentifierNode*>(id)) {
+                                                ParamInfo fieldInfo;
+                                                fieldInfo.name = toLower(fieldId->identifier);
+                                                fieldInfo.type = fieldType;
+                                                entry.fields.push_back(fieldInfo);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Insert the type alias into symbol table
+        if (!symbolTable_.insert(entry)) {
+            errorHandler_.report(node->pos.line, node->pos.col,
+                "Failed to insert type '" + typeName + "'");
+        }
+
+        // Annotate the record type node
+        annotateNode(typeDefNode);
+    } else if (auto* idTypeNode = dynamic_cast<IdentifierNode*>(typeDefNode)) {
+        // Type alias to another type (e.g., type MyInt = integer)
+        DataType aliasedType = inferTypeFromTypeNode(typeDefNode);
+        SymbolEntry entry = SymbolEntry::makeTypeAlias(typeName, aliasedType);
+
+        if (!symbolTable_.insert(entry)) {
+            errorHandler_.report(node->pos.line, node->pos.col,
+                "Failed to insert type '" + typeName + "'");
+        }
+    }
+
+    node->dataType = DataType::Record;
+}
+
+void SemanticAnnotator::annotateRecordType(RecordTypeNode* node) {
+    // RecordType: children[0] = field list
+    if (node->children.size() > 0) {
+        annotateNode(node->children[0]);
+    }
+    node->dataType = DataType::Record;
+}
+
+void SemanticAnnotator::annotateFieldDecl(FieldDeclNode* node) {
+    // FieldDecl: children[0] = id list, children[1] = type
+    // Don't annotate the id list - field names are not variables in the symbol table
+    if (node->children.size() >= 2) {
+        DataType fieldType = inferTypeFromTypeNode(node->children[1]);
+        node->dataType = fieldType;
+    }
+}
+
+void SemanticAnnotator::annotateFieldAccess(FieldAccessNode* node) {
+    // FieldAccess: children[0] = base expression, fieldName = field name string
+    if (node->children.size() < 1) {
+        node->dataType = DataType::Unknown;
+        return;
+    }
+
+    // Annotate the base expression
+    annotateNode(node->children[0]);
+    ASTNode* baseNode = node->children[0];
+
+    // If base is an identifier, look up its type
+    if (auto* baseId = dynamic_cast<IdentifierNode*>(baseNode)) {
+        const SymbolEntry* baseSym = symbolTable_.lookup(baseId->identifier);
+        if (!baseSym) {
+            errorHandler_.report(node->pos.line, node->pos.col,
+                "Undefined variable '" + baseId->identifier + "'");
+            node->dataType = DataType::Unknown;
+            return;
+        }
+
+        // Check if it's a record type
+        if (baseSym->type != DataType::Record) {
+            errorHandler_.report(node->pos.line, node->pos.col,
+                "Variable '" + baseId->identifier + "' is not a record type");
+            node->dataType = DataType::Unknown;
+            return;
+        }
+
+        // Look up the record type definition
+        const SymbolEntry* recordTypeSym = symbolTable_.lookup(baseSym->typeName);
+        if (!recordTypeSym || recordTypeSym->kind != SymbolKind::TypeAlias) {
+            errorHandler_.report(node->pos.line, node->pos.col,
+                "Record type '" + baseSym->typeName + "' not found");
+            node->dataType = DataType::Unknown;
+            return;
+        }
+
+        // Get the field name from the node
+        std::string fieldName = toLower(node->fieldName);
+
+        // Find the field in the record type
+        bool fieldFound = false;
+        for (const auto& field : recordTypeSym->fields) {
+            if (field.name == fieldName) {
+                node->dataType = field.type;
+                fieldFound = true;
+                break;
+            }
+        }
+
+        if (!fieldFound) {
+            errorHandler_.report(node->pos.line, node->pos.col,
+                "Record type '" + baseSym->typeName + "' has no field '" + fieldName + "'");
+            node->dataType = DataType::Unknown;
+        }
+    } else {
+        errorHandler_.report(node->pos.line, node->pos.col,
+            "Field access requires a record variable");
+        node->dataType = DataType::Unknown;
+    }
 }

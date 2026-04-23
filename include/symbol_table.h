@@ -13,7 +13,8 @@ enum class SymbolKind {
     Constant,
     Procedure,
     Function,
-    Parameter
+    Parameter,
+    TypeAlias
 };
 
 struct ArrayBound {
@@ -43,6 +44,12 @@ struct SymbolEntry {
     std::vector<ParamInfo> params;
     bool isVarParam = false;
 
+    // For record types: store field information
+    std::vector<ParamInfo> fields;
+
+    // For variables of user-defined types: reference to the type name
+    std::string typeName;
+
     bool isConstantLike() const {
         return kind == SymbolKind::Constant;
     }
@@ -52,6 +59,7 @@ struct SymbolEntry {
     static SymbolEntry makeProcedure(const std::string& name);
     static SymbolEntry makeFunction(const std::string& name, DataType returnType);
     static SymbolEntry makeParameter(const std::string& name, DataType type, bool isVarParam);
+    static SymbolEntry makeTypeAlias(const std::string& name, DataType type);
 };
 
 class SymbolTable {

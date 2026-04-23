@@ -25,6 +25,10 @@ private:
     void annotateParamDecl(ParamDeclNode* node);
     void annotateProcDecl(ProcDeclNode* node);
     void annotateFuncDecl(FuncDeclNode* node);
+    void annotateTypeDecl(TypeDeclNode* node);
+    void annotateRecordType(RecordTypeNode* node);
+    void annotateFieldDecl(FieldDeclNode* node);
+    void annotateFieldAccess(FieldAccessNode* node);
 
     void annotateAssignStmt(AssignStmtNode* node);
     void annotateIfStmt(IfStmtNode* node);
