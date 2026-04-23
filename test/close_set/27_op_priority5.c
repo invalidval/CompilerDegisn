@@ -9,16 +9,16 @@ int flag;
 
 
 int main(void) {
-a = 1;
-b = 0;
-c = 1;
-d = 2;
-e = 4;
-flag = 0;
-if ((((((a * b) / c) == (e + d)) && (((a * (a + b)) + c) <= (d + e))) || ((a - (b * c)) == (d - (a / c))))) {
+    a = 1;
+    b = 0;
+    c = 1;
+    d = 2;
+    e = 4;
+    flag = 0;
+    if ((((((a * b) / c) == (e + d)) && (((a * (a + b)) + c) <= (d + e))) || ((a - (b * c)) == (d - (a / c))))) {
         flag = 1;
     }
-if (flag) {
+    if (flag) {
         printf("%d", 1);
     }
 

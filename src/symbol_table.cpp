@@ -52,6 +52,15 @@ SymbolEntry SymbolEntry::makeParameter(const std::string& name, DataType type, b
     return entry;
 }
 
+SymbolEntry SymbolEntry::makeTypeAlias(const std::string& name, DataType type) {
+    SymbolEntry entry;
+    entry.name = name;
+    entry.kind = SymbolKind::TypeAlias;
+    entry.type = type;
+    entry.isArray = false;
+    return entry;
+}
+
 std::string SymbolTable::normalizeName(const std::string& name) {
     std::string normalized = name;
     for (char& ch : normalized) {

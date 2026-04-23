@@ -15,18 +15,18 @@ void merge(int p, int q);
 
 int getint() {
     int _retval;
-scanf("%d", &_retval);
+    scanf("%d", &_retval);
 
     return _retval;
 }
 
 int find(int root) {
     int _retval;
-if ((parent[root] == root)) {
+    if ((parent[root] == root)) {
         _retval = root;
     } else {
         parent[root] = find(parent[root]);
-_retval = parent[root];
+        _retval = parent[root];
     }
 
     return _retval;
@@ -34,11 +34,11 @@ _retval = parent[root];
 
 void merge(int p, int q) {
     int root_p;
-int root_q;
+    int root_q;
 
-root_p = find(p);
-root_q = find(q);
-if ((root_p != root_q)) {
+    root_p = find(p);
+    root_q = find(q);
+    if ((root_p != root_q)) {
         parent[root_q] = root_p;
     }
 
@@ -46,24 +46,24 @@ if ((root_p != root_q)) {
 
 
 int main(void) {
-n = getint();
-m = getint();
-for (i = 0; i <= (n - 1); i++) {
+    n = getint();
+    m = getint();
+    for (i = 0; i <= (n - 1); i++) {
         parent[i] = i;
     }
-for (i = 0; i <= (m - 1); i++) {
+    for (i = 0; i <= (m - 1); i++) {
         p = getint();
-q = getint();
-merge(p, q);
+        q = getint();
+        merge(p, q);
     }
-clusters = 0;
-for (i = 0; i <= (n - 1); i++) {
+    clusters = 0;
+    for (i = 0; i <= (n - 1); i++) {
         if ((parent[i] == i)) {
-        clusters = (clusters + 1);
+            clusters = (clusters + 1);
+        }
     }
-    }
-printf("%d", clusters);
-scanf("%d", &clusters);
+    printf("%d", clusters);
+    scanf("%d", &clusters);
 
     return 0;
 }

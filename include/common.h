@@ -8,6 +8,7 @@ enum class DataType {
     Char,
     Procedure,
     Function,
+    Record,
     Unknown
 };
 

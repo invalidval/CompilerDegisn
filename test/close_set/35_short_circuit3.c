@@ -28,85 +28,85 @@ int set_d(int val);
 
 int set_a(int val) {
     int _retval;
-a = val;
-_retval = val;
+    a = val;
+    _retval = val;
 
     return _retval;
 }
 
 int set_b(int val) {
     int _retval;
-b = val;
-_retval = val;
+    b = val;
+    _retval = val;
 
     return _retval;
 }
 
 int set_d(int val) {
     int _retval;
-d = val;
-_retval = val;
+    d = val;
+    _retval = val;
 
     return _retval;
 }
 
 
 int main(void) {
-a = 2;
-b = 3;
-if (((set_a(0) != 0) && (set_b(1) != 0))) {
+    a = 2;
+    b = 3;
+    if (((set_a(0) != 0) && (set_b(1) != 0))) {
     }
-printf("%d", a);
-printf("%d", b);
-a = 2;
-b = 3;
-if (((set_a(0) != 0) && (set_b(1) != 0))) {
+    printf("%d", a);
+    printf("%d", b);
+    a = 2;
+    b = 3;
+    if (((set_a(0) != 0) && (set_b(1) != 0))) {
     }
-printf("%d", a);
-printf("%d", b);
-d = 2;
-if (((c >= 1) && (set_d(3) != 0))) {
+    printf("%d", a);
+    printf("%d", b);
+    d = 2;
+    if (((c >= 1) && (set_d(3) != 0))) {
     }
-printf("%d", d);
-if (((c <= 1) || (set_d(4) != 0))) {
+    printf("%d", d);
+    if (((c <= 1) || (set_d(4) != 0))) {
     }
-printf("%d", d);
-if ((16 >= (3 - (2 + 1)))) {
+    printf("%d", d);
+    if ((16 >= (3 - (2 + 1)))) {
         printf("%c", aa);
     }
-if (((25 - 7) != (36 - (6 * 3)))) {
+    if (((25 - 7) != (36 - (6 * 3)))) {
         printf("%c", bb);
     }
-if ((1 != (7 % 2))) {
+    if ((1 != (7 % 2))) {
         printf("%c", cc);
     }
-if ((3 <= 4)) {
+    if ((3 <= 4)) {
         printf("%c", dd);
     }
-if ((0 != 0)) {
+    if ((0 != 0)) {
         printf("%c", e);
     }
-if ((1 != 0)) {
+    if ((1 != 0)) {
         printf("%c", f);
     }
-i0 = 0;
-i1 = 1;
-i2 = 2;
-i3 = 3;
-i4 = 4;
-if (((i0 != 0) || (i1 != 0))) {
+    i0 = 0;
+    i1 = 1;
+    i2 = 2;
+    i3 = 3;
+    i4 = 4;
+    if (((i0 != 0) || (i1 != 0))) {
         printf("%c", g);
     }
-if (((i0 >= i1) || (i1 <= i0))) {
+    if (((i0 >= i1) || (i1 <= i0))) {
         printf("%c", h);
     }
-if (((i2 >= i1) && (i4 != i3))) {
+    if (((i2 >= i1) && (i4 != i3))) {
         printf("%c", i);
     }
-if ((((i0 == 0) && (i3 < i3)) || (i4 >= i4))) {
+    if ((((i0 == 0) && (i3 < i3)) || (i4 >= i4))) {
         printf("%c", j);
     }
-if (((i0 == 0) || ((i3 < i3) && (i4 >= i4)))) {
+    if (((i0 == 0) || ((i3 < i3) && (i4 >= i4)))) {
         printf("%c", k);
     }
 

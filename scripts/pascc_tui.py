@@ -22,7 +22,7 @@ from typing import Deque, Dict, List, Optional
 
 EVENT_PREFIX = "[PASCC_EVT]"
 LOG_PREFIX = "[PASCC_LOG]"
-STAGE_ORDER = ["init", "lexer", "parser", "semantic", "codegen", "output", "compiler"]
+STAGE_ORDER = ["init", "lexer", "parser", "semantic", "codegen", "output", "gcc_verify", "compiler"]
 STAGE_TITLES = {
     "init": "初始化",
     "lexer": "词法分析",
@@ -30,6 +30,7 @@ STAGE_TITLES = {
     "semantic": "语义分析",
     "codegen": "代码生成",
     "output": "写入输出",
+    "gcc_verify": "GCC 验证",
     "compiler": "总体流程",
 }
 
@@ -173,7 +174,7 @@ def read_stream(proc: subprocess.Popen, queue: Queue) -> None:
     queue.put(None)
 
 
-def run_ui(stdscr: curses.window, cmd: List[str], project_root: str, log_level: str) -> int:
+def run_ui(stdscr: curses.window, cmd: List[str], project_root: str, log_level: str, output_file: Optional[str]) -> int:
     stdscr.keypad(True)
 
     curses.curs_set(0)
@@ -190,6 +191,7 @@ def run_ui(stdscr: curses.window, cmd: List[str], project_root: str, log_level: 
 
     log_offset = 0
     is_scrolling = False
+    gcc_verified = False
 
     env = os.environ.copy()
     env["PASCC_EVENT_STREAM"] = "1"
@@ -307,7 +309,89 @@ def run_ui(stdscr: curses.window, cmd: List[str], project_root: str, log_level: 
                     break
 
         # 检查进程状态
-        if proc.poll() is not None and done_reading:
+        if proc.poll() is not None and done_reading and not gcc_verified:
+            # pascc 编译完成，如果成功则运行 gcc 验证
+            if proc.returncode == 0 and output_file:
+                gcc_verified = True
+                current_stage = "gcc_verify"
+                stage_states["gcc_verify"].status = "running"
+                stage_states["gcc_verify"].message = "正在验证生成的 C 代码"
+                logs.append("[INFO][gcc_verify] 开始 GCC 验证")
+                stage_details["gcc_verify"].append("[INFO] 开始 GCC 验证")
+                need_refresh = True
+
+                # 运行 gcc 编译
+                gcc_output_bin = output_file.rsplit(".", 1)[0] if "." in output_file else output_file + ".out"
+                gcc_cmd = ["gcc", "-o", gcc_output_bin, output_file, "-lm"]
+
+                try:
+                    logs.append(f"[INFO][gcc_verify] 执行: {' '.join(gcc_cmd)}")
+                    stage_details["gcc_verify"].append(f"[INFO] 执行: {' '.join(gcc_cmd)}")
+
+                    gcc_proc = subprocess.run(
+                        gcc_cmd,
+                        cwd=project_root,
+                        capture_output=True,
+                        text=True,
+                        timeout=30
+                    )
+
+                    if gcc_proc.returncode == 0:
+                        stage_states["gcc_verify"].status = "done"
+                        stage_states["gcc_verify"].message = "C 代码验证成功"
+                        logs.append(f"[INFO][gcc_verify] ✓ GCC 编译成功，生成可执行文件: {gcc_output_bin}")
+                        stage_details["gcc_verify"].append(f"[INFO] ✓ GCC 编译成功")
+                        stage_details["gcc_verify"].append(f"[INFO] 可执行文件: {gcc_output_bin}")
+                    else:
+                        stage_states["gcc_verify"].status = "failed"
+                        stage_states["gcc_verify"].message = f"C 代码编译失败 (退出码 {gcc_proc.returncode})"
+                        logs.append(f"[ERROR][gcc_verify] GCC 编译失败，退出码: {gcc_proc.returncode}")
+                        stage_details["gcc_verify"].append(f"[ERROR] GCC 编译失败")
+
+                        if gcc_proc.stdout:
+                            for line in gcc_proc.stdout.strip().split("\n"):
+                                if line:
+                                    logs.append(f"[ERROR][gcc_verify] {line}")
+                                    stage_details["gcc_verify"].append(f"[ERROR] {line}")
+
+                        if gcc_proc.stderr:
+                            for line in gcc_proc.stderr.strip().split("\n"):
+                                if line:
+                                    logs.append(f"[ERROR][gcc_verify] {line}")
+                                    stage_details["gcc_verify"].append(f"[ERROR] {line}")
+
+                except subprocess.TimeoutExpired:
+                    stage_states["gcc_verify"].status = "failed"
+                    stage_states["gcc_verify"].message = "GCC 编译超时"
+                    logs.append("[ERROR][gcc_verify] GCC 编译超时")
+                    stage_details["gcc_verify"].append("[ERROR] GCC 编译超时")
+                except FileNotFoundError:
+                    stage_states["gcc_verify"].status = "failed"
+                    stage_states["gcc_verify"].message = "未找到 gcc 命令"
+                    logs.append("[ERROR][gcc_verify] 未找到 gcc 命令，请确保已安装 GCC")
+                    stage_details["gcc_verify"].append("[ERROR] 未找到 gcc 命令")
+                except Exception as e:
+                    stage_states["gcc_verify"].status = "failed"
+                    stage_states["gcc_verify"].message = f"GCC 验证异常: {str(e)}"
+                    logs.append(f"[ERROR][gcc_verify] 异常: {str(e)}")
+                    stage_details["gcc_verify"].append(f"[ERROR] 异常: {str(e)}")
+
+                need_refresh = True
+            elif proc.returncode != 0:
+                # pascc 编译失败，跳过 gcc 验证
+                gcc_verified = True
+                stage_states["gcc_verify"].status = "pending"
+                stage_states["gcc_verify"].message = "跳过（pascc 编译失败）"
+                logs.append("[INFO][gcc_verify] 跳过 GCC 验证（pascc 编译失败）")
+            elif not output_file:
+                # 没有输出文件，跳过 gcc 验证
+                gcc_verified = True
+                stage_states["gcc_verify"].status = "pending"
+                stage_states["gcc_verify"].message = "跳过（无输出文件）"
+                logs.append("[INFO][gcc_verify] 跳过 GCC 验证（无输出文件）")
+            else:
+                gcc_verified = True
+
             need_refresh = True
 
         spinner_idx = (spinner_idx + 1) % len(spinner)
@@ -514,7 +598,7 @@ def main() -> int:
     cmd = build_command(args, project_root)
 
     try:
-        return curses.wrapper(run_ui, cmd, project_root, args.log_level)
+        return curses.wrapper(run_ui, cmd, project_root, args.log_level, args.output)
     except FileNotFoundError as exc:
         print(f"无法启动 pascc: {exc}", file=sys.stderr)
         print("请先执行 scripts/build.sh 生成 build/pascc，或用 --pascc-bin 指定路径。", file=sys.stderr)

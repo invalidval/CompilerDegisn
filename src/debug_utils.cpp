@@ -81,6 +81,10 @@ const char* nodeTypeName(NodeType type) {
            type == NodeType::ArrayAccess ? "ArrayAccess" :
            type == NodeType::ArrayType ? "ArrayType" :
            type == NodeType::ParamDecl ? "ParamDecl" :
+           type == NodeType::TypeDecl ? "TypeDecl" :
+           type == NodeType::RecordType ? "RecordType" :
+           type == NodeType::FieldDecl ? "FieldDecl" :
+           type == NodeType::FieldAccess ? "FieldAccess" :
            type == NodeType::List ? "List" : "UnknownNode";
 }
 
@@ -90,14 +94,17 @@ const char* dataTypeName(DataType type) {
            type == DataType::Boolean ? "boolean" :
            type == DataType::Char ? "char" :
            type == DataType::Procedure ? "procedure" :
-           type == DataType::Function ? "function" : "unknown";
+           type == DataType::Function ? "function" :
+           type == DataType::Record ? "record" : "unknown";
 }
 
 const char* symbolKindName(SymbolKind kind) {
     return kind == SymbolKind::Variable ? "variable" :
            kind == SymbolKind::Constant ? "constant" :
            kind == SymbolKind::Procedure ? "procedure" :
-           kind == SymbolKind::Function ? "function" : "parameter";
+           kind == SymbolKind::Function ? "function" :
+           kind == SymbolKind::Parameter ? "parameter" :
+           kind == SymbolKind::TypeAlias ? "type_alias" : "unknown";
 }
 
 void printSymbolEntryBrief(const SymbolEntry* entry) {
@@ -110,8 +117,14 @@ void printSymbolEntryBrief(const SymbolEntry* entry) {
               << ", scope=" << entry->scopeLevel
               << ", type=" << dataTypeName(entry->type)
               << ", isArray=" << (entry->isArray ? "true" : "false")
-              << ", isVarParam=" << (entry->isVarParam ? "true" : "false")
-              << "}]";
+              << ", isVarParam=" << (entry->isVarParam ? "true" : "false");
+
+    if (!entry->typeName.empty()) {
+        std::cout << ", typeName=" << entry->typeName;
+    }
+
+    std::cout << "}]";
+
     if (entry->isConstantLike()) {
         std::cout << " [constLiteral=" << entry->constLiteralText << "]";
     }
@@ -121,6 +134,16 @@ void printSymbolEntryBrief(const SymbolEntry* entry) {
             std::cout << "[" << bound.lower << ".." << bound.upper << "]";
         }
         std::cout << "]";
+    }
+    if (!entry->fields.empty()) {
+        std::cout << " [fields={";
+        bool first = true;
+        for (const auto& field : entry->fields) {
+            if (!first) std::cout << ", ";
+            first = false;
+            std::cout << field.name << ":" << dataTypeName(field.type);
+        }
+        std::cout << "}]";
     }
 }
 
@@ -166,6 +189,10 @@ void printAstNode(const ASTNode *node, int indent) {
     std::cout << nodeTypeName(node->nodeType);
     if (auto* id = dynamic_cast<const IdentifierNode*>(node)) {
         std::cout << " (" << id->identifier << ")";
+    } else if (auto* typeDecl = dynamic_cast<const TypeDeclNode*>(node)) {
+        std::cout << " (" << typeDecl->name << ")";
+    } else if (auto* fieldAccess = dynamic_cast<const FieldAccessNode*>(node)) {
+        std::cout << " (." << fieldAccess->fieldName << ")";
     }
     std::cout << std::endl;
     for (ASTNode* child : node->children) {
@@ -184,8 +211,14 @@ void printAnnotatedAstNode(const ASTNode *node, int indent) {
         std::cout << " (" << id->identifier
                   << ", type: " << dataTypeName(id->dataType)
                   << ", isLValue: " << (id->isLValue ? "true" : "false") << ")";
+    } else if (auto* typeDecl = dynamic_cast<const TypeDeclNode*>(node)) {
+        std::cout << " (" << typeDecl->name << ")";
+    } else if (auto* fieldAccess = dynamic_cast<const FieldAccessNode*>(node)) {
+        std::cout << " (." << fieldAccess->fieldName
+                  << ", type: " << dataTypeName(fieldAccess->dataType) << ")";
+    } else {
+        std::cout << " (type: " << dataTypeName(node->dataType) << ")";
     }
-    std::cout << " (type: " << dataTypeName(node->dataType) << ")";
     printSymbolEntryBrief(node->symbolEntry);
 
     std::cout << std::endl;

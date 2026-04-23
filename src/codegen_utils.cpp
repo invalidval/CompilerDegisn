@@ -143,7 +143,7 @@ static std::string getFormat(DataType t) {
     }
 }
 
-// 变量声明（支持数组、多变量）
+// 变量声明（支持数组、多变量、record类型）
 std::string CodegenUtils::emitVarDecl(VarDeclNode* node) {
     // children[0]: idList(ListNode), children[1]: typeNode
     if (!node || node->children.size() < 2) return "";
@@ -168,8 +168,18 @@ std::string CodegenUtils::emitVarDecl(VarDeclNode* node) {
     for (size_t i = 0; i < idList->children.size(); ++i) {
         IdentifierNode* id = dynamic_cast<IdentifierNode*>(idList->children[i]);
         if (!id) continue;
-        std::string idType = CodegenUtils::mapType(id->dataType);
-        oss << idType << " " << id->identifier;
+
+        // Check if this is a record type (user-defined type)
+        if (id->symbolEntry && id->symbolEntry->type == DataType::Record &&
+            !id->symbolEntry->typeName.empty()) {
+            // Use the user-defined type name
+            oss << id->symbolEntry->typeName << " " << id->identifier;
+        } else {
+            // Use standard type mapping
+            std::string idType = CodegenUtils::mapType(id->dataType);
+            oss << idType << " " << id->identifier;
+        }
+
         for (int d : dimensions) {
             oss << "[" << d << "]";
         }

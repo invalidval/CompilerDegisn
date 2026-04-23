@@ -96,8 +96,22 @@ ASTNode* buildArrayAccessFromIndices(ASTNode* base, ASTNode* indicesNode, Source
         return base;
     }
 
-    ASTNode* current = base;
     auto* list = static_cast<ListNode*>(indicesNode);
+
+    // Check if this is field access (ListKind::FieldAccess)
+    if (list->kind == ListKind::FieldAccess) {
+        ASTNode* current = base;
+        for (ASTNode* fieldIdNode : list->children) {
+            // Extract field name from IdentifierNode
+            if (auto* fieldId = dynamic_cast<IdentifierNode*>(fieldIdNode)) {
+                current = g_astBuilder.makeFieldAccess(current, fieldId->identifier, pos);
+            }
+        }
+        return current;
+    }
+
+    // Otherwise, it's array access
+    ASTNode* current = base;
     for (ASTNode* idx : list->children) {
         current = g_astBuilder.makeArrayAccess(current, idx, 0, pos);
     }
@@ -115,6 +129,7 @@ ASTNode* buildArrayAccessFromIndices(ASTNode* base, ASTNode* indicesNode, Source
 /* Keywords */
 %token PROGRAM CONST VAR INTEGER REAL BOOLEAN CHAR ARRAY OF FUNCTION PROCEDURE TRUE FALSE
 %token KW_BEGIN KW_END IF THEN ELSE WHILE DO FOR TO DOWNTO BREAK READ WRITE NOT AND OR DIV MOD
+%token TYPE RECORD
 
 /* Literals */
 %token <text> NUMBER CHARACTER STRING
@@ -133,6 +148,7 @@ ASTNode* buildArrayAccessFromIndices(ASTNode* base, ASTNode* indicesNode, Source
 %type <node> opt_program_input idlist
 %type <node> const_declarations const_declaration_list const_declaration const_value
 %type <node> var_declarations var_declaration_list var_declaration type basic_type period range
+%type <node> type_declarations type_declaration_list type_declaration record_type field_list field_declaration
 %type <node> subprogram_declarations subprogram
 %type <node> formal_parameter parameter_list parameter var_parameter value_parameter
 %type <node> compound_statement statement_list statement_list_opt statement nonempty_statement
@@ -179,13 +195,14 @@ opt_program_input:
         ;
 
 program_body:
-            const_declarations var_declarations subprogram_declarations compound_statement
+            const_declarations type_declarations var_declarations subprogram_declarations compound_statement
             {
                     auto* block = g_astBuilder.makeBlock(currentPos());
                     block->children.push_back(asNode($1));
                     block->children.push_back(asNode($2));
                     block->children.push_back(asNode($3));
                     block->children.push_back(asNode($4));
+                    block->children.push_back(asNode($5));
                     $$ = static_cast<void*>(block);
             }
         ;
@@ -313,6 +330,40 @@ idlist:
             }
         ;
 
+type_declarations:
+            /* empty */
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeList(ListKind::Declarations, currentPos()));
+            }
+        | TYPE type_declaration_list ';'
+            {
+                    $$ = $2;
+            }
+        ;
+
+type_declaration_list:
+            type_declaration
+            {
+                    auto* list = g_astBuilder.makeList(ListKind::Declarations, currentPos());
+                    list->add(asNode($1));
+                    $$ = static_cast<void*>(list);
+            }
+        | type_declaration_list ';' type_declaration
+            {
+                    auto* list = asList($1);
+                    list->add(asNode($3));
+                    $$ = $1;
+            }
+        ;
+
+type_declaration:
+            IDENTIFIER '=' type
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeTypeDecl(std::string($1), asNode($3), currentPos()));
+                    std::free($1);
+            }
+        ;
+
 type:
             basic_type
             {
@@ -321,6 +372,57 @@ type:
         | ARRAY '[' period ']' OF basic_type
             {
                     $$ = static_cast<void*>(buildArrayTypeFromRanges(asNode($3), asNode($6), currentPos()));
+            }
+        | record_type
+            {
+                    $$ = $1;
+            }
+        | IDENTIFIER
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeIdentifier(std::string($1), currentPos()));
+                    std::free($1);
+            }
+        ;
+
+record_type:
+            RECORD field_list KW_END
+            {
+                    $$ = static_cast<void*>(g_astBuilder.makeRecordType(asList($2), currentPos()));
+            }
+        ;
+
+field_list:
+            field_declaration
+            {
+                    auto* list = g_astBuilder.makeList(ListKind::Declarations, currentPos());
+                    list->add(asNode($1));
+                    $$ = static_cast<void*>(list);
+            }
+        | field_list ';' field_declaration
+            {
+                    auto* list = asList($1);
+                    list->add(asNode($3));
+                    $$ = $1;
+            }
+        ;
+
+field_declaration:
+            idlist ':' basic_type
+            {
+                    auto* idList = asList($1);
+                    auto* typeNode = asNode($3);
+                    auto* list = g_astBuilder.makeList(ListKind::Declarations, currentPos());
+                    for (auto* child : idList->children) {
+                            auto* singleIdList = g_astBuilder.makeList(ListKind::Identifiers, currentPos());
+                            singleIdList->add(child);
+                            auto* fieldDecl = g_astBuilder.makeFieldDecl(
+                                    singleIdList,
+                                    typeNode,
+                                    currentPos()
+                            );
+                            list->add(fieldDecl);
+                    }
+                    $$ = static_cast<void*>(list);
             }
         ;
 
@@ -597,6 +699,20 @@ id_varpart:
                     for (ASTNode* idx : indices) {
                             list->add(idx);
                     }
+                    $$ = static_cast<void*>(list);
+            }
+        | id_varpart '.' IDENTIFIER
+            {
+                    ListNode* list = nullptr;
+                    if ($1 == nullptr) {
+                            list = g_astBuilder.makeList(ListKind::FieldAccess, currentPos());
+                    } else {
+                            list = asList($1);
+                    }
+
+                    auto* fieldId = g_astBuilder.makeIdentifier(std::string($3), currentPos());
+                    list->add(fieldId);
+                    std::free($3);
                     $$ = static_cast<void*>(list);
             }
         ;

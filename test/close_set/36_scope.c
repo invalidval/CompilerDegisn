@@ -9,13 +9,13 @@ int func();
 int func() {
     int _retval;
     int b;
-int a;
+    int a;
 
-b = 7;
-a = 1;
-if ((a == b)) {
+    b = 7;
+    a = 1;
+    if ((a == b)) {
         a = (a + 1);
-_retval = 1;
+        _retval = 1;
     } else {
         _retval = 0;
     }
@@ -25,15 +25,15 @@ _retval = 1;
 
 
 int main(void) {
-a = 7;
-sum = 0;
-for (i = 0; i <= 99; i++) {
+    a = 7;
+    sum = 0;
+    for (i = 0; i <= 99; i++) {
         if ((func() == 1)) {
-        sum = (sum + 1);
+            sum = (sum + 1);
+        }
     }
-    }
-printf("%d", a);
-printf("%d", sum);
+    printf("%d", a);
+    printf("%d", sum);
 
     return 0;
 }

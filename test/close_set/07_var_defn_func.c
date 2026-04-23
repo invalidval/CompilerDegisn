@@ -6,15 +6,15 @@ int defn();
 
 int defn() {
     int _retval;
-_retval = 4;
+    _retval = 4;
 
     return _retval;
 }
 
 
 int main(void) {
-a = defn();
-printf("%d", a);
+    a = defn();
+    printf("%d", a);
 
     return 0;
 }
