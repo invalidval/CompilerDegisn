@@ -71,6 +71,10 @@ bash test/run_openset_check.sh
 # 使用 TUI 可视化编译过程
 bash scripts/run_tui.sh -i test/close_set/00_main.pas
 bash scripts/run_tui.sh -i test/close_set/00_main.pas --log-level debug
+
+# 使用 IDE 进行开发（推荐）
+bash scripts/run_ide.sh                          # 启动空白编辑器
+bash scripts/run_ide.sh test_ide_demo.pas        # 打开指定文件
 ```
 
 ## 架构设计
@@ -195,14 +199,32 @@ C 代码 (.c)
 - `test/semantic_unit/`: 语义分析单元测试
 - `test/semantic_stubs/`: 语义分析桩代码
 
-### TUI 可视化
+### IDE 和可视化工具
 
-项目包含一个可选的 TUI（终端用户界面）用于可视化编译过程：
+项目提供了多个可视化和开发工具：
+
+#### PASCC IDE（推荐用于日常开发）
+- `scripts/pascc_ide.py`: 轻量级终端 IDE
+- `scripts/run_ide.sh`: IDE 启动脚本
+- 功能：
+  - 代码编辑器（语法高亮、行号）
+  - 实时编译反馈（F5 编译，F9 运行）
+  - 错误导航（自动跳转到错误行）
+  - 双面板布局（编辑器 + 输出）
+  - 多种保存方式（F2、Ctrl+S、命令模式）
+- 快捷键：
+  - F2 或 Ctrl+S: 保存
+  - F5: 编译
+  - F9: 运行
+  - Ctrl+X: 命令模式（:w 保存，:q 退出，:wq 保存并退出）
+  - Ctrl+Q: 退出
+- 详细文档：`docs/IDE_GUIDE.md` 和 `docs/IDE_SHORTCUTS.md`
+
+#### TUI 可视化（用于调试编译过程）
 - `scripts/pascc_tui.py`: 基础 TUI
 - `scripts/pascc_tui_interactive.py`: 交互式 TUI
 - `scripts/run_tui.sh`: TUI 启动脚本
-
-通过环境变量 `PASCC_EVENT_STREAM=1` 启用事件流输出，TUI 解析事件流并实时显示编译阶段进度。
+- 通过环境变量 `PASCC_EVENT_STREAM=1` 启用事件流输出，TUI 解析事件流并实时显示编译阶段进度。
 
 ### 文件组织
 

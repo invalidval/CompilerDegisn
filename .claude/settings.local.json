@@ -13,7 +13,8 @@
       "Bash(/tmp/test_record_comprehensive:*)",
       "Bash(PASCC_EVENT_STREAM=1 ./build/pasc:*)",
       "Bash(PASCC_EVENT_STREAM=1 PASCC_LOG_LEVEL=debug ./build/pasc:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(chmod:*)"
     ]
   }
 }
