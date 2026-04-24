@@ -98,17 +98,22 @@ ASTNode* buildArrayAccessFromIndices(ASTNode* base, ASTNode* indicesNode, Source
 
     auto* list = static_cast<ListNode*>(indicesNode);
 
-    // Process the list: array indices first, then field accesses
-    ASTNode* current = base;
-    for (ASTNode* child : list->children) {
-        // Check if this is a field access marker (FieldAccessNode with nullptr base)
-        if (auto* fieldAccess = dynamic_cast<FieldAccessNode*>(child)) {
-            // This is a field name, apply field access
-            current = g_astBuilder.makeFieldAccess(current, fieldAccess->fieldName, pos);
-        } else {
-            // This is an array index, apply array access
-            current = g_astBuilder.makeArrayAccess(current, child, 0, pos);
+    // Check if this is field access (ListKind::FieldAccess)
+    if (list->kind == ListKind::FieldAccess) {
+        ASTNode* current = base;
+        for (ASTNode* fieldIdNode : list->children) {
+            // Extract field name from IdentifierNode
+            if (auto* fieldId = dynamic_cast<IdentifierNode*>(fieldIdNode)) {
+                current = g_astBuilder.makeFieldAccess(current, fieldId->identifier, pos);
+            }
         }
+        return current;
+    }
+
+    // Otherwise, it's array access
+    ASTNode* current = base;
+    for (ASTNode* idx : list->children) {
+        current = g_astBuilder.makeArrayAccess(current, idx, 0, pos);
     }
     return current;
 }
@@ -364,7 +369,7 @@ type:
             {
                     $$ = $1;
             }
-        | ARRAY '[' period ']' OF type
+        | ARRAY '[' period ']' OF basic_type
             {
                     $$ = static_cast<void*>(buildArrayTypeFromRanges(asNode($3), asNode($6), currentPos()));
             }
@@ -543,7 +548,7 @@ var_parameter:
         ;
 
 value_parameter:
-            idlist ':' type
+            idlist ':' basic_type
             {
                     $$ = static_cast<void*>(g_astBuilder.makeParamDecl(false, asNode($1), asNode($3), currentPos()));
             }
@@ -703,14 +708,10 @@ id_varpart:
                             list = g_astBuilder.makeList(ListKind::FieldAccess, currentPos());
                     } else {
                             list = asList($1);
-                            // Change kind to FieldAccess to indicate mixed access
-                            list->kind = ListKind::FieldAccess;
                     }
 
-                    // Create a temporary FieldAccessNode with nullptr base to mark this as a field name
-                    // This helps distinguish field names from array index variables in buildArrayAccessFromIndices
-                    auto* fieldMarker = g_astBuilder.makeFieldAccess(nullptr, std::string($3), currentPos());
-                    list->add(fieldMarker);
+                    auto* fieldId = g_astBuilder.makeIdentifier(std::string($3), currentPos());
+                    list->add(fieldId);
                     std::free($3);
                     $$ = static_cast<void*>(list);
             }

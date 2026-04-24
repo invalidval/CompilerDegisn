@@ -14,7 +14,24 @@
       "Bash(PASCC_EVENT_STREAM=1 ./build/pasc:*)",
       "Bash(PASCC_EVENT_STREAM=1 PASCC_LOG_LEVEL=debug ./build/pasc:*)",
       "Bash(python3:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(ls:*)",
+      "Bash(for file in test/cases/record/test_record_*.pas)",
+      "Bash(do echo \"Testing: $file\")",
+      "Bash(done)",
+      "Bash(./output/test_record_field:*)",
+      "Bash(./output/test_record_statistics:*)",
+      "Bash(./output/test_record_multiple_types:*)",
+      "Bash(./test_param_value:*)",
+      "Bash(./test_param_var:*)",
+      "Bash(./test_param_multiple:*)",
+      "Bash(/tmp/test_param_value:*)",
+      "Bash(build/pasc:*)",
+      "Bash(/tmp/test_param_var)",
+      "Bash(/tmp/test_param_multiple)",
+      "Bash(/tmp/test_array_basi:*)",
+      "Bash(/tmp/test_array_sum:*)",
+      "Bash(./test_record_array_basi:*)"
     ]
   }
 }

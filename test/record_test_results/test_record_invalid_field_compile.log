@@ -1,0 +1,2 @@
+Error at 11:3 - Record type 'person' has no field 'name'
+Error at 11:3 - Type mismatch in assignment: expected unknown, got char

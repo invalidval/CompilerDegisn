@@ -81,7 +81,14 @@ std::string CodegenUtils::emitProcPrototype(ProcDeclNode* node) {
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
-                std::string ctype = mapType(id->dataType);
+                std::string ctype;
+                // Check if this is a record type (user-defined type)
+                if (id->symbolEntry && id->symbolEntry->type == DataType::Record &&
+                    !id->symbolEntry->typeName.empty()) {
+                    ctype = id->symbolEntry->typeName;
+                } else {
+                    ctype = mapType(id->dataType);
+                }
                 if (!first) oss << ", ";
                 first = false;
                 if (param->isVar) oss << ctype << " *" << id->identifier;
@@ -109,7 +116,14 @@ std::string CodegenUtils::emitFuncPrototype(FuncDeclNode* node) {
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
-                std::string ptype = mapType(id->dataType);
+                std::string ptype;
+                // Check if this is a record type (user-defined type)
+                if (id->symbolEntry && id->symbolEntry->type == DataType::Record &&
+                    !id->symbolEntry->typeName.empty()) {
+                    ptype = id->symbolEntry->typeName;
+                } else {
+                    ptype = mapType(id->dataType);
+                }
                 if (!first) oss << ", ";
                 first = false;
                 if (param->isVar) oss << ptype << " *" << id->identifier;
@@ -255,7 +269,14 @@ std::string CodegenUtils::emitProcDecl(ProcDeclNode* node, CodeGenerator& cg) {
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
-                std::string ctype = CodegenUtils::mapType(id->dataType);
+                std::string ctype;
+                // Check if this is a record type (user-defined type)
+                if (id->symbolEntry && id->symbolEntry->type == DataType::Record &&
+                    !id->symbolEntry->typeName.empty()) {
+                    ctype = id->symbolEntry->typeName;
+                } else {
+                    ctype = mapType(id->dataType);
+                }
                 if (i > 0 || j > 0) oss << ", ";
                 if (param->isVar) oss << ctype << " *" << id->identifier;
                 else oss << ctype << " " << id->identifier;
@@ -291,7 +312,14 @@ std::string CodegenUtils::emitFuncDecl(FuncDeclNode* node, CodeGenerator& cg) {
             for (size_t j = 0; ids && j < ids->children.size(); ++j) {
                 IdentifierNode* id = dynamic_cast<IdentifierNode*>(ids->children[j]);
                 if (!id) continue;
-                std::string ptype = CodegenUtils::mapType(id->dataType);
+                std::string ptype;
+                // Check if this is a record type (user-defined type)
+                if (id->symbolEntry && id->symbolEntry->type == DataType::Record &&
+                    !id->symbolEntry->typeName.empty()) {
+                    ptype = id->symbolEntry->typeName;
+                } else {
+                    ptype = mapType(id->dataType);
+                }
                 if (i > 0 || j > 0) oss << ", ";
                 if (param->isVar) oss << ptype << " *" << id->identifier;
                 else oss << ptype << " " << id->identifier;
