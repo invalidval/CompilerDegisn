@@ -1,0 +1,7 @@
+/Users/zcy/Documents/3-2/Compiler/code/test/cases/record/test_record_duplicate_field.c:4:11: error: duplicate member 'age'
+    4 |     float age;
+      |           ^
+/Users/zcy/Documents/3-2/Compiler/code/test/cases/record/test_record_duplicate_field.c:3:9: note: previous declaration is here
+    3 |     int age;
+      |         ^
+1 error generated.

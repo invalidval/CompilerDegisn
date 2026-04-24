@@ -4,6 +4,7 @@
 #include <cctype>
 #include <string>
 #include <iostream>
+#include <unordered_set>
 namespace {
 
 std::string toLower(std::string text) {
@@ -174,15 +175,32 @@ void SemanticAnnotator::annotateVarDecl(VarDeclNode* node) {
     const std::vector<ArrayBound> arrayBounds = collectArrayBounds(typeNode);
 
     // Check if this is a user-defined type (record type)
+    // For arrays, we need to check the element type
     std::string userTypeName;
     const SymbolEntry* typeSym = nullptr;
-    if (auto* typeId = dynamic_cast<IdentifierNode*>(typeNode)) {
+    ASTNode* elementTypeNode = typeNode;
+
+    // If it's an array, find the element type
+    while (elementTypeNode->nodeType == NodeType::ArrayType) {
+        ArrayTypeNode* arrType = dynamic_cast<ArrayTypeNode*>(elementTypeNode);
+        if (arrType && arrType->children.size() >= 3) {
+            elementTypeNode = arrType->children[2]; // Element type is the third child
+        } else {
+            break;
+        }
+    }
+
+    // Check if the element type is a user-defined type
+    if (auto* typeId = dynamic_cast<IdentifierNode*>(elementTypeNode)) {
         std::string typeName = toLower(typeId->identifier);
         typeSym = symbolTable_.lookup(typeName);
         if (typeSym) {
             if (typeSym->kind == SymbolKind::TypeAlias) {
                 userTypeName = typeName;
-                declaredType = typeSym->type;
+                // For arrays, declaredType should be the element type
+                if (typeNode->nodeType == NodeType::ArrayType) {
+                    declaredType = typeSym->type;
+                }
             }
         }
     }
@@ -240,8 +258,28 @@ void SemanticAnnotator::annotateParamDecl(ParamDeclNode* node) {
     DataType declaredType = inferTypeFromTypeNode(typeNode);
     typeNode->dataType = declaredType;
 
+    // Check if this is a user-defined type (record type)
+    std::string userTypeName;
+    const SymbolEntry* typeSym = nullptr;
+    if (auto* typeId = dynamic_cast<IdentifierNode*>(typeNode)) {
+        std::string typeName = toLower(typeId->identifier);
+        typeSym = symbolTable_.lookup(typeName);
+        if (typeSym) {
+            if (typeSym->kind == SymbolKind::TypeAlias) {
+                userTypeName = typeName;
+                declaredType = typeSym->type;
+            }
+        }
+    }
+
     auto declareOne = [&](IdentifierNode* id) {
         SymbolEntry entry = SymbolEntry::makeParameter(id->identifier, declaredType, node->isVar);
+
+        // Store the type name and fields for user-defined types
+        if (!userTypeName.empty() && typeSym) {
+            entry.typeName = userTypeName;
+            entry.fields = typeSym->fields;  // Copy fields from type definition
+        }
 
         if (!symbolTable_.insert(entry)) {
             errorHandler_.report(id->pos.line, id->pos.col,
@@ -959,6 +997,12 @@ DataType SemanticAnnotator::inferTypeFromTypeNode(ASTNode* typeNode) const {
         if (typeName == "char") {
             return DataType::Char;
         }
+
+        // Look up user-defined types
+        const SymbolEntry* typeSym = symbolTable_.lookup(typeName);
+        if (typeSym && typeSym->kind == SymbolKind::TypeAlias) {
+            return typeSym->type;
+        }
     }
 
     if (typeNode->nodeType == NodeType::ArrayType && typeNode->children.size() >= 3) {
@@ -1030,6 +1074,8 @@ void SemanticAnnotator::annotateTypeDecl(TypeDeclNode* node) {
 
         // Collect field information from the record type
         auto* recordNode = static_cast<RecordTypeNode*>(typeDefNode);
+        std::unordered_set<std::string> fieldNames;  // Track field names for duplicate detection
+
         if (recordNode->children.size() > 0) {
             auto* fieldList = recordNode->children[0];
             if (auto* list = dynamic_cast<ListNode*>(fieldList)) {
@@ -1049,10 +1095,20 @@ void SemanticAnnotator::annotateTypeDecl(TypeDeclNode* node) {
                                     if (auto* ids = dynamic_cast<ListNode*>(idList)) {
                                         for (ASTNode* id : ids->children) {
                                             if (auto* fieldId = dynamic_cast<IdentifierNode*>(id)) {
-                                                ParamInfo fieldInfo;
-                                                fieldInfo.name = toLower(fieldId->identifier);
-                                                fieldInfo.type = fieldType;
-                                                entry.fields.push_back(fieldInfo);
+                                                std::string fieldName = toLower(fieldId->identifier);
+
+                                                // Check for duplicate field names using set
+                                                if (!fieldNames.insert(fieldName).second) {
+                                                    // Insertion failed - duplicate field
+                                                    errorHandler_.report(fieldId->pos.line, fieldId->pos.col,
+                                                        "Duplicate field '" + fieldName + "' in record type '" + typeName + "'");
+                                                } else {
+                                                    // New field - add to entry
+                                                    ParamInfo fieldInfo;
+                                                    fieldInfo.name = fieldName;
+                                                    fieldInfo.type = fieldType;
+                                                    entry.fields.push_back(fieldInfo);
+                                                }
                                             }
                                         }
                                     }
@@ -1114,54 +1170,80 @@ void SemanticAnnotator::annotateFieldAccess(FieldAccessNode* node) {
     annotateNode(node->children[0]);
     ASTNode* baseNode = node->children[0];
 
-    // If base is an identifier, look up its type
+    const SymbolEntry* baseSym = nullptr;
+    std::string baseTypeName;
+
+    // Handle identifier base (e.g., p.age)
     if (auto* baseId = dynamic_cast<IdentifierNode*>(baseNode)) {
-        const SymbolEntry* baseSym = symbolTable_.lookup(baseId->identifier);
+        baseSym = symbolTable_.lookup(baseId->identifier);
         if (!baseSym) {
             errorHandler_.report(node->pos.line, node->pos.col,
                 "Undefined variable '" + baseId->identifier + "'");
             node->dataType = DataType::Unknown;
             return;
         }
-
-        // Check if it's a record type
-        if (baseSym->type != DataType::Record) {
+        baseTypeName = baseSym->typeName;
+    }
+    // Handle array access base (e.g., people[1].age)
+    else if (auto* arrayAccess = dynamic_cast<ArrayAccessNode*>(baseNode)) {
+        baseSym = arrayAccess->symbolEntry;
+        if (!baseSym) {
             errorHandler_.report(node->pos.line, node->pos.col,
-                "Variable '" + baseId->identifier + "' is not a record type");
+                "Cannot determine type of array element");
             node->dataType = DataType::Unknown;
             return;
         }
-
-        // Look up the record type definition
-        const SymbolEntry* recordTypeSym = symbolTable_.lookup(baseSym->typeName);
-        if (!recordTypeSym || recordTypeSym->kind != SymbolKind::TypeAlias) {
-            errorHandler_.report(node->pos.line, node->pos.col,
-                "Record type '" + baseSym->typeName + "' not found");
-            node->dataType = DataType::Unknown;
-            return;
-        }
-
-        // Get the field name from the node
-        std::string fieldName = toLower(node->fieldName);
-
-        // Find the field in the record type
-        bool fieldFound = false;
-        for (const auto& field : recordTypeSym->fields) {
-            if (field.name == fieldName) {
-                node->dataType = field.type;
-                fieldFound = true;
-                break;
-            }
-        }
-
-        if (!fieldFound) {
-            errorHandler_.report(node->pos.line, node->pos.col,
-                "Record type '" + baseSym->typeName + "' has no field '" + fieldName + "'");
-            node->dataType = DataType::Unknown;
-        }
-    } else {
+        baseTypeName = baseSym->typeName;
+    }
+    // Handle field access base (e.g., nested records)
+    else if (auto* fieldAccess = dynamic_cast<FieldAccessNode*>(baseNode)) {
+        // For nested field access, we need to look up the type of the previous field
+        // This is more complex and may require storing type information in the node
         errorHandler_.report(node->pos.line, node->pos.col,
-            "Field access requires a record variable");
+            "Nested record field access not yet supported");
+        node->dataType = DataType::Unknown;
+        return;
+    }
+    else {
+        errorHandler_.report(node->pos.line, node->pos.col,
+            "Field access requires a record variable or array element");
+        node->dataType = DataType::Unknown;
+        return;
+    }
+
+    // Check if it's a record type
+    if (baseSym->type != DataType::Record) {
+        errorHandler_.report(node->pos.line, node->pos.col,
+            "Variable is not a record type");
+        node->dataType = DataType::Unknown;
+        return;
+    }
+
+    // Look up the record type definition
+    const SymbolEntry* recordTypeSym = symbolTable_.lookup(baseTypeName);
+    if (!recordTypeSym || recordTypeSym->kind != SymbolKind::TypeAlias) {
+        errorHandler_.report(node->pos.line, node->pos.col,
+            "Record type '" + baseTypeName + "' not found");
+        node->dataType = DataType::Unknown;
+        return;
+    }
+
+    // Get the field name from the node
+    std::string fieldName = toLower(node->fieldName);
+
+    // Find the field in the record type
+    bool fieldFound = false;
+    for (const auto& field : recordTypeSym->fields) {
+        if (field.name == fieldName) {
+            node->dataType = field.type;
+            fieldFound = true;
+            break;
+        }
+    }
+
+    if (!fieldFound) {
+        errorHandler_.report(node->pos.line, node->pos.col,
+            "Record type '" + baseTypeName + "' has no field '" + fieldName + "'");
         node->dataType = DataType::Unknown;
     }
 }
