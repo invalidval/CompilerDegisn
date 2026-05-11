@@ -1,6 +1,7 @@
 build/
 output/
 .vscode/
+.claude/
 test/.parser-test-out/
 test/out.c
 .DS_Store

@@ -31,7 +31,8 @@
       "Bash(/tmp/test_param_multiple)",
       "Bash(/tmp/test_array_basi:*)",
       "Bash(/tmp/test_array_sum:*)",
-      "Bash(./test_record_array_basi:*)"
+      "Bash(./test_record_array_basi:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }
