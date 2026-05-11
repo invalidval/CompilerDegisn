@@ -158,7 +158,7 @@
         else if y == 1 { (bottom: 0.5pt + black) }
         else if y == total { (bottom: 1.5pt + black) }
       },
-      inset: (x: 6pt, y: 2pt),
+      inset: (x: 6pt, y: 4.5pt),
       ..rows,
     ),
   )
@@ -175,14 +175,14 @@
   
   table(
     columns: default-cols,
-    stroke: (x, y) => 0.6pt + rgb("#b7c3d0"),
+    stroke: (x, y) => 0.5pt + rgb("#b7c3d0"),
     fill: (x, y) => {
       if y == 0 {
-        rgb("#77a5c8")
+        rgb("#e6f0f9")
       } else if calc.odd(y) {
         white
       } else {
-        rgb("#edf2f8")
+        rgb("#fcfdff")
       }
     },
     
