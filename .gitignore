@@ -5,4 +5,5 @@ output/
 test/.parser-test-out/
 test/out.c
 .DS_Store
+.*-out/
 __pycache__/

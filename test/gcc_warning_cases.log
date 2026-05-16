@@ -1,0 +1,323 @@
+=== 18_if_test3.pas (generated: 18_if_test3.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/18_if_test3.c:12:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   12 |     if ((a == 5)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/18_if_test3.c:12:12: note: remove extraneous parentheses around the comparison to silence this warning
+   12 |     if ((a == 5)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/18_if_test3.c:12:12: note: use '=' to turn this equality comparison into an assignment
+   12 |     if ((a == 5)) {
+      |            ^~
+      |            =
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/18_if_test3.c:13:16: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   13 |         if ((b == 10)) {
+      |              ~~^~~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/18_if_test3.c:13:16: note: remove extraneous parentheses around the comparison to silence this warning
+   13 |         if ((b == 10)) {
+      |             ~  ^    ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/18_if_test3.c:13:16: note: use '=' to turn this equality comparison into an assignment
+   13 |         if ((b == 10)) {
+      |                ^~
+      |                =
+2 warnings generated.
+----------------------
+=== 19_if_test4.pas (generated: 19_if_test4.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/19_if_test4.c:11:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   11 |     if ((a == 5)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/19_if_test4.c:11:12: note: remove extraneous parentheses around the comparison to silence this warning
+   11 |     if ((a == 5)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/19_if_test4.c:11:12: note: use '=' to turn this equality comparison into an assignment
+   11 |     if ((a == 5)) {
+      |            ^~
+      |            =
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/19_if_test4.c:12:16: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   12 |         if ((b == 10)) {
+      |              ~~^~~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/19_if_test4.c:12:16: note: remove extraneous parentheses around the comparison to silence this warning
+   12 |         if ((b == 10)) {
+      |             ~  ^    ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/19_if_test4.c:12:16: note: use '=' to turn this equality comparison into an assignment
+   12 |         if ((b == 10)) {
+      |                ^~
+      |                =
+2 warnings generated.
+----------------------
+=== 20_if_test5.pas (generated: 20_if_test5.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/20_if_test5.c:11:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   11 |     if ((a == 5)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/20_if_test5.c:11:12: note: remove extraneous parentheses around the comparison to silence this warning
+   11 |     if ((a == 5)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/20_if_test5.c:11:12: note: use '=' to turn this equality comparison into an assignment
+   11 |     if ((a == 5)) {
+      |            ^~
+      |            =
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/20_if_test5.c:12:16: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   12 |         if ((b == 10)) {
+      |              ~~^~~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/20_if_test5.c:12:16: note: remove extraneous parentheses around the comparison to silence this warning
+   12 |         if ((b == 10)) {
+      |             ~  ^    ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/20_if_test5.c:12:16: note: use '=' to turn this equality comparison into an assignment
+   12 |         if ((b == 10)) {
+      |                ^~
+      |                =
+2 warnings generated.
+----------------------
+=== 21_while_if_test2.pas (generated: 21_while_if_test2.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/21_while_if_test2.c:14:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   14 |     if ((a == 5)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/21_while_if_test2.c:14:12: note: remove extraneous parentheses around the comparison to silence this warning
+   14 |     if ((a == 5)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/21_while_if_test2.c:14:12: note: use '=' to turn this equality comparison into an assignment
+   14 |     if ((a == 5)) {
+      |            ^~
+      |            =
+1 warning generated.
+----------------------
+=== 35_short_circuit3.pas (generated: 35_short_circuit3.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/35_short_circuit3.c:106:28: warning: self-comparison always evaluates to false [-Wtautological-compare]
+  106 |     if ((((i0 == 0) && (i3 < i3)) || (i4 >= i4))) {
+      |                            ^
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/35_short_circuit3.c:106:42: warning: self-comparison always evaluates to true [-Wtautological-compare]
+  106 |     if ((((i0 == 0) && (i3 < i3)) || (i4 >= i4))) {
+      |                                          ^
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/35_short_circuit3.c:109:28: warning: self-comparison always evaluates to false [-Wtautological-compare]
+  109 |     if (((i0 == 0) || ((i3 < i3) && (i4 >= i4)))) {
+      |                            ^
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/35_short_circuit3.c:109:41: warning: self-comparison always evaluates to true [-Wtautological-compare]
+  109 |     if (((i0 == 0) || ((i3 < i3) && (i4 >= i4)))) {
+      |                                         ^
+4 warnings generated.
+----------------------
+=== 36_scope.pas (generated: 36_scope.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/36_scope.c:16:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   16 |     if ((a == b)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/36_scope.c:16:12: note: remove extraneous parentheses around the comparison to silence this warning
+   16 |     if ((a == b)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/36_scope.c:16:12: note: use '=' to turn this equality comparison into an assignment
+   16 |     if ((a == b)) {
+      |            ^~
+      |            =
+1 warning generated.
+----------------------
+=== 40_percolation.pas (generated: 40_percolation.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:31:17: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   31 |     if ((arr[a] == a)) {
+      |          ~~~~~~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:31:17: note: remove extraneous parentheses around the comparison to silence this warning
+   31 |     if ((arr[a] == a)) {
+      |         ~       ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:31:17: note: use '=' to turn this equality comparison into an assignment
+   31 |     if ((arr[a] == a)) {
+      |                 ^~
+      |                 =
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:63:19: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   63 |         if ((flag == 0)) {
+      |              ~~~~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:63:19: note: remove extraneous parentheses around the comparison to silence this warning
+   63 |         if ((flag == 0)) {
+      |             ~     ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:63:19: note: use '=' to turn this equality comparison into an assignment
+   63 |         if ((flag == 0)) {
+      |                   ^~
+      |                   =
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:66:20: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   66 |             if ((a == 1)) {
+      |                  ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:66:20: note: remove extraneous parentheses around the comparison to silence this warning
+   66 |             if ((a == 1)) {
+      |                 ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:66:20: note: use '=' to turn this equality comparison into an assignment
+   66 |             if ((a == 1)) {
+      |                    ^~
+      |                    =
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:70:20: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   70 |             if ((a == n)) {
+      |                  ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:70:20: note: remove extraneous parentheses around the comparison to silence this warning
+   70 |             if ((a == n)) {
+      |                 ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:70:20: note: use '=' to turn this equality comparison into an assignment
+   70 |             if ((a == n)) {
+      |                    ^~
+      |                    =
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:92:15: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   92 |     if ((flag == 0)) {
+      |          ~~~~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:92:15: note: remove extraneous parentheses around the comparison to silence this warning
+   92 |     if ((flag == 0)) {
+      |         ~     ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/40_percolation.c:92:15: note: use '=' to turn this equality comparison into an assignment
+   92 |     if ((flag == 0)) {
+      |               ^~
+      |               =
+5 warnings generated.
+----------------------
+=== 42_color.pas (generated: 42_color.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/42_color.c:26:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   26 |     if ((a == b)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/42_color.c:26:12: note: remove extraneous parentheses around the comparison to silence this warning
+   26 |     if ((a == b)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/42_color.c:26:12: note: use '=' to turn this equality comparison into an assignment
+   26 |     if ((a == b)) {
+      |            ^~
+      |            =
+1 warning generated.
+----------------------
+=== 43_exgcd.pas (generated: 43_exgcd.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/43_exgcd.c:16:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   16 |     if ((b == 0)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/43_exgcd.c:16:12: note: remove extraneous parentheses around the comparison to silence this warning
+   16 |     if ((b == 0)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/43_exgcd.c:16:12: note: use '=' to turn this equality comparison into an assignment
+   16 |     if ((b == 0)) {
+      |            ^~
+      |            =
+1 warning generated.
+----------------------
+=== 45_dijkstra.pas (generated: 45_dijkstra.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/45_dijkstra.c:58:20: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   58 |             if ((i == j)) {
+      |                  ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/45_dijkstra.c:58:20: note: remove extraneous parentheses around the comparison to silence this warning
+   58 |             if ((i == j)) {
+      |                 ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/45_dijkstra.c:58:20: note: use '=' to turn this equality comparison into an assignment
+   58 |             if ((i == j)) {
+      |                    ^~
+      |                    =
+1 warning generated.
+----------------------
+=== 47_hanoi.pas (generated: 47_hanoi.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/47_hanoi.c:17:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   17 |     if ((n == 1)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/47_hanoi.c:17:12: note: remove extraneous parentheses around the comparison to silence this warning
+   17 |     if ((n == 1)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/47_hanoi.c:17:12: note: use '=' to turn this equality comparison into an assignment
+   17 |     if ((n == 1)) {
+      |            ^~
+      |            =
+1 warning generated.
+----------------------
+=== 48_n_queens.pas (generated: 48_n_queens.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/48_n_queens.c:28:16: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   28 |         if ((i == n)) {
+      |              ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/48_n_queens.c:28:16: note: remove extraneous parentheses around the comparison to silence this warning
+   28 |         if ((i == n)) {
+      |             ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/48_n_queens.c:28:16: note: use '=' to turn this equality comparison into an assignment
+   28 |         if ((i == n)) {
+      |                ^~
+      |                =
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/48_n_queens.c:43:23: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   43 |             if ((step == n)) {
+      |                  ~~~~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/48_n_queens.c:43:23: note: remove extraneous parentheses around the comparison to silence this warning
+   43 |             if ((step == n)) {
+      |                 ~     ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/48_n_queens.c:43:23: note: use '=' to turn this equality comparison into an assignment
+   43 |             if ((step == n)) {
+      |                       ^~
+      |                       =
+2 warnings generated.
+----------------------
+=== 49_substr.pas (generated: 49_substr.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/49_substr.c:53:29: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   53 |             if ((a[(i - 1)] == b[(j - 1)])) {
+      |                  ~~~~~~~~~~~^~~~~~~~~~~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/49_substr.c:53:29: note: remove extraneous parentheses around the comparison to silence this warning
+   53 |             if ((a[(i - 1)] == b[(j - 1)])) {
+      |                 ~           ^            ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/49_substr.c:53:29: note: use '=' to turn this equality comparison into an assignment
+   53 |             if ((a[(i - 1)] == b[(j - 1)])) {
+      |                             ^~
+      |                             =
+1 warning generated.
+----------------------
+=== 51_var_name.pas (generated: 51_var_name.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/51_var_name.c:14:107: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   14 |     if ((t2e5i2v7t2o9p9n9h7q1s7b8g7s6k0x7z7y1w4q0f5g2q7j6c2n7s9t8i5e7z5b9h4x7e6q1w1j1t7k6u7i4k2l4v8o7m6j7 == 0)) {
+      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/51_var_name.c:14:107: note: remove extraneous parentheses around the comparison to silence this warning
+   14 |     if ((t2e5i2v7t2o9p9n9h7q1s7b8g7s6k0x7z7y1w4q0f5g2q7j6c2n7s9t8i5e7z5b9h4x7e6q1w1j1t7k6u7i4k2l4v8o7m6j7 == 0)) {
+      |         ~                                                                                                 ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/51_var_name.c:14:107: note: use '=' to turn this equality comparison into an assignment
+   14 |     if ((t2e5i2v7t2o9p9n9h7q1s7b8g7s6k0x7z7y1w4q0f5g2q7j6c2n7s9t8i5e7z5b9h4x7e6q1w1j1t7k6u7i4k2l4v8o7m6j7 == 0)) {
+      |                                                                                                           ^~
+      |                                                                                                           =
+1 warning generated.
+----------------------
+=== 57_many_params.pas (generated: 57_many_params.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/57_many_params.c:14:13: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   14 |     if ((a1 == 0)) {
+      |          ~~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/57_many_params.c:14:13: note: remove extraneous parentheses around the comparison to silence this warning
+   14 |     if ((a1 == 0)) {
+      |         ~   ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/57_many_params.c:14:13: note: use '=' to turn this equality comparison into an assignment
+   14 |     if ((a1 == 0)) {
+      |             ^~
+      |             =
+1 warning generated.
+----------------------
+=== 63_nested_calls.pas (generated: 63_nested_calls.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/63_nested_calls.c:22:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   22 |     if ((z == 0)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/63_nested_calls.c:22:12: note: remove extraneous parentheses around the comparison to silence this warning
+   22 |     if ((z == 0)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/63_nested_calls.c:22:12: note: use '=' to turn this equality comparison into an assignment
+   22 |     if ((z == 0)) {
+      |            ^~
+      |            =
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/63_nested_calls.c:44:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   44 |     if ((y == 0)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/63_nested_calls.c:44:12: note: remove extraneous parentheses around the comparison to silence this warning
+   44 |     if ((y == 0)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/63_nested_calls.c:44:12: note: use '=' to turn this equality comparison into an assignment
+   44 |     if ((y == 0)) {
+      |            ^~
+      |            =
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/63_nested_calls.c:84:12: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   84 |     if ((x == 0)) {
+      |          ~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/63_nested_calls.c:84:12: note: remove extraneous parentheses around the comparison to silence this warning
+   84 |     if ((x == 0)) {
+      |         ~  ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/63_nested_calls.c:84:12: note: use '=' to turn this equality comparison into an assignment
+   84 |     if ((x == 0)) {
+      |            ^~
+      |            =
+3 warnings generated.
+----------------------
+=== 65_float.pas (generated: 65_float.c) ===
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/65_float.c:69:15: warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+   69 |     if ((cond == 0)) {
+      |          ~~~~~^~~~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/65_float.c:69:15: note: remove extraneous parentheses around the comparison to silence this warning
+   69 |     if ((cond == 0)) {
+      |         ~     ^   ~
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/65_float.c:69:15: note: use '=' to turn this equality comparison into an assignment
+   69 |     if ((cond == 0)) {
+      |               ^~
+      |               =
+1 warning generated.
+----------------------

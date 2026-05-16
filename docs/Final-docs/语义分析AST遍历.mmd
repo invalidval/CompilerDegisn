@@ -1,0 +1,17 @@
+```mermaid
+flowchart TD
+    ASGN["AssignStmt"]
+    ID_X["Identifier<br/>x"]
+    BIN_PLUS["BinaryExpr<br/>op='+'"]
+    LIT3["Literal<br/>3"]
+    BIN_MUL["BinaryExpr<br/>op='*'"]
+    ID_A["Identifier<br/>a"]
+    LIT2["Literal<br/>2"]
+
+    ASGN -- "① LHS" --> ID_X
+    ASGN -- "② RHS" --> BIN_PLUS
+    BIN_PLUS -- "③ lhs" --> LIT3
+    BIN_PLUS -- "④ rhs" --> BIN_MUL
+    BIN_MUL -- "⑤ lhs" --> ID_A
+    BIN_MUL -- "⑥ rhs" --> LIT2
+```

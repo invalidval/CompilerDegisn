@@ -14,6 +14,7 @@ from __future__ import annotations
 import curses
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -107,7 +108,7 @@ class TextEditor:
                 self.state.lines = f.read().splitlines()
                 if not self.state.lines:
                     self.state.lines = [""]
-            self.state.file_path = file_path
+            self.state.file_path = os.path.abspath(file_path)
             self.state.modified = False
             self.state.cursor_x = 0
             self.state.cursor_y = 0
@@ -127,7 +128,7 @@ class TextEditor:
         try:
             with open(target, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(self.state.lines))
-            self.state.file_path = target
+            self.state.file_path = os.path.abspath(target)
             self.state.modified = False
             return True
         except Exception:
@@ -288,7 +289,6 @@ def draw_editor(win: curses.window, editor: TextEditor, show_errors: bool = True
             break
 
         line = state.lines[line_idx]
-        is_cursor_line = (line_idx == state.cursor_y)
         is_error_line = line_idx in state.error_lines
 
         # Line number
@@ -304,14 +304,7 @@ def draw_editor(win: curses.window, editor: TextEditor, show_errors: bool = True
         # Line content
         visible_line = line[state.scroll_x:state.scroll_x + width - line_num_width]
 
-        if is_cursor_line and not is_error_line:
-            # Highlight cursor line
-            try:
-                win.addstr(i, line_num_width, visible_line.ljust(width - line_num_width),
-                          curses.color_pair(CP_CURSOR_LINE))
-            except curses.error:
-                pass
-        elif is_error_line and show_errors:
+        if is_error_line and show_errors:
             # Highlight error line
             try:
                 win.addstr(i, line_num_width, visible_line.ljust(width - line_num_width),
@@ -438,20 +431,11 @@ def compile_file(file_path: str, project_root: str) -> CompileResult:
         output = result.stdout + result.stderr
         errors = []
 
-        # Parse errors (format: "Error [Line:Col]: message")
+        # Parse errors (format: "Error at Line:Col - message")
         for line in output.split('\n'):
-            if 'Error' in line and '[' in line and ']' in line:
-                try:
-                    # Extract line and column
-                    start = line.find('[') + 1
-                    end = line.find(']')
-                    loc = line[start:end]
-                    if ':' in loc:
-                        line_num, col_num = loc.split(':')
-                        msg = line[end + 1:].strip()
-                        errors.append((int(line_num), int(col_num), msg))
-                except:
-                    pass
+            m = re.match(r'Error at (\d+):(\d+) - (.*)', line)
+            if m:
+                errors.append((int(m.group(1)), int(m.group(2)), m.group(3)))
 
         return CompileResult(
             success=(result.returncode == 0),
@@ -510,7 +494,7 @@ def get_input_dialog(stdscr: curses.window, prompt: str) -> Optional[str]:
         input_str = None
 
     curses.noecho()
-    curses.curs_set(0)
+    curses.curs_set(1)
 
     del dialog
     stdscr.touchwin()
@@ -555,10 +539,10 @@ def main_ide(stdscr: curses.window, initial_file: Optional[str], project_root: s
         if status_message and time.time() - message_time > 3:
             status_message = ""
 
-        # Draw UI
-        draw_editor(editor_win, editor)
+        # Draw UI (editor last so its cursor position takes effect)
         draw_output_panel(output_win, output_lines, output_scroll)
         draw_status_bar(status_win, editor, status_message)
+        draw_editor(editor_win, editor)
 
         # Handle input
         try:
@@ -676,6 +660,7 @@ def main_ide(stdscr: curses.window, initial_file: Optional[str], project_root: s
             # Save before compiling
             editor.save_file()
 
+            output_lines.clear()
             output_lines.append("=== Compiling ===")
             output_lines.append(f"File: {editor.state.file_path}")
 
@@ -713,6 +698,7 @@ def main_ide(stdscr: curses.window, initial_file: Optional[str], project_root: s
                 message_time = time.time()
                 continue
 
+            output_lines.clear()
             output_lines.append("=== Running ===")
             run_output = run_compiled_file(c_file, project_root)
             output_lines.extend(run_output.split('\n'))

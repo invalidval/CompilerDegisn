@@ -1,0 +1,6 @@
+=== 56_long_code2.pas (generated: 56_long_code2.c) ===
+exit_code=1
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/56_long_code2.c:9:267: fatal error: bracket nesting level exceeded maximum of 256
+/Users/zcy/Documents/3-2/Compiler/code/test/.openset-out/56_long_code2.c:9:267: note: use -fbracket-depth=N to increase maximum nesting level
+1 error generated.
+----------------------
