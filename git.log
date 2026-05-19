@@ -1,0 +1,413 @@
+commit a2949d8de4fd675ca6f2a2300c3e066961a95bcd
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Sat May 16 23:01:46 2026 +0800
+
+    docs: v1.2
+
+commit 8b3c581cdd80940549eb7b13a2d00ceb1ac7ff86
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Mon May 11 21:45:51 2026 +0800
+
+    docs: 词法分析报告完善，main-v1.1.typ
+
+commit e574c35ec30f4059d2a2c9344e44911b2e3827f7
+Merge: 2027faf 9b79db9
+Author: Zhang Chenyu <141384271+invalidval@users.noreply.github.com>
+Date:   Mon May 11 19:52:49 2026 +0800
+
+    Merge pull request #10 from invalidval/feature/record
+    
+    docs: 课程报告初版
+
+commit 9b79db957e2ac99d9f654546a14801f5f483f7e2
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Mon May 11 19:47:03 2026 +0800
+
+    docs: 课程报告初版
+
+commit 2027faf1540d6c7ec14146f3fede63c7a7afda5b
+Merge: e53656a 890e825
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Fri Apr 24 16:59:59 2026 +0800
+
+    Merge pull request #9 from invalidval/feature/record
+    
+    feat&docs: record array/param
+
+commit 890e825f4321f3f17d14dbf56b1b5eab0e2f7647
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Fri Apr 24 16:57:46 2026 +0800
+
+    feat&docs: record array/param
+
+commit e53656a544bcf1157c030280e71765302ee743a2
+Merge: f6cd49b 7f041b7
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Thu Apr 23 13:46:05 2026 +0800
+
+    Merge pull request #8 from invalidval/feature/record
+    
+    Feature/record
+    增加record
+    增加IDE喵^^
+
+commit 7f041b71132fc3704c5a505e1aa57c539d52d310
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Apr 23 13:39:33 2026 +0800
+
+    feat: IDE
+
+commit ddf4c41ead7cc47280630f8a223f0df2804d8fcc
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Apr 23 12:40:45 2026 +0800
+
+    docs: record-type
+
+commit 06557a440c43c9f01ab892faf6c3ce115b133eb5
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Apr 23 10:13:42 2026 +0800
+
+    feat: add record support
+
+commit f6cd49bcdc47ce6374538d699bee1cbaff9901f2
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 22 20:42:21 2026 +0800
+
+    chore: 移除 .DS_Store 文件
+
+commit e452a281220c4a97e3c2f54f58d8766fba890f37
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 22 19:10:27 2026 +0800
+
+    feat: better tui
+
+commit 8499ee5537c1d643b745e23092ed9e8ed7a272aa
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 22 13:40:24 2026 +0800
+
+    feat: tui
+
+commit 306bfa239b3b05e7edf5bb51bb7e206f363a4c5b
+Author: 胡航宾（Hangbin Hu） <142589330+Brcoinlearning@users.noreply.github.com>
+Date:   Tue Apr 21 22:34:21 2026 +0800
+
+    docs: add lexer midterm slides and figures
+
+commit b1fed8682f2706243918468c944a2ff1d19ff58d
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Tue Apr 21 20:53:12 2026 +0800
+
+    ppt: merged wjh and zcy works
+
+commit c1ae8dee46d1984b8b10b6082d8223a3501224ae
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Tue Apr 21 10:41:55 2026 +0800
+
+    合并了一个ppt，并回退不正确merge
+
+commit 73055af467ba6820d22b10e29140bd26226e32ab
+Author: 19daze <3120623907@qq.com>
+Date:   Sat Apr 18 21:30:13 2026 +0800
+
+    week8 中期汇报-语法部分；修复了归约-归约冲突
+
+commit 2022826d3cfe5446d5e60c82ef9f9ce8d0c55dda
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Apr 16 20:25:20 2026 +0800
+
+    docs: ppt init
+
+commit e7f4bb7800a7debb6805defdd5896fa4aaa9e3d4
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Sat Apr 11 01:09:12 2026 +0800
+
+    refactor: c style
+
+commit 19be346d3d83f6f384a81b91a3991bdeb42e2e18
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Sat Apr 11 00:55:38 2026 +0800
+
+    refactor: &(*x)
+
+commit 718070333a40df20bc84cd64f0ef9ebf901bed01
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Fri Apr 10 23:30:08 2026 +0800
+
+    refactor: something
+
+commit 209eddcdd6ac8fce22825f03e1f0c2ebf8df8807
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Fri Apr 10 22:59:05 2026 +0800
+
+    docs: 修复日志
+
+commit 8f0e9a1e03dd38568808603d666053cc5216653a
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Fri Apr 10 22:57:11 2026 +0800
+
+    finish: 100passed
+
+commit bea974c1d4642664dd0268f59d0289fc1c852de2
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Fri Apr 3 14:52:03 2026 +0800
+
+    docs:详细设计
+
+commit d511ad8c02bfb0349912c6ae72ed1ed5b928988d
+Merge: 290aaa0 a7ff689
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Wed Apr 1 11:20:18 2026 +0800
+
+    Merge pull request #7 from invalidval/语法改错v2
+    
+    语法改错v2
+
+commit a7ff689494361d34a23c007a6d00b782757e1be4
+Merge: 3c1938e ad26013
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 1 11:17:12 2026 +0800
+
+    Merge branch 'edited_by_lsy' into 语法改错v2
+    
+    修复语法、词法
+    合并文档
+
+commit 3c1938e889448ab9368c482d73c2e9e243663760
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 1 11:16:42 2026 +0800
+
+    增加break关键字
+
+commit ad2601338d1025b2ab1026ec325a391ddc9cbbce
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 1 10:46:30 2026 +0800
+
+    docs
+
+commit e05e900731fca929c0f54dbd9e07f44b6eb787f5
+Author: 19daze <3120623907@qq.com>
+Date:   Wed Apr 1 10:08:28 2026 +0800
+
+    语法改错v2：单引号多字符识别支持，数组下标支持a[i][j]写法
+
+commit 290aaa003557de42b64cad2fc74cd97d9762cd78
+Merge: ee6bda7 87c4ab8
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Mon Mar 30 17:30:45 2026 +0800
+
+    Merge pull request #6 from invalidval/edited_by_lsy
+    
+    Edited by lsy
+
+commit 87c4ab8d1548b728e0568d56ae23d782c2f39c4b
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Mon Mar 30 17:29:54 2026 +0800
+
+    修复语义检查对 read 的误报
+
+commit 78f4aec7ea6420d5d048e13dcd4aba212e069bd0
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Mon Mar 30 17:05:05 2026 +0800
+
+    增加用例，修改文档图标
+
+commit ee6bda787a869b06cf419f0cfd7302c73702ee0f
+Merge: 700951c 5f3b5e1
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Sun Mar 29 15:03:28 2026 +0800
+
+    Merge pull request #5 from invalidval/edited_by_lsy
+    
+    Edited by lsy
+
+commit 5f3b5e1a411fbd8c6ac803dc7a6107a8c3946916
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Sun Mar 29 15:01:12 2026 +0800
+
+    修复代码生成变量**类型回退为int，不按AST标注来**的问题
+
+commit 24c085849d29fa000ecb311cb27855b74b67270c
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Sat Mar 28 23:01:38 2026 +0800
+
+    依旧修复大量bug
+
+commit 99959edab01407cef1ff80a153444929fe39d9bd
+Author: lsiyuan <lisiyuan20050224@gmail.com>
+Date:   Sat Mar 28 20:47:08 2026 +0800
+
+    v0提交
+
+commit 9ca69b13c91fccec9a91830913b5081e58e324aa
+Author: 19daze <3120623907@qq.com>
+Date:   Sat Mar 28 17:03:13 2026 +0800
+
+    改正了语法错误
+
+commit 700951c1fa26b6529164894f480833062c01b44c
+Merge: 2035393 3e6813c
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Fri Mar 27 10:06:48 2026 +0800
+
+    Merge pull request #4 from invalidval/semantic
+    
+    支持非运算
+    - 语义分析错误处理完成
+
+commit 3e6813c8bbeaabf177e57080ab97c94727420caa
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Mar 26 23:18:16 2026 +0800
+
+    支持非运算
+
+commit 2035393dfddc7970d99a67ad2bfbdd6aeb80ad2c
+Merge: 30300f8 74b2a90
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Thu Mar 26 20:54:38 2026 +0800
+
+    Merge pull request #3 from invalidval/代码生成
+    
+    代码生成
+    bug多
+
+commit 74b2a9085e2bf81c1333ce17d23360a12db2415b
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Mar 26 20:52:33 2026 +0800
+
+    支持boolean，增加自动化脚本
+
+commit c78ff9f836108f28d8589e71dd72e8c65a70731a
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Mar 26 20:18:59 2026 +0800
+
+    测试集open_set
+
+commit e273d2999c897e4ae1da42234448e274b0be9c46
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Mar 26 17:49:09 2026 +0800
+
+    修复大量代码生成bug，可基本运行
+
+commit 13e4a5a42ef319de9be8853837f6ffb1fcd8497f
+Author: sanbao0220 <2023211177@bupt.cn>
+Date:   Thu Mar 26 16:34:46 2026 +0800
+
+    解决构建时报错问题
+
+commit 80bab588de96d5997f7ec7ffa237b7b5a346fd34
+Author: sanbao0220 <2023211177@bupt.cn>
+Date:   Thu Mar 26 15:37:23 2026 +0800
+
+    完成代码实现,待测试
+
+commit 30300f80e58a6a7b04cabef69c6360f9d229abe6
+Merge: 0daedc7 cd6253e
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Tue Mar 24 17:20:02 2026 +0800
+
+    Merge pull request #2 from invalidval/semantic
+    
+    Semantic
+    - 支持Int类型向Real兼容
+    - 完善语义分析补充说明
+    - 修正语义分析测试用例
+    - 增加main参数
+
+commit cd6253e36ad7f2340642de0f72a36e1e8a8b0e0e
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Tue Mar 24 17:17:17 2026 +0800
+
+    支持Int向Real兼容； 补充文档
+
+commit 98f643f40f872315318ef5ed3d9210e703c20c17
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Tue Mar 24 14:37:32 2026 +0800
+
+    修正semantic参数、测试用例
+
+commit 0daedc7d03e53a2f77f044481aca3d2b866faf48
+Merge: 80b6e44 3d36182
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Mon Mar 23 14:58:23 2026 +0800
+
+    Merge pull request #1 from invalidval/semantic
+    
+    Semantic v0.1
+
+commit 3d36182e2d17855399469e17d18705c70affbd57
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Mon Mar 23 14:42:39 2026 +0800
+
+    feature: semantic v0.1
+
+commit d3f9bca5c534608fc79673c04276670427c805d1
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Sun Mar 22 20:45:30 2026 +0800
+
+    合并语法分析(待联调)
+
+commit ec07270b25b9f1dc381a5f0b7ff55b23ec804a23
+Author: 19daze <3120623907@qq.com>
+Date:   Sun Mar 22 19:36:39 2026 +0800
+
+    完成了语法分析实现和仅语法环境下的测试跑通
+
+commit a244e67ec8de54a79f5081e075ce4780e6ff132c
+Author: 19daze <3120623907@qq.com>
+Date:   Sat Mar 21 22:26:29 2026 +0800
+
+    AST契约相关内容
+
+commit 80b6e44e6e9c0f3f0da00e79708762e51c19db52
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Sat Mar 21 22:17:54 2026 +0800
+
+    合并词法分析，并迁移了个人文档位置
+
+commit 9ee2bc49c582049976efbfa861d6f1ad615a2a9c
+Author: 胡航宾（Hangbin Hu） <142589330+Brcoinlearning@users.noreply.github.com>
+Date:   Sat Mar 21 20:26:19 2026 +0800
+
+    docs(lexer): 修缮词法契约与测试验收文档
+
+commit 217721efc454076ba4d8efca815d2514d264c9e0
+Author: 胡航宾（Hangbin Hu） <142589330+Brcoinlearning@users.noreply.github.com>
+Date:   Sat Mar 21 19:37:32 2026 +0800
+
+    feat(lexer): 完成词法分析实现与测试资产
+
+commit fa7f885fc72841aef9f86c133e6ba10337e5a9a4
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Fri Mar 20 16:41:39 2026 +0800
+
+    更新了文档
+
+commit 38ede69a1db1745f758c9ff6c08e4bbecc750d02
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Thu Mar 19 15:30:08 2026 +0800
+
+    Remove build/ and output/ from version control
+
+commit 4c9519e5cd27bae5ee19a706bd66b025e9378809
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Thu Mar 19 11:02:44 2026 +0800
+
+    ignore build
+
+commit 5bac3b737f6e53828c02a4d33adceeb3feb675cf
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Thu Mar 19 11:00:16 2026 +0800
+
+    Add docs, ast
+
+commit 4c8e70e342b853545c7e23fd4700144d18a32463
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Wed Mar 18 16:05:31 2026 +0800
+
+    Skeleton
+
+commit 4a5c96daa1aa7dcbfeef599ed013d7c873de646e
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Fri Mar 13 16:05:25 2026 +0800
+
+    Initial commit

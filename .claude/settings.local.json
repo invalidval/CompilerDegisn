@@ -33,7 +33,10 @@
       "Bash(/tmp/test_array_sum:*)",
       "Bash(./test_record_array_basi:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(git -C /Users/zcy/Documents/3-2/Compiler/code show HEAD:test/run_closeset_check.sh)"
+      "Bash(git -C /Users/zcy/Documents/3-2/Compiler/code show HEAD:test/run_closeset_check.sh)",
+      "Bash(/tmp/exgcd_demo:*)",
+      "Bash(/Users/zcy/Documents/3-2/Compiler/code/build/pascc:*)",
+      "Bash(./build/pascc:*)"
     ]
   }
 }

@@ -431,9 +431,20 @@ def compile_file(file_path: str, project_root: str) -> CompileResult:
         output = result.stdout + result.stderr
         errors = []
 
-        # Parse errors (format: "Error at Line:Col - message")
+        # Parse errors (three formats):
+        #   "Error at Line:Col - message"         (lexer/semantic)
+        #   "Parse error at Line:Col: message"    (parser)
+        #   "Parse error at Line:Col near 'X': msg" (parser with lexeme)
         for line in output.split('\n'):
             m = re.match(r'Error at (\d+):(\d+) - (.*)', line)
+            if m:
+                errors.append((int(m.group(1)), int(m.group(2)), m.group(3)))
+                continue
+            m = re.match(r"Parse error at (\d+):(\d+) near '([^']+)': (.*)", line)
+            if m:
+                errors.append((int(m.group(1)), int(m.group(2)), m.group(4)))
+                continue
+            m = re.match(r'Parse error at (\d+):(\d+): (.*)', line)
             if m:
                 errors.append((int(m.group(1)), int(m.group(2)), m.group(3)))
 
@@ -544,7 +555,8 @@ def main_ide(stdscr: curses.window, initial_file: Optional[str], project_root: s
         draw_status_bar(status_win, editor, status_message)
         draw_editor(editor_win, editor)
 
-        # Handle input
+        # Handle input (doupdate ensures screen renders without waiting for event)
+        curses.doupdate()
         try:
             key = stdscr.getch()
         except:

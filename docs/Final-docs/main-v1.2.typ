@@ -16,11 +16,20 @@
 
 #show cite: it => super(it)
 
+#align(center)[
+  #title("目  录")
+]
 #outline(
-  // title: none
+  title: none
 )
 
 #pagebreak()
+
+
+#align(center)[
+  #title(text(size: 16pt)[Pascal-S语言编译程序的设计与实现])
+]
+\
 
 = 课程设计任务和目标
 
@@ -64,7 +73,7 @@
 编译器整体数据流如下图所示：Pascal-S 源文件输入后，依次经过词法分析、语法分析、语义分析、代码生成四个阶段，最终输出 C 语言源文件。
 
 #figure(
-  image("typst/assets/image-1.png", width: 95%),
+  image("typst/assets/image-1.png", width: 84%),
   caption: [编译器数据流图]
 )
 
@@ -128,23 +137,6 @@ Pascal-S 的词法规则遵循标准 Pascal 规范，关键特征如下：
    - 支持 record 作为函数/过程参数
    - 支持 record 数组
 
-== 功能模块需求
-
-编译器划分为以下核心功能模块：
-
-#styled-parameter-table(
-  columns: (auto, auto, auto),
-  [模块], [实现文件], [功能说明],
-  [词法分析器], [src/lexer.l], [Flex 实现，负责 Token 识别、标识符大小写归一化、注释处理、行列号维护、词法错误检测],
-  [语法分析器], [src/parser.y], [Bison 实现，LALR(1) 分析，归约时构建 AST，恐慌模式错误恢复],
-  [AST 数据结构], [include/ast.h, src/ast.cpp], [20 种 AST 节点类型，Visitor 模式访问接口，Arena 内存管理],
-  [符号表], [include/symbol_table.h, src/symbol_table.cpp], [哈希表+栈结构，两层作用域管理，支持变量/常量/过程/函数/类型别名],
-  [语义分析器], [include/semantic_annotator.h, src/semantic_annotator.cpp], [递归遍历 AST，类型推导与检查，符号绑定，语义错误报告],
-  [代码生成器], [include/code_generator.h, src/code_generator.cpp], [Visitor 模式遍历注解后 AST，分四区收集代码，生成完整 C 程序],
-  [代码生成工具], [include/codegen_utils.h, src/codegen_utils.cpp], [类型映射、声明生成、读写语句、代码组装等辅助函数],
-  [错误处理], [include/error_handler.h, src/error_handler.cpp], [统一错误报告接口，记录行号列号，错误恢复策略],
-  [主程序], [src/main.cpp], [命令行解析，编译流程控制，事件流输出，调试支持],
-)
 
 == 非功能性需求
 
@@ -326,7 +318,26 @@ SymbolEntry 使用静态工厂方法创建：`makeVariable()`、`makeConstant()`
 - *语义分析 → 代码生成*：语义分析器为 AST 节点填充 `dataType` 和 `symbolEntry`，代码生成器读取这些注解信息生成代码。
 - *所有模块 → 错误处理*：各模块均可通过统一的 `ErrorHandler::report()` 接口报告错误。
 
-模块关系图与前文的总体结构图一致。
+=== 各模块源文件及关系
+#styled-parameter-table(
+  columns: (auto, auto, auto),
+  [模块], [实现文件], [功能说明],
+  [词法分析器], [src/lexer.l], [Flex 实现，负责 Token 识别、标识符大小写归一化、注释处理、行列号维护、词法错误检测],
+  [语法分析器], [src/parser.y], [Bison 实现，LALR(1) 分析，归约时构建 AST，恐慌模式错误恢复],
+  [AST 数据结构], [include/ast.h, src/ast.cpp], [20 种 AST 节点类型，Visitor 模式访问接口，Arena 内存管理],
+  [符号表], [include/symbol_table.h, src/symbol_table.cpp], [哈希表+栈结构，两层作用域管理，支持变量/常量/过程/函数/类型别名],
+  [语义分析器], [include/semantic_annotator.h, src/semantic_annotator.cpp], [递归遍历 AST，类型推导与检查，符号绑定，语义错误报告],
+  [代码生成器], [include/code_generator.h, src/code_generator.cpp], [Visitor 模式遍历注解后 AST，分四区收集代码，生成完整 C 程序],
+  [代码生成工具], [include/codegen_utils.h, src/codegen_utils.cpp], [类型映射、声明生成、读写语句、代码组装等辅助函数],
+  [错误处理], [include/error_handler.h, src/error_handler.cpp], [统一错误报告接口，记录行号列号，错误恢复策略],
+  [主程序], [src/main.cpp], [命令行解析，编译流程控制，事件流输出，调试支持],
+)
+
+程序源文件之间的依赖关系如下图：
+
+#image("/assets/image-11.png")
+
+
 
 == 模块接口
 
@@ -1066,6 +1077,10 @@ const SymbolEntry* SymbolTable::lookup(const std::string& name) const {
 `enterScope()`：向 `scopes_` 尾部追加一个空 `unordered_map`，表示进入新作用域。由于过程/函数不可嵌套定义，最大作用域深度为 2（全局 + 局部）。
 
 `exitScope()`：弹出 `scopes_` 尾部元素。注意条目对象保留在 `entryArena_` 中，因此退出作用域后已注册的符号指针仍然有效。
+#figure(
+  image("/assets/image-5-1.png",width: 50%),
+  caption: "进入与退出作用域示例"
+)
 
 === 内置符号注册
 
@@ -1384,160 +1399,354 @@ bool SemanticAnnotator::tryEvalIntConst(ASTNode* node, int& out) const {
 
 遇到错误时不中断分析，继续遍历 AST 以收集更多错误信息。
 
+
 == 代码生成模块
 
-=== 输入输出
+=== 输入输出与总体架构
 
-- 输入：语义分析后带注解的 AST（`ProgramNode*`）。
-- 输出：完整的 C 语言源程序字符串。
+代码生成模块的输入是语义分析后带类型注解和符号表绑定的 AST（`ProgramNode*`），输出是完整的 C 语言源程序字符串。
 
-=== 数据结构
+代码生成器 `CodeGenerator` 采用 Visitor 模式遍历 AST。每个 `visit` 方法处理一种 AST 节点，将生成的 C 代码片段写入 `currentExpr_`（`std::string`），供父节点组合使用。`CodegenUtils` 提供一组静态工具方法用于生成声明、读写语句和最终组装。
 
-代码生成器维护四个代码缓冲区：
+=== 四区代码缓冲
+
+代码生成器为不同性质的声明将代码分流到四个缓冲区：
 
 ```cpp
-std::string globalDecls_;    // 全局常量、类型定义（struct）、全局变量
-std::string prototypes_;     // 函数/过程前置声明
-std::string definitions_;    // 函数/过程定义实现
-std::string mainBody_;       // main 函数体
+std::string globalDecls_;   // 全局常量 (const)、类型定义 (typedef struct)、全局变量
+std::string prototypes_;    // 函数/过程的前置声明
+std::string definitions_;   // 函数/过程的完整定义（含函数体）
+std::string mainBody_;      // main 函数体中的语句
 ```
 
-每个缓冲区按序产出，最终由 `CodegenUtils::wrapAsCProgram()` 组装：
+`generate()` 入口方法手动解析 `BlockNode` 的子节点而非递归遍历，将每个子节点类别精确路由到正确的缓冲区：
+
+```cpp
+std::string CodeGenerator::generate(ProgramNode* root) {
+    reset();
+    // 程序 (program) → 包含一个 BlockNode
+    auto* block = dynamic_cast<BlockNode*>(root->children[0]);
+
+    // children[0]: 常量声明 → 全局声明区
+    for (auto* declNode : block->children[0]->children)
+        globalDecls_ += CodegenUtils::emitConstDecl(declNode);
+
+    // children[1]: 类型声明 (record 等) → 全局声明区
+    for (auto* typeNode : block->children[1]->children)
+        globalDecls_ += emitNode(typeNode);
+
+    // children[2]: 变量声明 → 全局声明区
+    for (auto* varNode : block->children[2]->children)
+        globalDecls_ += CodegenUtils::emitVarDecl(varNode);
+
+    // children[3]: 子程序 → 原型区 + 定义区
+    for (auto* subNode : block->children[3]->children) {
+        if (auto* proc = dynamic_cast<ProcDeclNode*>(subNode)) {
+            prototypes_   += CodegenUtils::emitProcPrototype(proc);
+            definitions_  += CodegenUtils::emitProcDecl(proc, *this);
+        } else if (auto* func = dynamic_cast<FuncDeclNode*>(subNode)) {
+            prototypes_   += CodegenUtils::emitFuncPrototype(func);
+            definitions_  += CodegenUtils::emitFuncDecl(func, *this);
+        }
+    }
+
+    // children[4]: 主程序体 → main 函数体
+    visit(block->children[4]);
+    mainBody_ = currentExpr_;
+
+    return CodegenUtils::wrapAsCProgram(globalDecls_, prototypes_,
+                                        definitions_, mainBody_);
+}
+```
+
+四个缓冲区依次拼接，最终由 `wrapAsCProgram()` 组装为完整 C 文件：
 
 ```c
 #include <stdio.h>
-[globalDecls_]
-[prototypes_]
-[definitions_]
+[globalDecls_]        // const int N = 100;
+                      // typedef struct { ... } Person;
+                      // int a, b;
+[prototypes_]         // void swap(int *x, int *y);
+                      // int gcd(int a, int b);
+[definitions_]        // void swap(int *x, int *y) { ... }
+                      // int gcd(int a, int b) { ... }
 int main(void) {
     [mainBody_]
     return 0;
 }
 ```
 
-辅助工具类 `CodegenUtils` 提供静态方法用于生成各种声明和语句，包括类型映射、格式符选择、变量/常量声明、过程/函数声明、`read`/`write` 语句等。
+=== 类型映射
 
-Visitor 访问过程中，用 `currentExpr_`（`std::string`）存储当前节点对应的 C 代码片段，供父节点组合使用。
-
-=== 关键算法
-
-*generate() 主入口*
-
-`CodeGenerator::generate(ProgramNode* root)` 执行以下步骤：
-
-1. 从根节点的 children 中找到 BlockNode。
-2. 遍历 BlockNode 的子节点：
-   - `children[0]`（consts）：遍历常量声明，调用 `emitConstDecl()` 生成 `const` 定义写入 `globalDecls_`。
-   - `children[1]`（types）：遍历类型声明（如 record），生成 `typedef struct` 定义写入 `globalDecls_`。
-   - `children[2]`（vars）：遍历变量声明，调用 `emitVarDecl()` 生成全局变量声明写入 `globalDecls_`。
-   - `children[3]`（subprograms）：遍历子程序，生成原型写入 `prototypes_`，生成定义写入 `definitions_`。
-   - `children[4]`（compound）：生成主程序体写入 `mainBody_`。
-
-*类型映射（mapType）*
+Pascal-S 基本类型到 C 类型的一一映射由 `mapType()` 完成：
 
 ```cpp
-std::string CodegenUtils::mapType(DataType t) {
-    switch (t) {
-        case DataType::Integer: return "int";
-        case DataType::Real:    return "float";
-        case DataType::Boolean: return "int";
-        case DataType::Char:    return "char";
-        default:                return "int";
+DataType::Integer → "int"
+DataType::Real    → "float"    // Pascal real 映射为 C float
+DataType::Boolean → "int"      // boolean 使用 0/1 表示
+DataType::Char    → "char"
+default           → "int"
+```
+
+读写语句中的格式符选择同样基于类型：
+
+```cpp
+DataType::Integer → "%d"
+DataType::Real    → "%f"
+DataType::Boolean → "%d"
+DataType::Char    → "%c"
+```
+
+=== 变量声明生成
+
+`emitVarDecl()` 处理三种变量声明场景：
+
+*基本类型：* 从 `VarDeclNode` 中提取变量名列表和类型节点，生成 `int a, b, c;` 形式的声明。
+
+*数组类型：* 遍历嵌套的 `ArrayTypeNode` 链，逐维收集下界和上界（从 `ArrayTypeNode` 的字面量子节点中读取），计算每维大小 `upper - lower + 1`，生成 `type name[N1][N2]...;`。例如，Pascal 声明 `arr: array[1..10, 2..8] of integer` 生成 C 声明 `int arr[10][7];`。
+
+```cpp
+// 遍历数组类型链，收集每一维的大小
+while (typeNode->nodeType == NodeType::ArrayType) {
+    int lower = std::stoi(asLiteral(typeNode->children[0])->value);
+    int upper = std::stoi(asLiteral(typeNode->children[1])->value);
+    dimensions.push_back(upper - lower + 1);
+    typeNode = typeNode->children[2];  // 进入下一维或元素类型
+}
+// 生成: type name[dims[0]][dims[1]]...;
+```
+
+*Record 类型：* 从符号表条目获取用户定义的类型名（如 `person`），直接使用该名称 — 不参与 `mapType()` 映射。
+
+=== 常量声明生成
+
+`emitConstDecl()` 生成 `const type name = value;`。特殊处理包括布尔常量（`true→1`, `false→0`）、负数常量（识别 `UnaryExprNode` 包裹的字面量，输出 `-<value>`），以及字符串类常量（使用 `const char*` 并通过 `pascalCharLiteralToCString()` 将 Pascal 单引号字符常量转换为 C 双引号字符串）。常量命名时自动避免与 C 保留字冲突（如 `true_reserved`、`false_reserved`）。
+
+=== 过程与函数翻译
+
+==== 原型声明
+
+原型生成分为过程原型和函数原型，二者的区别在于返回类型：
+
+```cpp
+// 过程原型
+void procedureName(int param1, int *param2);
+// 函数原型
+int functionName(int param, float *varParam);
+```
+
+参数列表的生成需处理 Pascal 的多变量声明语法：`var a, b, c: integer` 允许在一个参数组中声明多个同类型变量。遍历时对每个变量名单独生成参数条目。`var` 参数在类型前插入 `*`（指针）。
+
+==== 过程定义
+
+`emitProcDecl()` 生成完整的 `void name(params) { body }` 函数定义。函数体的生成通过调用者传入的 `CodeGenerator` 引用：`cg.visit(body)` 遍历过程体的 `BlockNode`，将局部常量、局部变量和语句依次生成为缩进后的 C 代码。
+
+==== 函数定义与 \_retval 机制
+
+`emitFuncDecl()` 是函数翻译的核心。Pascal 语法中函数通过“对函数名赋值”来设置返回值（如 `gcd := a`），而 C 通过 `return` 语句返回。为此，引入一个名为 `_retval` 的局部变量作为中间桥梁：
+
+```cpp
+int funcName(int param) {
+    int _retval;              // 1. 声明同类型的返回值临时变量
+    // ...
+    _retval = expr;            // 2. 对函数名的赋值转化为对 _retval 的赋值
+    // ...
+    return _retval;            // 3. 函数末尾返回 _retval
+}
+```
+
+`_retval` 机制涉及三个环节的配合：
+
+- *声明*：`emitFuncDecl()` 在函数体开头插入 `int _retval;`（类型由函数返回类型决定）。
+- *赋值*：当 `AssignStmtNode` 检测到左值为一个函数标识符（`symbolEntry->kind == SymbolKind::Function`）时，生成 `_retval = <rhs>;` 而非 `funcName = <rhs>;`。
+- *返回*：`emitFuncDecl()` 在函数体末尾追加 `return _retval;`。
+- *read 读入*：当 `emitReadStmt()` 检测到实参标记 `isFunctionResultTarget` 时，生成 `&_retval` 作为 scanf 的目标地址，使 `read(f)` 能够将输入值直接写入函数返回值。
+
+=== var 引用参数的指针翻译
+
+Pascal 的 `var` 参数表示引用传递，在 C 中通过指针实现。这一翻译涉及三个方面：
+
+*声明侧——参数类型加 `*`：* 过程原型 `procedure swap(var x, y: integer)` 生成 C 原型 `void swap(int *x, int *y);`。
+
+*使用侧——自动解引用：* 在 `IdentifierNode` 的 visit 中，检查符号表条目的 `isVarParam` 标记。若为 var 参数，在标识符外包裹 `(*)`：
+
+```cpp
+void CodeGenerator::visit(IdentifierNode* node) {
+    if (node->symbolEntry->kind == SymbolKind::Parameter
+        && node->symbolEntry->isVarParam) {
+        currentExpr_ = "(*" + node->identifier + ")";
+        return;
+    }
+    currentExpr_ = node->identifier;
+}
+```
+
+因此，Pascal 过程体中的 `x := x + 1`（`x` 为 var 参数）生成 C 代码 `(*x) = (*x) + 1;`。
+
+*调用侧——自动取址：* 在 `ProcCallNode` 的 visit 中，检查参数位置的 `isVarParam[i]` 标记。若对应形参为 var，则在实参前添加 `&`：
+
+```cpp
+if (node->isVarParam[i]) {
+    currentExpr_ += "&" + argExpr;
+} else {
+    currentExpr_ += argExpr;
+}
+```
+
+调用 `swap(a, b)` 生成 `swap(&a, &b);`。
+
+*避免双重取址：* 当一个 var 参数本身作为另一个 var 参数传入时，它已经是指针，不应再加 `&`。代码通过检查实参 `IdentifierNode` 的 `isVarParam` 属性来识别此情况，直接传递变量名。
+
+=== 数组访问的下标偏移
+
+Pascal 数组可以从任意整数起始（如 `array[3..9] of integer`），而 C 数组总是从 0 开始。`visit(ArrayAccessNode*)` 必须为每次数组访问生成下标偏移：
+
+```cpp
+void CodeGenerator::visit(ArrayAccessNode* node) {
+    std::string base = emitNode(node->children[0]);   // 数组名或上层 ArrayAccess
+    std::string index = emitNode(node->children[1]);  // 下标表达式
+
+    // 从符号表获取当前维度的下界
+    int lowerBound = node->lowerBound;
+    if (node->symbolEntry && node->symbolEntry->isArray) {
+        int depth = arrayAccessDepthForCodegen(node);
+        lowerBound = node->symbolEntry->arrayBounds[depth].lower;
+    }
+
+    if (lowerBound == 0) {
+        currentExpr_ = base + "[" + index + "]";       // 无需偏移
+    } else {
+        currentExpr_ = base + "[(" + index + ") - "
+                     + std::to_string(lowerBound) + "]"; // 偏移
     }
 }
 ```
 
-注意：Pascal-S 的 `real` 映射为 C 的 `float`，`boolean` 映射为 `int`（以 0/1 表示真假）。
+辅助函数 `arrayAccessDepthForCodegen()` 递归计数当前 `ArrayAccessNode` 的嵌套层次，以从符号表的多维边界数组中选择正确的下界。例如，对于 `matrix[2, 3]`（声明为 `array[1..3, 1..3]`），外层访问深度为 0（下界 1），内层访问深度为 1（下界 1），生成 `matrix[(2) - 1][(3) - 1]`。
 
-*变量声明生成（emitVarDecl）*
+=== 表达式生成
 
-处理以下情况：
-- *基本类型变量*：根据 `dataType` 调用 `mapType()` 生成类型名。
-- *Record 类型变量*：使用 `symbolEntry->typeName` 作为类型名（如 `person p;`）。
-- *数组变量*：递归收集所有维度（通过遍历嵌套的 `ArrayTypeNode`），计算每维大小（`upper - lower + 1`），生成 `type name[size1][size2]...;`。
+==== 二元表达式
 
-*常量声明生成（emitConstDecl）*
+二元运算符通过直接查表转换，整个表达式包裹在括号内以保证优先级：
 
-生成 `const type name = value;` 格式。特殊处理：
-- 字符串常量：`const char* name = "...";`
-- 布尔常量：`const int true_reserved = 1; const int false_reserved = 0;`（避免与 C 的 `true`/`false` 宏冲突）
-- 字符常量：转换为 C 字符字面量
+- 算术：`+` → `+`，`-` → `-`，`*` → `*`，`/` → `/`
+- 整数运算：`div` → `/`，`mod` → `%`
+- 关系比较：`=` → `==`，`<>` → `!=`，`<`/`<=`/`>`/`>=` 保持不变
+- 逻辑运算：`and` → `&&`，`or` → `||`
 
-*过程/函数声明生成*
+生成方式为递归生成左右操作数，插入对应 C 运算符，再整体加括号：
 
-`emitProcDecl()` 和 `emitFuncDecl()` 生成 C 函数定义。关键处理：
+```cpp
+currentExpr_ = "(" + emitNode(node->children[0])
+             + " " + op + " " + emitNode(node->children[1]) + ")";
+```
 
-- `var` 参数：生成 `Type *param`（指针类型），函数体内对 `var` 参数的使用自动解引用（`(*param)`）。
-- 值参数：直接生成 `Type param`。
-- Record 类型参数：var 参数使用 `TypeName *param`，值参数使用 `TypeName param`。
-- 函数：在函数体开头声明 `_retval` 局部变量，结束时 `return _retval;`。函数体内对函数名的赋值转换为 `_retval = expr;`。
+==== 一元表达式
 
-*过程/函数原型生成*
+`not` 运算符的处理区分操作数类型——对整数使用位非 `~`，对布尔使用逻辑非 `!`。一元负号 `-` 直接翻译为 `(-operand)`。结果同样用括号包裹。
 
-`emitProcPrototype()` 和 `emitFuncPrototype()` 生成前置声明，格式类似定义但以分号结尾（如 `void proc_name(int, int*);`）。
+==== 字面量与标识符
 
-*read/write 语句生成*
+字面量中，布尔常量 `true`/`false` 映射为 `1`/`0`，其余（整数、实数、字符）直接输出。标识符中，除前述的 var 参数解引用外，还处理：零参数函数的引用——当 Pascal 代码中直接使用函数名（如 `write(factorial)`），生成 C 的函数调用表达式 `factorial()`。
 
-`emitReadStmt()` 处理 `read(varlist)`：根据变量类型选择 `scanf` 格式符（`%d`/`%f`/`%c`），对每个变量加 `&` 取址符。
+=== 控制流语句
 
-`emitWriteStmt()` 处理 `write(exprlist)`：根据表达式类型选择 `printf` 格式符（`%d`/`%f`/`%c`/`%s`），依次输出各表达式。表达式的 C 代码由 Visitor 的 `currentExpr_` 提供。
+==== 赋值语句
 
-*赋值语句生成（visit(AssignStmtNode\*))*
+赋值语句的生成区分函数返回值赋值和普通赋值：
 
 ```cpp
 void CodeGenerator::visit(AssignStmtNode* node) {
-    // 处理左值：变量 → 标识符，字段访问 → base.field
-    // 处理右值：表达式 → C 表达式串
-    // 函数结果赋值：转换为 _retval = rhs;
-    // 常规赋值：生成 lhs = rhs;
+    std::string lhs = emitNode(node->children[0]);
+    std::string rhs = emitNode(node->children[1]);
+
+    // 函数结果赋值：f := expr → _retval = expr;
+    if (auto* idNode = dynamic_cast<IdentifierNode*>(node->children[0]))
+        if (idNode->symbolEntry->kind == SymbolKind::Function)
+            lhs = "_retval";
+
+    currentExpr_ = lhs + " = " + rhs + ";";
 }
 ```
 
-函数结果赋值判断：左值标识符的 `isFunctionResultTarget` 标记。
+==== if-then-else 语句
 
-*for 循环生成（visit(ForStmtNode\*)）*
+生成标准 C 语法 `if (cond) { thenPart } else { elsePart }`。条件表达式来自递归生成（如前所述，已带括号），then 和 else 分支各自用花括号包裹。
 
-根据 `isDownto` 标志生成不同的 C 代码：
+==== while 语句
 
-- `for to`：`for (int id = init; id <= end; ++id) { body }`
-- `for downto`：`for (int id = init; id >= end; --id) { body }`
+生成 `while (cond) { body }`。条件表达式的生成与 if 相同。
 
-若循环变量未在符号表中注册（即未提前声明），则自动在循环头中声明 `int id`。
+==== for 循环
 
-*数组访问生成（visit(ArrayAccessNode\*)）*
+for 循环根据 `to`/`downto` 方向生成不同的比较和步进操作：
 
 ```cpp
-// 基本数组访问 a[i] → a[(i) - lowerBound]
-// 多维数组：递归展开到最内层，按数组深度累积下标维度
-currentExpr_ = base + "[" + index + " - " + lowerBound + "]";
+void CodeGenerator::visit(ForStmtNode* node) {
+    std::string cmp  = node->isDownto ? ">=" : "<=";
+    std::string step = node->isDownto ? "--"  : "++";
+
+    currentExpr_ = "for (" + loopVar + " = " + initValue
+                 + "; " + loopVar + " " + cmp + " " + endValue
+                 + "; " + loopVar + step + ") { " + body + " }";
+}
 ```
 
-通过 `arrayAccessDepthForCodegen()` 辅助函数计算多维数组的维度深度，在声明时按深度生成多维数组尺寸。
+因此 `for i := 1 to 10 do` 生成 `for (i = 1; i <= 10; i++)`，而 `for i := 10 downto 1 do` 生成 `for (i = 10; i >= 1; i--)`。若循环变量未在符号表中注册（即未提前声明），则自动在 for 头部生成 `int i` 声明。
 
-*表达式生成*
+==== break 与复合语句
 
-- 二元表达式：递归生成左右操作数，按运算符翻译（`mod→%`，`div→/`，`=`→`==`，`<>→!=`，`and→&&`，`or→||`）。整个表达式用括号包裹以确保优先级正确。
-- 一元表达式：`not factor`（有特殊处理），`-factor` 直接翻译为 `(-factor)`。
-- 布尔字面量：`true→1`，`false→0`。
+`break` 直接输出 `break`。复合语句（`begin...end`）顺序遍历各子语句并连接，对过程调用和 break 两种节点自动补充分号（这些节点的 visit 方法不输出尾部分号，由复合语句节点统一处理）：
 
-*过程调用生成（visit(ProcCallNode\*)）*
+```cpp
+void CodeGenerator::visit(CompoundStmtNode* node) {
+    std::string result;
+    for (auto* stmt : node->children) {
+        result += emitNode(stmt);
+        if (needsTrailingSemicolon(stmt))
+            result += ";";
+        result += "\n";
+    }
+    currentExpr_ = result;
+}
+```
 
-- `read`：委托 `CodegenUtils::emitReadStmt()` 处理。
-- `write`：委托 `CodegenUtils::emitWriteStmt()` 处理。
-- 用户定义调用：根据 `isVarParam` 标记决定实参如何传递——引用参数传 `&arg`，值参数直接传 `arg`。
+=== read/write 内建过程的翻译
 
-*标识符生成（visit(IdentifierNode\*)）*
+`read(varlist)` 通过 `emitReadStmt()` 翻译为 C 的 `scanf()`。对每个参数根据其类型选择格式符，并在变量名前加 `&` 取址。特殊处理包括：对 var 参数（已是指针，不加 `&`）和函数返回值目标（使用 `&_retval`）。
 
-- `true` → `1`，`false` → `0`
-- 函数名→生成函数调用表达式 `name()`
-- `var` 参数→生成 `(*name)`
-- 普通变量/常量引用→直接输出标识符名
+```cpp
+// Pascal: read(a, b);        // a: integer, b: real
+// C:      scanf("%d%f", &a, &b);
+```
 
-*Record 类型代码生成*
+`write(exprlist)` 通过 `emitWriteStmt()` 翻译为 `printf()`。同样根据类型选择格式符，但不加 `&`（输出值而非写入地址）。对字符串类常量使用 `%s` 格式。
 
-- `visit(TypeDeclNode*)`：生成 `typedef struct { ... } TypeName;`
-- `visit(FieldDeclNode*)`：在 struct 内部生成字段声明 `field_type field_name;`
-- `visit(FieldAccessNode*)`：生成 `base.fieldName`（使用 C 的点运算符）
+```cpp
+// Pascal: write(x, 'hello'); // x: integer
+// C:      printf("%d%s", x, "hello");
+```
+
+=== Record 类型的代码生成
+
+Record 类型的翻译涉及三个 AST 节点：
+
+*TypeDeclNode*（类型定义）：生成 `typedef struct { ... } TypeName;`。遍历 record 体内的字段列表，逐一生成字段声明。
+
+*FieldDeclNode*（字段声明）：处理 `id1, id2: fieldType` 的 Pascal 多变量声明语法，为每个标识符生成 `ctype fieldName;`。
+
+*FieldAccessNode*（字段访问）：Pascal 的 `r.fieldName` 直接翻译为 C 的 `r.fieldName`（使用 `.` 运算符）。基对象（`r`）通过递归生成来处理数组元素 `arr[i]` 或更深层的嵌套。
+
+=== 代码生成辅助函数
+
+除主类外，代码生成模块还提供若干文件级辅助函数：
+
+- `toLowerCopy()`：字符串转小写，用于 `true`/`false` 的不区分大小写识别。
+- `indentText()`：对多行代码字符串每行增加指定数量的前导空格，用于函数体内的缩进格式。
+- `arrayAccessDepthForCodegen()`：递归计算 `ArrayAccessNode` 链的嵌套深度，用于多维数组的维度下界查找。
+- `needsTrailingSemicolon()`：判断特定节点类型（`ProcCall`、`BreakStmt`）是否需要补充分号。
+
 
 == 错误处理模块
 
@@ -1678,8 +1887,7 @@ code/
 │   ├── debug_utils.cpp          # 调试工具实现
 │   └── semantic_register.cpp    # 内置符号注册实现
 ├── test/                        # 测试用例集
-│   ├── cases/valid/             # 合法测试用例
-│   ├── cases/invalid/           # 非法测试用例
+│   ├── cases/                   # 测试用例，合法/非法
 │   ├── open_set/                # 开放测试集
 │   ├── semantic_unit/           # 语义分析单元测试
 │   └── semantic_stubs/          # 语义分析桩代码
@@ -1700,6 +1908,7 @@ code/
 - 内存管理：优先使用 RAII 和智能指针（`std::unique_ptr`）。AST 节点和符号条目使用 Arena 模式管理生命周期。
 - Visitor 模式：语义分析和代码生成通过 Visitor 模式解耦，各节点通过 `accept()` 方法接受访问。
 
+#pagebreak()
 = 程序测试
 
 == 测试环境
@@ -1759,7 +1968,7 @@ code/
 )
 
 #figure(
-  image("typst/assets/image-8.png",width: 70%),
+  image("typst/assets/image-8.png",width: 35%),
   caption: "测试用例文件夹"
 
 )
@@ -2351,7 +2560,7 @@ exit_code=1
 
 
 
-
+#pagebreak()
 
 = 课程设计总结
 
@@ -2363,27 +2572,44 @@ exit_code=1
 - *语法分析*：Bison 实现 LALR(1) 分析，归约时构建 AST，恐慌模式错误恢复，正确处理运算符优先级和悬挂 else。
 - *语义分析*：完整的类型检查系统，符号表管理，作用域控制，编译期常量求值，上下文敏感的 break 检查和函数结果赋值检查。
 - *代码生成*：基于 Visitor 模式生成可编译运行的 C 代码，正确处理类型映射、数组偏移、var 参数、函数返回值。
-- *扩展功能*：实现 record 类型（结构体）的完整支持，包括 record 声明、字段访问、作为参数和数组元素。
+- *扩展功能*：实现 record 类型（结构体）的完整支持，包括 record 声明、字段访问、作为参数和数组元素。并且实现了美观易用的可视化终端界面和IDE。
 
-总计约 5657 行源代码（含 Flex/Bison 文件），支持 232 个测试用例。
+总计约 5657 行源代码（含 Flex/Bison 文件），支持 210 个测试用例。
 
 == 每位成员的工作与收获
 
-*王嘉晗（语法分析）*：负责设计和维护 AST 契约，在 Bison 文件中实现归约建树动作。主要收获包括深入理解了 LALR(1) 分析原理、AST 数据结构设计方法，以及如何在语法分析阶段高效构建中间表示。
+*王嘉晗（语法分析）*：作为语法分析负责人，我利用 Bison 完成了 Pascal-S 语言的 LALR(1) 语法分析工作。我的核心任务是在归约动作中构建抽象语法树（AST）。为了保证后续模块的顺利对接，我重点维护了 AST 的节点契约，与词法及语义模块做好了接口对齐，同时实现了错误定位与恢复机制，确保编译器在遇到错误时能尽可能多地输出报错信息。
 
-*张宸宇（组长/语义分析）*：负责符号表设计与实现，语义注解器的完整编写，以及整体架构设计。掌握了符号表作用域管理的实现技巧、类型系统的设计要点，以及编译器中语义检查的广度与深度。
+在具体实现上，我通过合理的文法分层结构解决了运算符优先级问题，妥善处理了 dangling else 的二义性，并启用了位置系统让 AST 具备精准的报错溯源能力。此外，我还统一了变量访问链的处理逻辑，使其能兼容数组下标与字段访问，并通过桥接接口避免了外部对解析器内部的直接依赖。开发过程中，我坚持测试驱动，排查并修复了各类归约与冲突问题。最终，我交付了完整的代码实现及配套的设计验收文档，深刻体会到了稳定的 AST 契约对于降低多模块联调成本的重要价值。
 
-*胡航宾（词法分析）*：负责 `src/lexer.l` 的核心规则实现与维护，包括关键字/标识符识别、数字与字符串字面量规则、嵌套注释与编译器指令状态处理、行列号跟踪，以及词法错误收集接口。通过这部分工作，进一步掌握了 Flex Start Condition、规则优先级、错误恢复式扫描，以及如何为后续 parser/semantic 阶段提供稳定且可观测的 Token 输入。
+*张宸宇（组长/语义分析）*：作为组长，我负责项目的需求分析、方案和架构设计、文档维护等，统筹各成员工作，并负责后续Record等扩展功能的增量开发模式。在编译器功能方面，我负责符号表设计与实现、语义注解器的完整编写，并组织各模块等联调和错误修复。还负责了终端用户界面的开发。
 
-*李思远（代码生成基础）*：负责代码生成器框架和基础语句（赋值、条件、复合语句）的 Visitor 实现。掌握了 Visitor 模式的实战应用、C 代码生成的关键技术细节，以及如何编写可扩展的代码生成框架。
+在这次课设中，我切实感受到了将软件工程方法运用到实际团队开发任务的重要性。正是因为前期采用高内聚、低耦合的模块划分和分工，以及滚雪球式开发的模式，此项目实现过程中才没有遇到合作上的问题。这次经历提高了我团队协调和合作的能力，同时巩固了编译原理课程的语义分析相关知识，掌握了符号表作用域管理在C++上的实现技巧、类型系统的设计要点，以及编译器中语义检查的广度与深度。
 
-*谢康（代码生成进阶）*：负责数组访问、过程调用、var 参数传递的代码生成实现。深入理解了 Pascal-S 与 C 在类型系统和参数传递机制上的差异，掌握了数组偏移计算和指针参数转换等关键技术。
+*胡航宾（词法分析）*：我负责 `src/lexer.l` 的核心规则实现与维护，包括关键字/标识符识别、数字与字符串字面量规则、嵌套注释与编译器指令状态处理、行列号跟踪，以及词法错误收集接口。通过这部分工作，进一步掌握了 Flex Start Condition、规则优先级、错误恢复式扫描，以及如何为后续 parser/semantic 阶段提供稳定且可观测的 Token 输入。
+
+*李思远（代码生成基础）*：在本次开发中，我主要负责代码生成器框架的搭建，以及赋值语句、条件语句、复合语句等基础结构的 Visitor 实现。通过这一过程，我掌握了 Visitor 模式在真实项目中的落地方法，熟悉了 C 代码生成的细节，例如作用域管理、先声明后调用的处理、代码格式化输出等。同时，我也积累了如何设计一个结构清晰、易于扩展的代码生成框架的实践经验。
+
+*谢康（代码生成进阶）*：我负责实现了数组访问、过程调用以及 var 参数传递等进阶代码生成逻辑。在此过程中，我理解了 Pascal-S 与 C 在类型系统和参数传递机制上的差异，掌握了数组偏移量计算、指针参数转换等技术细节。此外，嵌套过程、var 参数的地址传递语义，以及 Pascal 与 C 在左值右值概念上的映射关系也需要处理，期间遇到了很多困难和bug，在组长和其他组员的帮助下都成功解决。
 
 == 设计过程中遇到的主要问题及解决方案
 
-1. *标识符大小写处理*：Pascal-S 不区分大小写，但 C 区分。解决方案：在词法分析阶段将标识符统一转为小写返回，符号表 Key 同样转小写。这样后续所有阶段自然获得大小写不敏感的语义。
++ *开发环境问题*：
+  - Bison 2.3不支持%code格式的代码，根据实验要求，应该升级至3.0.4。
+  - 在MacOS、Windows和Linux跨平台开发时，编译一致性问题：编写build.sh，实现跨平台编译。
+  ```bash
+  # 通用方法：
+  cmake -S . -B build
+  cmake --build build
+  # Linux下建议：
+  mkdir build
+  cd build
+  cmake ..
+  make
+  ```
 
-2. *数组下标偏移*：Pascal 数组可从任意整数开始（如 `A[3..9]`），C 从 0 开始。解决方案：代码生成时自动计算偏移 `a[i - lower_bound]`，其中 `lower_bound` 从语义分析阶段的 `arrayBounds` 信息获取。
+
++ *数组下标偏移*：Pascal 数组可从任意整数开始（如 `A[3..9]`），C 从 0 开始。解决方案：代码生成时自动计算偏移 `a[i - lower_bound]`，其中 `lower_bound` 从语义分析阶段的 `arrayBounds` 信息获取。
 
 3. *var 参数传递*：Pascal 的 `var` 参数是引用传递，C 无直接对应。解决方案：var 参数在函数声明时生成指针类型，调用时传地址 `&arg`，函数体内自动解引用 `*arg`。
 
@@ -2621,3 +2847,1012 @@ factor             → NUMBER
 7. 数组类型支持多维声明（如 `array [1..3, 2..4] of integer`），构建为嵌套 `ArrayTypeNode`。
 8. Record 扩展支持：`type T = record ... end;` 类型定义、字段访问 `r.f`、record 作为参数、record 数组。
 9. `statement_list ';' error` 为恐慌模式恢复规则：语法分析器在分号后遇到错误时丢弃后续 Token 直到下一个分号，然后恢复分析。
+
+= 附录B：测试报告
+
+此处附上简要版的测试报告，对于各模块的单元测试报告以及集成测试报告，请见随报告提交的单独文档。
+
+== 词法分析测试
+
+=== 合法用例：关键字大小写不敏感
+
+测试用例 `v02_keyword_mixedcase.pas` 验证词法分析器对 Pascal 关键字不区分大小写的处理能力。
+
+*测试源码：*
+```pascal
+ProGram t02;
+begin
+end.
+```
+
+*编译命令：*
+```bash
+./build/pascc -i test/cases/valid/v02_keyword_mixedcase.pas --lex
+```
+
+*Token 输出：*
+```csv
+Type, Lexeme, Line, Column
+Keyword, ProGram, 1, 1
+Identifier, t02, 1, 9
+Delimiter, ;, 1, 12
+Keyword, begin, 2, 1
+Keyword, end, 3, 1
+Delimiter, ., 3, 4
+```
+
+词法分析器正确将大小写混合的token识别为 `program`、`begin`、`end` 关键字，`t02` 为标准标识符，行列号精确。
+
+=== 非法用例：未终止字符字面量
+
+测试用例 `i05_unterminated_char_literal.pas` 验证词法分析器对未闭合字符字面量的错误检测。
+
+*测试源码：*
+```pascal
+program i05;
+var c: char;
+begin
+  c := 'a;  { 未终止的字符字面量 }
+end.
+```
+
+*编译命令：*
+```bash
+./build/pascc -i test/cases/invalid/i05_unterminated_char_literal.pas --lex
+```
+
+*错误输出：*
+```
+Error at 4:8 - Lexical error: unterminated character literal (lexeme=''a;')
+```
+
+词法分析器在编译阶段正确报告了未终止字符字面量错误，同时给出了精确的行号（第 4 行）和列号（第 8 列），以及引发错误的词素内容。
+
+#pagebreak()
+
+== 语法分析测试
+
+=== 合法用例：for-to 循环的 AST 构建
+
+测试用例 `pv05_for_to.pas` 验证语法分析器对 for-to 循环的正确解析和 AST 构建。
+
+*测试源码：*
+```pascal
+program pv05;
+var i: integer;
+begin
+  for i := 1 to 10 do
+    i := i + 1
+end.
+```
+
+*编译命令：*
+```bash
+./build/pascc -i test/cases/parser_valid/pv05_for_to.pas --parse
+```
+
+*AST 输出：*
+```
+Parse succeeded.
+Program
+  Block
+    List
+    List
+    List
+      VarDecl
+        List
+          Identifier (i)
+        Identifier (integer)
+    List
+    CompoundStmt
+      ForStmt
+        Identifier (i)
+        Literal
+        Literal
+        AssignStmt
+          Identifier (i)
+          BinaryExpr
+            Identifier (i)
+            Literal
+```
+
+语法分析器生成了正确的 AST：`ForStmt` 节点包含循环变量 `i`、起始值 `1`、终止值 `10` 和循环体（赋值语句），各节点类型与层级结构均正确。
+
+=== 非法用例：if 缺少 then
+
+测试用例 `pi04_if_missing_then.pas` 验证语法分析器对缺失关键字的错误检测与恐慌模式恢复。
+
+*测试源码：*
+```pascal
+program pi04;
+var a: integer;
+begin
+  if a = 1
+    a := 2
+end.
+```
+
+*编译命令：*
+```bash
+./build/pascc -i test/cases/parser_invalid/pi04_if_missing_then.pas --parse
+```
+
+*错误输出：*
+```
+Parse error at 5:5 near 'a': syntax error
+Parsing failed.
+```
+
+语法分析器检测到 `if` 语句中缺少必需的 `then` 关键字，在第 5 行第 5 列报错并终止分析。
+
+== 语义分析测试
+
+=== 合法用例：阶乘递归函数
+
+测试用例 `sv17_func_result.pas` 验证语义分析器对递归函数声明与函数返回值赋值的处理。
+
+*测试源码：*
+```pascal
+program sv17_func_result;
+var n, result: integer;
+
+function factorial(x: integer): integer;
+begin
+    if x <= 1 then
+        factorial := 1
+    else
+        factorial := x * factorial(x - 1)
+end;
+
+begin
+    n := 5;
+    result := factorial(n)
+end.
+```
+
+*编译命令：*
+```bash
+./build/pascc -i test/cases/semantic_valid/sv17_func_result.pas --semantic
+```
+
+*语义分析输出：*
+```
+Semantic analysis succeeded.
+```
+
+语义分析器正确识别了函数体内对函数名 `factorial` 的赋值为合法的函数返回值设置操作。
+
+=== 合法用例：多维数组
+
+测试用例 `sv26_array_multidim.pas` 验证语义分析器对多维数组声明与下标访问的处理。
+
+*测试源码：*
+```pascal
+program sv26_array_multidim;
+var
+    matrix: array[1..3, 1..3] of integer;
+    i, j, sum: integer;
+begin
+    for i := 1 to 3 do
+        for j := 1 to 3 do
+            matrix[i, j] := i * j;
+    sum := 0;
+    for i := 1 to 3 do
+        sum := sum + matrix[i, i]
+end.
+```
+
+*语义分析输出：*
+```
+Semantic analysis succeeded.
+```
+
+=== 非法用例：类型不匹配赋值
+
+测试用例 `si06_type_mismatch_assign.pas` 验证语义分析器对布尔值赋值给整数变量的类型错误检测。
+
+*测试源码：*
+```pascal
+program si06_type_mismatch_assign;
+var a: integer;
+begin
+    a := true
+end.
+```
+
+*编译命令：*
+```bash
+./build/pascc -i test/cases/semantic_invalid/si06_type_mismatch_assign.pas --semantic
+```
+
+*错误输出：*
+```
+Error at 5:5 - Type mismatch in assignment: expected integer, got boolean
+```
+
+=== 非法用例：数组下标越界
+
+测试用例 `si12_array_index_bounds.pas` 验证语义分析器对编译期常量下标越界的检测能力。
+
+*测试源码：*
+```pascal
+program si12_array_index_bounds;
+var arr: array[1..10] of integer;
+begin
+    arr[0] := 1
+end.
+```
+
+*编译命令：*
+```bash
+./build/pascc -i test/cases/semantic_invalid/si12_array_index_bounds.pas --semantic
+```
+
+*错误输出：*
+```
+Error at 5:9 - Array index out of bounds: 0 not in [1, 10]
+```
+
+语义分析器通过编译期常量求值，检测到下标 `0` 超出数组 `arr[1..10]` 的声明范围。
+
+#pagebreak()
+
+== Record 专项测试
+
+=== 合法用例：record 数组求总年龄
+
+测试用例 `test_record_array_sum.pas` 验证 record 数组的声明、字段访问、循环遍历与聚合运算。
+
+*测试源码：*
+```pascal
+program test;
+type
+  person = record
+    age: integer;
+    score: real
+  end;
+var
+  people: array[1..3] of person;
+  i: integer;
+  totalAge: integer;
+  avgScore: real;
+
+begin
+  people[1].age := 20;
+  people[1].score := 80.0;
+  people[2].age := 25;
+  people[2].score := 90.0;
+  people[3].age := 30;
+  people[3].score := 100.0;
+
+  totalAge := 0;
+  avgScore := 0.0;
+
+  for i := 1 to 3 do
+  begin
+    totalAge := totalAge + people[i].age;
+    avgScore := avgScore + people[i].score
+  end;
+
+  avgScore := avgScore / 3.0;
+
+  write(totalAge)
+end.
+```
+
+*pascc 生成的目标 C 代码：*
+```c
+#include <stdio.h>
+typedef struct {
+    int age;
+    float score;
+} person;
+person people[3];
+
+int i;
+int totalage;
+float avgscore;
+
+int main(void) {
+    people[(1) - 1].age = 20;
+    people[(1) - 1].score = 80.0;
+    people[(2) - 1].age = 25;
+    people[(2) - 1].score = 90.0;
+    people[(3) - 1].age = 30;
+    people[(3) - 1].score = 100.0;
+    totalage = 0;
+    avgscore = 0.0;
+    for (i = 1; i <= 3; i++) {
+        totalage = (totalage + people[(i) - 1].age);
+        avgscore = (avgscore + people[(i) - 1].score);
+    }
+    avgscore = (avgscore / 3.0);
+    printf("%d", totalage);
+    return 0;
+}
+```
+
+*C 编译与运行：*
+```bash
+$ gcc -std=c99 test_record_array_sum.c -o test_record_array_sum
+$ ./test_record_array_sum
+75
+```
+
+编译器正确实现了 Pascal `record` 类型到 C `struct` 的映射、`array[1..3]` 到 `[3]` 的下标偏移（`(i) - 1`）、以及字段访问 `people[i].age` 的忠实翻译。程序输出 75（$20+25+30$），验证正确。
+
+=== 合法用例：record 作为 var 参数
+
+测试用例 `test_record_param_var.pas` 验证 record 类型作为 `var` 引用参数传入过程的正确性——参数修改能反映回调用方。
+
+*测试源码：*
+```pascal
+program test;
+type
+  person = record
+    age: integer;
+    score: real
+  end;
+var p: person;
+
+procedure modifyPerson(var p: person);
+begin
+  p.age := 30;
+  p.score := 88.0
+end;
+
+begin
+  p.age := 25;
+  p.score := 95.5;
+  write(p.age);
+  modifyPerson(p);
+  write(p.age)
+end.
+```
+
+*pascc 生成的目标 C 代码：*
+```c
+#include <stdio.h>
+typedef struct {
+    int age;
+    float score;
+} person;
+person p;
+
+void modifyperson(person *p);
+
+void modifyperson(person *p) {
+    (*p).age = 30;
+    (*p).score = 88.0;
+}
+
+int main(void) {
+    p.age = 25;
+    p.score = 95.5;
+    printf("%d", p.age);
+    modifyperson(&p);
+    printf("%d", p.age);
+    return 0;
+}
+```
+
+*C 编译与运行：*
+```bash
+$ gcc -std=c99 test_record_param_var.c -o test_record_param_var
+$ ./test_record_param_var
+2530
+```
+
+关键观察：
+- Pascal `var` 参数正确翻译为 C 指针参数（`person *p`）。
+- 过程体内对 record 字段的访问编译为 C 指针解引用 `(*p).age`。
+- 调用方自动传递变量地址 `&p`。
+- 输出 `2530`：修改前 `p.age = 25`（输出 `25`），`modifyPerson` 修改后 `p.age = 30`（输出 `30`），验证引用传递正确。
+
+=== 非法用例：访问不存在的 record 字段
+
+测试用例 `test_record_invalid_field.pas` 验证语义分析器对 record 字段访问的静态检查。
+
+*测试源码：*
+```pascal
+program test;
+type
+  person = record
+    age: integer;
+    score: real
+  end;
+var p: person;
+
+begin
+  p.name := 'John';  { Error: field 'name' does not exist }
+  write(p.age)
+end.
+```
+
+*语义分析输出：*
+```
+Error at 11:3 - Record type 'person' has no field 'name'
+Error at 11:3 - Type mismatch in assignment: expected unknown, got char
+```
+
+#pagebreak()
+
+== 课件示例测试
+
+课件中示例程序的扩展，验证编译器对完整标准 Pascal-S 程序的端到端编译能力。
+
+*测试源码 `test/cases/official/1.pas`：*
+```pascal
+program example(input, output);
+const t = 's'; a = 1e6;
+var x, y: integer;
+    z : array [1..10, 2..8] of integer;
+    u : integer;
+
+function gcd(a, b: integer): integer;
+begin
+  if b=0 then gcd:=a
+  else gcd:=gcd(b, a mod b)
+end;
+
+begin
+  x := 2+1;
+  z[2,2] := 5;
+  u := 1;
+  read(x, y);
+  write(gcd(x, y))
+end.
+```
+
+该程序定义了 Pascal-S 的多种语言特性：常量声明（字符常量 `'s'`、科学计数法实数 `1e6`）、多维数组声明（`array[1..10, 2..8]`）、递归 GCD 函数、以及输入输出语句。编译器能够完整编译该程序，生成正确可编译的 C 代码，通过 gcc 无警告编译，运行时正确计算两数的最大公约数并输出。
+
+== Open Set 集成测试
+
+=== 扩展欧几里得算法
+
+测试用例 `43_exgcd.pas` 验证编译器对递归函数、`var` 参数、整数除法和取模运算的完整编译。
+
+*测试源码：*
+```pascal
+program main;
+var
+  a, b: integer;
+
+function exgcd(a, b: integer; var x, y: integer): integer;
+var t, r: integer;
+begin
+  if b = 0 then
+  begin
+    x := 1;
+    y := 0;
+    exgcd := a;
+  end
+  else
+  begin
+    r := exgcd(b, a mod b, x, y);
+    t := x;
+    x := y;
+    y := (t - (a div b) * y);
+    exgcd := r;
+  end;
+end;
+
+begin
+  a := 7;
+  b := 15;
+  exgcd(a, b, x[0], y[0]);
+  x[0] := ((x[0] mod b) + b) mod b;
+  write(x[0]);
+end.
+```
+
+*pascc 生成的目标 C 代码：*
+```c
+#include <stdio.h>
+int a; int b;
+
+int exgcd(int a, int b, int *x, int *y);
+
+int exgcd(int a, int b, int *x, int *y) {
+    int _retval; int t; int r;
+    if ((b == 0)) {
+        (*x) = 1;
+        (*y) = 0;
+        _retval = a;
+    } else {
+        r = exgcd(b, (a % b), x, y);
+        t = (*x);
+        (*x) = (*y);
+        (*y) = (t - ((a / b) * (*y)));
+        _retval = r;
+    }
+    return _retval;
+}
+
+int main(void) {
+    a = 7; b = 15;
+    exgcd(a, b, &x[0], &y[0]);
+    x[0] = (((x[0] % b) + b) % b);
+    printf("%d", x[0]);
+    return 0;
+}
+```
+
+*C 编译与运行（gcc 产生 1 个无关警告）：*
+```bash
+$ gcc -std=c99 exgcd.c -o exgcd
+$ ./exgcd
+13
+```
+
+程序使用扩展欧几里得算法求解 $7$ 关于模数 $15$ 的乘法逆元，结果为 $13$（$7 times 13 equiv 1 space (mod 15)$），验证编译正确。
+
+=== 图着色计数（DP）
+
+测试用例 `42_color.pas` 是一个较复杂的动态规划程序，求解图的合法着色方案数，对编译器多维数组访问、常量表达式和模运算的处理形成压力测试。
+
+*核心递归函数源码片段（完整程序 55 行）：*
+```pascal
+function dfs(a, b, c, d, e, last: integer): integer;
+var anss: integer;
+begin
+  if dp[a, b, c, d, e, last] <> -1 then
+    dfs := dp[a, b, c, d, e, last];
+  if a + b + c + d + e = 0 then
+    dfs := 1
+  else
+  begin
+    anss := 0;
+    if a <> 0 then
+      anss := (anss + (a - equal(last, 2))
+               * dfs(a - 1, b, c, d, e, 1)) mod modn;
+    { ... 其余四个分支类似 ... }
+    dp[a, b, c, d, e, last] := anss mod modn;
+    dfs := dp[a, b, c, d, e, last];
+  end;
+end;
+```
+
+该程序使用了五维 DP 数组 `dp[0..17, 0..17, 0..17, 0..17, 0..17, 0..6]`，六层嵌套 for 循环进行初始化，以及递归 DFS 中的多维数组访问和模运算。
+
+*pascc 生成的多维数组下标偏移（C 代码片段）：*
+```c
+int dp[18][18][18][18][18][7];
+// ...
+cns[(list[i]) - 1] = (cns[(list[i]) - 1] + 1);
+ans = dfs(cns[(1) - 1], cns[(2) - 1], cns[(3) - 1],
+          cns[(4) - 1], cns[(5) - 1], 0);
+```
+
+*C 编译与运行：*
+```bash
+$ gcc -std=c99 color.c -o color
+$ ./color < 42_color.in
+39480
+```
+
+即便存在 gcc 的括号风格警告，程序编译后正确运行并输出期望结果 `39480`，验证了编译器在复杂算法场景下的多维数组翻译、var 参数处理和模运算的正确性。
+
+= 附录C：Git日志
+
+```log
+commit a2949d8de4fd675ca6f2a2300c3e066961a95bcd
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Sat May 16 23:01:46 2026 +0800
+
+    docs: v1.2
+
+commit 8b3c581cdd80940549eb7b13a2d00ceb1ac7ff86
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Mon May 11 21:45:51 2026 +0800
+
+    docs: 词法分析报告完善，main-v1.1.typ
+
+commit e574c35ec30f4059d2a2c9344e44911b2e3827f7
+Merge: 2027faf 9b79db9
+Author: Zhang Chenyu <141384271+invalidval@users.noreply.github.com>
+Date:   Mon May 11 19:52:49 2026 +0800
+
+    Merge pull request #10 from invalidval/feature/record
+    
+    docs: 课程报告初版
+
+commit 9b79db957e2ac99d9f654546a14801f5f483f7e2
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Mon May 11 19:47:03 2026 +0800
+
+    docs: 课程报告初版
+
+commit 2027faf1540d6c7ec14146f3fede63c7a7afda5b
+Merge: e53656a 890e825
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Fri Apr 24 16:59:59 2026 +0800
+
+    Merge pull request #9 from invalidval/feature/record
+    
+    feat&docs: record array/param
+
+commit 890e825f4321f3f17d14dbf56b1b5eab0e2f7647
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Fri Apr 24 16:57:46 2026 +0800
+
+    feat&docs: record array/param
+
+commit e53656a544bcf1157c030280e71765302ee743a2
+Merge: f6cd49b 7f041b7
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Thu Apr 23 13:46:05 2026 +0800
+
+    Merge pull request #8 from invalidval/feature/record
+    
+    Feature/record
+    增加record
+    增加IDE喵^^
+
+commit 7f041b71132fc3704c5a505e1aa57c539d52d310
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Apr 23 13:39:33 2026 +0800
+
+    feat: IDE
+
+commit ddf4c41ead7cc47280630f8a223f0df2804d8fcc
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Apr 23 12:40:45 2026 +0800
+
+    docs: record-type
+
+commit 06557a440c43c9f01ab892faf6c3ce115b133eb5
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Apr 23 10:13:42 2026 +0800
+
+    feat: add record support
+
+commit f6cd49bcdc47ce6374538d699bee1cbaff9901f2
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 22 20:42:21 2026 +0800
+
+    chore: 移除 .DS_Store 文件
+
+commit e452a281220c4a97e3c2f54f58d8766fba890f37
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 22 19:10:27 2026 +0800
+
+    feat: better tui
+
+commit 8499ee5537c1d643b745e23092ed9e8ed7a272aa
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 22 13:40:24 2026 +0800
+
+    feat: tui
+
+commit 306bfa239b3b05e7edf5bb51bb7e206f363a4c5b
+Author: 胡航宾（Hangbin Hu） <142589330+Brcoinlearning@users.noreply.github.com>
+Date:   Tue Apr 21 22:34:21 2026 +0800
+
+    docs: add lexer midterm slides and figures
+
+commit b1fed8682f2706243918468c944a2ff1d19ff58d
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Tue Apr 21 20:53:12 2026 +0800
+
+    ppt: merged wjh and zcy works
+
+commit c1ae8dee46d1984b8b10b6082d8223a3501224ae
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Tue Apr 21 10:41:55 2026 +0800
+
+    合并了一个ppt，并回退不正确merge
+
+commit 73055af467ba6820d22b10e29140bd26226e32ab
+Author: 19daze <3120623907@qq.com>
+Date:   Sat Apr 18 21:30:13 2026 +0800
+
+    week8 中期汇报-语法部分；修复了归约-归约冲突
+
+commit 2022826d3cfe5446d5e60c82ef9f9ce8d0c55dda
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Apr 16 20:25:20 2026 +0800
+
+    docs: ppt init
+
+commit e7f4bb7800a7debb6805defdd5896fa4aaa9e3d4
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Sat Apr 11 01:09:12 2026 +0800
+
+    refactor: c style
+
+commit 19be346d3d83f6f384a81b91a3991bdeb42e2e18
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Sat Apr 11 00:55:38 2026 +0800
+
+    refactor: &(*x)
+
+commit 718070333a40df20bc84cd64f0ef9ebf901bed01
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Fri Apr 10 23:30:08 2026 +0800
+
+    refactor: something
+
+commit 209eddcdd6ac8fce22825f03e1f0c2ebf8df8807
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Fri Apr 10 22:59:05 2026 +0800
+
+    docs: 修复日志
+
+commit 8f0e9a1e03dd38568808603d666053cc5216653a
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Fri Apr 10 22:57:11 2026 +0800
+
+    finish: 100passed
+
+commit bea974c1d4642664dd0268f59d0289fc1c852de2
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Fri Apr 3 14:52:03 2026 +0800
+
+    docs:详细设计
+
+commit d511ad8c02bfb0349912c6ae72ed1ed5b928988d
+Merge: 290aaa0 a7ff689
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Wed Apr 1 11:20:18 2026 +0800
+
+    Merge pull request #7 from invalidval/语法改错v2
+    
+    语法改错v2
+
+commit a7ff689494361d34a23c007a6d00b782757e1be4
+Merge: 3c1938e ad26013
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 1 11:17:12 2026 +0800
+
+    Merge branch 'edited_by_lsy' into 语法改错v2
+    
+    修复语法、词法
+    合并文档
+
+commit 3c1938e889448ab9368c482d73c2e9e243663760
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 1 11:16:42 2026 +0800
+
+    增加break关键字
+
+commit ad2601338d1025b2ab1026ec325a391ddc9cbbce
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Wed Apr 1 10:46:30 2026 +0800
+
+    docs
+
+commit e05e900731fca929c0f54dbd9e07f44b6eb787f5
+Author: 19daze <3120623907@qq.com>
+Date:   Wed Apr 1 10:08:28 2026 +0800
+
+    语法改错v2：单引号多字符识别支持，数组下标支持a[i][j]写法
+
+commit 290aaa003557de42b64cad2fc74cd97d9762cd78
+Merge: ee6bda7 87c4ab8
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Mon Mar 30 17:30:45 2026 +0800
+
+    Merge pull request #6 from invalidval/edited_by_lsy
+    
+    Edited by lsy
+
+commit 87c4ab8d1548b728e0568d56ae23d782c2f39c4b
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Mon Mar 30 17:29:54 2026 +0800
+
+    修复语义检查对 read 的误报
+
+commit 78f4aec7ea6420d5d048e13dcd4aba212e069bd0
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Mon Mar 30 17:05:05 2026 +0800
+
+    增加用例，修改文档图标
+
+commit ee6bda787a869b06cf419f0cfd7302c73702ee0f
+Merge: 700951c 5f3b5e1
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Sun Mar 29 15:03:28 2026 +0800
+
+    Merge pull request #5 from invalidval/edited_by_lsy
+    
+    Edited by lsy
+
+commit 5f3b5e1a411fbd8c6ac803dc7a6107a8c3946916
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Sun Mar 29 15:01:12 2026 +0800
+
+    修复代码生成变量**类型回退为int，不按AST标注来**的问题
+
+commit 24c085849d29fa000ecb311cb27855b74b67270c
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Sat Mar 28 23:01:38 2026 +0800
+
+    依旧修复大量bug
+
+commit 99959edab01407cef1ff80a153444929fe39d9bd
+Author: lsiyuan <lisiyuan20050224@gmail.com>
+Date:   Sat Mar 28 20:47:08 2026 +0800
+
+    v0提交
+
+commit 9ca69b13c91fccec9a91830913b5081e58e324aa
+Author: 19daze <3120623907@qq.com>
+Date:   Sat Mar 28 17:03:13 2026 +0800
+
+    改正了语法错误
+
+commit 700951c1fa26b6529164894f480833062c01b44c
+Merge: 2035393 3e6813c
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Fri Mar 27 10:06:48 2026 +0800
+
+    Merge pull request #4 from invalidval/semantic
+    
+    支持非运算
+    - 语义分析错误处理完成
+
+commit 3e6813c8bbeaabf177e57080ab97c94727420caa
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Mar 26 23:18:16 2026 +0800
+
+    支持非运算
+
+commit 2035393dfddc7970d99a67ad2bfbdd6aeb80ad2c
+Merge: 30300f8 74b2a90
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Thu Mar 26 20:54:38 2026 +0800
+
+    Merge pull request #3 from invalidval/代码生成
+    
+    代码生成
+    bug多
+
+commit 74b2a9085e2bf81c1333ce17d23360a12db2415b
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Mar 26 20:52:33 2026 +0800
+
+    支持boolean，增加自动化脚本
+
+commit c78ff9f836108f28d8589e71dd72e8c65a70731a
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Mar 26 20:18:59 2026 +0800
+
+    测试集open_set
+
+commit e273d2999c897e4ae1da42234448e274b0be9c46
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Thu Mar 26 17:49:09 2026 +0800
+
+    修复大量代码生成bug，可基本运行
+
+commit 13e4a5a42ef319de9be8853837f6ffb1fcd8497f
+Author: sanbao0220 <2023211177@bupt.cn>
+Date:   Thu Mar 26 16:34:46 2026 +0800
+
+    解决构建时报错问题
+
+commit 80bab588de96d5997f7ec7ffa237b7b5a346fd34
+Author: sanbao0220 <2023211177@bupt.cn>
+Date:   Thu Mar 26 15:37:23 2026 +0800
+
+    完成代码实现,待测试
+
+commit 30300f80e58a6a7b04cabef69c6360f9d229abe6
+Merge: 0daedc7 cd6253e
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Tue Mar 24 17:20:02 2026 +0800
+
+    Merge pull request #2 from invalidval/semantic
+    
+    Semantic
+    - 支持Int类型向Real兼容
+    - 完善语义分析补充说明
+    - 修正语义分析测试用例
+    - 增加main参数
+
+commit cd6253e36ad7f2340642de0f72a36e1e8a8b0e0e
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Tue Mar 24 17:17:17 2026 +0800
+
+    支持Int向Real兼容； 补充文档
+
+commit 98f643f40f872315318ef5ed3d9210e703c20c17
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Tue Mar 24 14:37:32 2026 +0800
+
+    修正semantic参数、测试用例
+
+commit 0daedc7d03e53a2f77f044481aca3d2b866faf48
+Merge: 80b6e44 3d36182
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Mon Mar 23 14:58:23 2026 +0800
+
+    Merge pull request #1 from invalidval/semantic
+    
+    Semantic v0.1
+
+commit 3d36182e2d17855399469e17d18705c70affbd57
+Author: 张宸宇 <hxd3c0015@126.com>
+Date:   Mon Mar 23 14:42:39 2026 +0800
+
+    feature: semantic v0.1
+
+commit d3f9bca5c534608fc79673c04276670427c805d1
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Sun Mar 22 20:45:30 2026 +0800
+
+    合并语法分析(待联调)
+
+commit ec07270b25b9f1dc381a5f0b7ff55b23ec804a23
+Author: 19daze <3120623907@qq.com>
+Date:   Sun Mar 22 19:36:39 2026 +0800
+
+    完成了语法分析实现和仅语法环境下的测试跑通
+
+commit a244e67ec8de54a79f5081e075ce4780e6ff132c
+Author: 19daze <3120623907@qq.com>
+Date:   Sat Mar 21 22:26:29 2026 +0800
+
+    AST契约相关内容
+
+commit 80b6e44e6e9c0f3f0da00e79708762e51c19db52
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Sat Mar 21 22:17:54 2026 +0800
+
+    合并词法分析，并迁移了个人文档位置
+
+commit 9ee2bc49c582049976efbfa861d6f1ad615a2a9c
+Author: 胡航宾（Hangbin Hu） <142589330+Brcoinlearning@users.noreply.github.com>
+Date:   Sat Mar 21 20:26:19 2026 +0800
+
+    docs(lexer): 修缮词法契约与测试验收文档
+
+commit 217721efc454076ba4d8efca815d2514d264c9e0
+Author: 胡航宾（Hangbin Hu） <142589330+Brcoinlearning@users.noreply.github.com>
+Date:   Sat Mar 21 19:37:32 2026 +0800
+
+    feat(lexer): 完成词法分析实现与测试资产
+
+commit fa7f885fc72841aef9f86c133e6ba10337e5a9a4
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Fri Mar 20 16:41:39 2026 +0800
+
+    更新了文档
+
+commit 38ede69a1db1745f758c9ff6c08e4bbecc750d02
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Thu Mar 19 15:30:08 2026 +0800
+
+    Remove build/ and output/ from version control
+
+commit 4c9519e5cd27bae5ee19a706bd66b025e9378809
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Thu Mar 19 11:02:44 2026 +0800
+
+    ignore build
+
+commit 5bac3b737f6e53828c02a4d33adceeb3feb675cf
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Thu Mar 19 11:00:16 2026 +0800
+
+    Add docs, ast
+
+commit 4c8e70e342b853545c7e23fd4700144d18a32463
+Author: zcy <zcy@appledeMacBook-Pro.local>
+Date:   Wed Mar 18 16:05:31 2026 +0800
+
+    Skeleton
+
+commit 4a5c96daa1aa7dcbfeef599ed013d7c873de646e
+Author: d& <141384271+invalidval@users.noreply.github.com>
+Date:   Fri Mar 13 16:05:25 2026 +0800
+
+    Initial commit
+```
+
+= 附录D：大模型使用情况记录
+
+在本次课设中，我们结合了大模型软件开发的技术。我们的角色从底层编码实现向顶层设计转移，但是并没有将所有要求丢给大模型后一劳永逸，而是经过仔细的规划、分析、设计后，带着问题和思考，用清晰、明确的prompt让大模型根据我们的要求写出符合预期的代码。即使实现不符合预期，我们仍能凭借C++和编译原理基础发现问题，并提出修改方案。
+
+下面附上团队协作过程中的大模型使用记录飞书文档：
